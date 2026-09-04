@@ -15,6 +15,13 @@ public class Account {
                 this.activityWindow.calculateBalance(this.id));
     }
 
+    private boolean mayWithdraw(Money money) {
+        return Money.add(
+                        this.calculateBalance(),
+                        money.negate())
+                .isPositiveOrZero();
+    }
+
     @Value
     public static class AccountId {
         Long value;
