@@ -7,6 +7,8 @@ import lombok.*;
 public class Account {
     private AccountId id;
     private Money baselineBalance;
+    private ActivityWindow activityWindow;
+
     @Value
     public static class AccountId {
         Long value;
