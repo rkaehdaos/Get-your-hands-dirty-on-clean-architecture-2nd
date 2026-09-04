@@ -16,6 +16,7 @@ public class Money {
     }
 
     public static Money add(Money a, Money b) { return new Money(a.amount.add(b.amount)); }
+    public static Money subtract(Money a, Money b) { return new Money(a.amount.subtract(b.amount)); }
 
     public Money negate() { return new Money(this.amount.negate()); }
 
