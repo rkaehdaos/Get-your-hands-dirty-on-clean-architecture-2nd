@@ -9,6 +9,12 @@ public class Account {
     private Money baselineBalance;
     private ActivityWindow activityWindow;
 
+    public Money calculateBalance() {
+        return Money.add(
+                this.baselineBalance,
+                this.activityWindow.calculateBalance(this.id));
+    }
+
     @Value
     public static class AccountId {
         Long value;
