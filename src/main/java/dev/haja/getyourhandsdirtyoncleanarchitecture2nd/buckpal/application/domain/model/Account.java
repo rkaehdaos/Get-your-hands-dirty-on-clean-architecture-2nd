@@ -2,6 +2,8 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.dom
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter @ToString
 @AllArgsConstructor
 public class Account {
@@ -29,8 +31,15 @@ public class Account {
      * @return 출금 성공 여부
      */
     public boolean withdraw(Money money, AccountId targetAccountId) {
-        if (!mayWithdraw(money))
-            return false;
+        if (!mayWithdraw(money)) return false;
+
+        Activity withdrawal = new Activity(
+                this.id,
+                this.id,
+                targetAccountId,
+                LocalDateTime.now(),
+                money);
+        this.activityWindow.addActivity(withdrawal);
         return true;
     }
 
