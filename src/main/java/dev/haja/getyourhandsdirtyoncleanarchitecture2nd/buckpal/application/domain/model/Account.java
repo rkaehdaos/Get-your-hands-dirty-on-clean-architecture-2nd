@@ -15,7 +15,13 @@ public class Account {
                 this.activityWindow.calculateBalance(this.id));
     }
 
-    private boolean mayWithdraw(Money money) {
+    public boolean withdraw(Money money, AccountId targetAccountId) {
+        if (!mayWithdraw(money))
+            return false;
+        return true;
+    }
+
+        private boolean mayWithdraw(Money money) {
         return Money.add(
                         this.calculateBalance(),
                         money.negate())
