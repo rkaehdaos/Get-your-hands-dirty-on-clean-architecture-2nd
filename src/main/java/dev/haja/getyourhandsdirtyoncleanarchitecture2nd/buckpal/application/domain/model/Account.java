@@ -6,7 +6,7 @@ import lombok.*;
 @AllArgsConstructor
 public class Account {
     private AccountId id;
-
+    private Money baselineBalance;
     @Value
     public static class AccountId {
         Long value;
