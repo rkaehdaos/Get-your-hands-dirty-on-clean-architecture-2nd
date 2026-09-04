@@ -1,12 +1,10 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model;
 
-import jakarta.annotation.Nonnull;
 import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import lombok.Value;
 
 import java.time.LocalDateTime;
-
+@Value
 public class Activity {
     ActivityId id;
     Account.AccountId ownerAccountId;
