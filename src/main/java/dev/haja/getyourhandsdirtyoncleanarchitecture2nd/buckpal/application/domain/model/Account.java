@@ -9,19 +9,38 @@ public class Account {
     private Money baselineBalance;
     private ActivityWindow activityWindow;
 
+    /**
+     * 계정의 총 잔액을 계산한다.
+     *
+     * @return Money 계정의 총 잔액
+     */
     public Money calculateBalance() {
         return Money.add(
                 this.baselineBalance,
                 this.activityWindow.calculateBalance(this.id));
     }
 
+
+    /**
+     * 출금: 이 계좌에서 일정 금액을 출금하려고 시도
+     *
+     * @param money           출금 금액
+     * @param targetAccountId 대상 계좌 id
+     * @return 출금 성공 여부
+     */
     public boolean withdraw(Money money, AccountId targetAccountId) {
         if (!mayWithdraw(money))
             return false;
         return true;
     }
 
-        private boolean mayWithdraw(Money money) {
+    /**
+     * 출금 가능 여부를 확인한다.
+     *
+     * @param money 출금 금액
+     * @return 출금 가능 여부
+     */
+    private boolean mayWithdraw(Money money) {
         return Money.add(
                         this.calculateBalance(),
                         money.negate())
