@@ -1,5 +1,12 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model;
 
-public class Account {
+import lombok.Value;
 
+public class Account {
+    private AccountId id;
+
+    @Value
+    public static class AccountId {
+        Long value;
+    }
 }
