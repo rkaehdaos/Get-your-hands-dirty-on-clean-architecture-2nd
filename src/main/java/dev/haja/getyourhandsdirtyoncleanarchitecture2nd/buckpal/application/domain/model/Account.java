@@ -56,6 +56,25 @@ public class Account {
                 .isPositiveOrZero();
     }
 
+    /**
+     * 입금: 이 계좌에 일정 금액을 입금하려고 시도
+     * 성공하면 양수 값의 새 활동을 생성하고 활동 윈도우에 추가
+     *
+     * @param money           입금 금액
+     * @param sourceAccountId 소스 계좌 id
+     * @return 입금 성공 여부
+     */
+    public boolean deposit(Money money, AccountId sourceAccountId) {
+        Activity deposit = new Activity(
+                this.id,
+                sourceAccountId,
+                this.id,
+                LocalDateTime.now(),
+                money);
+        this.activityWindow.addActivity(deposit);
+        return true;
+    }
+
     @Value
     public static class AccountId {
         Long value;
