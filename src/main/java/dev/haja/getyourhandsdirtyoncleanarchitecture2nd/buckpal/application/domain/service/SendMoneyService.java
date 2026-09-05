@@ -24,4 +24,5 @@ public class SendMoneyService implements SendMoneyUseCase {
         //TODO: 검사에 실패할 경우 전용 예외를 발생시키는 메서드를 호출.
         // 사용자와 인터페이스하는 어댑터는 이 예외를 오류 메시지로 사용자에게 표시하거나,
         // 적절하다고 판단되는 다른 방식으로 처리할 수 있습니다.
+    }
 }
