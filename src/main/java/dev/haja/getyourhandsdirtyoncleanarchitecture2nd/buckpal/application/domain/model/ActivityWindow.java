@@ -7,6 +7,9 @@ import java.util.List;
 public record ActivityWindow(
         @NonNull List<Activity> activities) {
 
+    public void addActivity(Activity activity) {
+        this.activities.add(activity);
+    }
     public Money calculateBalance(Account.AccountId accountId) {
         Money depositBalance = activities.stream()
                 .filter(a -> a.targetAccountId().equals(accountId))
