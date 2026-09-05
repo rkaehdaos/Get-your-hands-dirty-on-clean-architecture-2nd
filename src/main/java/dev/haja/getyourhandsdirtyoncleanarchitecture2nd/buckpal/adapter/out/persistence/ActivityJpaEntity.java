@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Table(name = "Activity")
 @EqualsAndHashCode(of = {"id"})
 @Getter
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 class ActivityJpaEntity {
     @Id @GeneratedValue
@@ -19,4 +20,6 @@ class ActivityJpaEntity {
     @Column private Long sourceAccountId;
     @Column private Long targetAccountId;
     @Column private Long amount;
+
+
 }
