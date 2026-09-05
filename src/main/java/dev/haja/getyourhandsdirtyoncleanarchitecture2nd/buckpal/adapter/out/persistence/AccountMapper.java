@@ -16,6 +16,7 @@ import java.util.List;
 @Component
 class AccountMapper {
 
+
     Account mapToDomainEntity(
             AccountJpaEntity account,
             List<ActivityJpaEntity> activities,
@@ -47,5 +48,14 @@ class AccountMapper {
         }
 
         return new ActivityWindow(mappedActivities);
+    }
+    ActivityJpaEntity mapToJpaEntity(Activity activity) {
+        return new ActivityJpaEntity(
+                activity.id() == null ? null : activity.id().value(),
+                activity.timestamp(),
+                activity.ownerAccountId().value(),
+                activity.sourceAccountId().value(),
+                activity.targetAccountId().value(),
+                activity.money().amount().longValue());
     }
 }
