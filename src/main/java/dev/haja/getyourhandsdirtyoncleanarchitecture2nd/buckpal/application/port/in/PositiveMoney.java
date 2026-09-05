@@ -1,7 +1,7 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.port.in;
 
-import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model.Money;
 import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -19,5 +19,5 @@ public @interface PositiveMoney {
     String message() default "must be positive" +
             " found: ${validatedValue}";
     Class<?>[] groups() default {};
-    Class<? extends Money>[] payload() default {};
+    Class<? extends Payload>[] payload() default {};
 }
