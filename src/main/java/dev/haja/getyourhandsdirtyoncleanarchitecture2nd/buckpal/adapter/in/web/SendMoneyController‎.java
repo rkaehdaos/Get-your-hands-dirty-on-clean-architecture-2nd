@@ -1,4 +1,6 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.adapter.in.web;
 
-class SendMoneyController {
-}
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+class SendMoneyController {}
