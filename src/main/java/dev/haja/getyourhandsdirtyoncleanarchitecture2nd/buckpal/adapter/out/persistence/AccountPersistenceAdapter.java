@@ -41,7 +41,6 @@ class AccountPersistenceAdapter implements
                         baselineDate)
                 .orElse(0L);
 
-
         return accountMapper.mapToDomainEntity(
                 account,
                 activities,
