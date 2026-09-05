@@ -5,7 +5,9 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.port
 import jakarta.validation.constraints.NotNull;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model.Account.AccountId;
+import org.springframework.stereotype.Component;
 
+@Component
 public class SendMoneyService implements SendMoneyUseCase {
     @Override
     public boolean sendMoney(SendMoneyCommand command) {
