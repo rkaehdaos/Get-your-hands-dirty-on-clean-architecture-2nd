@@ -11,7 +11,8 @@ public class Account {
 
     // TODO: 비즈니스 룰 검증: 원본(출금) 계좌의 잔액이 마이너스가 되어서는 안 된다
     public boolean withdraw(Money money, AccountId targetAccountId) {
-        if (!mayWithdraw(money)) return false;
+        if (!mayWithdraw(money))
+            return false;
         return true;
     }
 
