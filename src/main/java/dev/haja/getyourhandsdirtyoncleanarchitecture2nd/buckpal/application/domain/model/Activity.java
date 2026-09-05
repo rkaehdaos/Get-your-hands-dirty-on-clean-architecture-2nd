@@ -10,6 +10,7 @@ public record Activity(
         LocalDateTime timestamp,
         Money money
         ) {
+
     public record ActivityId(Long value) {}
 }
 
