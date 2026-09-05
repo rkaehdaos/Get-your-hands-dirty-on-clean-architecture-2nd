@@ -2,6 +2,7 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.dom
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.math.BigInteger;
 import java.util.Optional;
@@ -10,7 +11,7 @@ import java.util.Optional;
 public class Account {
     private final AccountId id;
     private final Money baselineBalance;
-    private final ActivityWindow activityWindow;
+    @Getter final ActivityWindow activityWindow;
 
     public static Account withoutId(
             Money baselineBalance,
