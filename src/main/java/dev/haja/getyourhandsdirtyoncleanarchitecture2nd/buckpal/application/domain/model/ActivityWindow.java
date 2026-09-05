@@ -5,14 +5,17 @@ import lombok.NonNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class ActivityWindow {
     private List<Activity> activities;
     public ActivityWindow(@NonNull List<Activity> activities) {
-        this.activities = activities;
+        activities.forEach(activity -> Objects.requireNonNull(
+                activity, "activity is marked non-null but is null"));
+        this.activities = new ArrayList<>(activities);
     }
     public ActivityWindow(@NonNull Activity... activities) {
-        this.activities = new ArrayList<>(Arrays.asList(activities));
+        this(Arrays.asList(activities));
     }
 
     public Money calculateBalance(Account.AccountId accountId) {
@@ -27,7 +30,7 @@ public class ActivityWindow {
         return Money.add(depositBalance, withdrawalBalance.negate());
     }
 
-    public void addActivity(Activity activity) {
+    public void addActivity(@NonNull Activity activity) {
         this.activities.add(activity);
     }
 }
