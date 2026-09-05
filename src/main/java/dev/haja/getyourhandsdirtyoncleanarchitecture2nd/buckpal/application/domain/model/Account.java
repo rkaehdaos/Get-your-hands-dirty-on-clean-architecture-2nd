@@ -29,11 +29,11 @@ public class Account {
     }
 
     public Money calculateBalance(){
-        // TODO: calculate Balance, 현재는 더미 데이터 반환
-        return new Money (BigInteger.ZERO);
+        return Money.add(
+                this.baselineBalance,
+                this.activityWindow.calculateBalance(this.id));
     }
 
-    // TODO: 비즈니스 룰 검증: 원본(출금) 계좌의 잔액이 마이너스가 되어서는 안 된다
     public boolean withdraw(Money money, AccountId targetAccountId) {
         if (!mayWithdraw(money))
             return false;
