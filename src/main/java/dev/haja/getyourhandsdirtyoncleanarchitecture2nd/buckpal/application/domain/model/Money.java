@@ -8,7 +8,7 @@ public record Money(BigInteger amount) {
         return new Money(BigInteger.valueOf(longValue));
     }
 
-    public static Money subtract(Money a, Money b) {
-        return new Money(a.amount.subtract(b.amount));
-    }
+    public static Money add(Money a, Money b) { return new Money(a.amount.add(b.amount)); }
+    public static Money subtract(Money a, Money b) { return new Money(a.amount.subtract(b.amount)); }
+
 }
