@@ -15,7 +15,10 @@ public class ActivityWindow {
         this.activities = new ArrayList<>(activities);
     }
     public ActivityWindow(@NonNull Activity... activities) {
-        this(Arrays.asList(activities));
+        Arrays.asList(activities).forEach(activity -> Objects.requireNonNull(
+                activity, "activity is marked non-null but is null"));
+        this.activities = new ArrayList<>(Arrays.asList(activities));
+
     }
 
     public Money calculateBalance(Account.AccountId accountId) {
