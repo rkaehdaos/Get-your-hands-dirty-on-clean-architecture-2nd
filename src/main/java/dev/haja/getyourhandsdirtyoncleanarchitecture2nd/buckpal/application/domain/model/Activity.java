@@ -8,9 +8,7 @@ public record Activity(
         Account.AccountId sourceAccountId,
         Account.AccountId targetAccountId,
         LocalDateTime timestamp,
-        Money money
-        ) {
+        Money money) {
 
     public record ActivityId(Long value) {}
 }
-
