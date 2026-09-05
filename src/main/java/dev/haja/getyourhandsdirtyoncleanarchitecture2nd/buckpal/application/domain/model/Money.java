@@ -7,4 +7,8 @@ public record Money(BigInteger amount) {
     public static Money of(long longValue) {
         return new Money(BigInteger.valueOf(longValue));
     }
+
+    public static Money subtract(Money a, Money b) {
+        return new Money(a.amount.subtract(b.amount));
+    }
 }
