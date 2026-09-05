@@ -8,7 +8,7 @@ import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.applicati
 public record SendMoneyCommand(
         @NotNull AccountId sourceAccountId,
         @NotNull AccountId targetAccountId,
-        @NotNull Money money
+        @NotNull @PositiveMoney Money money
         ) {
     public SendMoneyCommand(
             AccountId sourceAccountId,
