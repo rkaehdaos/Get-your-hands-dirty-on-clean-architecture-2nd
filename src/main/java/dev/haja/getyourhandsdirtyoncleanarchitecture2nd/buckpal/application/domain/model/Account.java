@@ -1,12 +1,31 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+
 import java.math.BigInteger;
+import java.util.Optional;
 
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Account {
-    private AccountId id;
-    private Money baselineBalance;
-    private ActivityWindow activityWindow;
+    private final AccountId id;
+    private final Money baselineBalance;
+    private final ActivityWindow activityWindow;
 
+    public static Account withoutId(
+            Money baselineBalance,
+            ActivityWindow activityWindow) {
+        return new Account(null, baselineBalance, activityWindow);
+    }
+    public static Account withId(
+            AccountId accountId,
+            Money baselineBalance,
+            ActivityWindow activityWindow) {
+        return new Account(accountId, baselineBalance, activityWindow);
+    }
+    public Optional<AccountId> getId(){
+        return Optional.ofNullable(this.id);
+    }
 
     public Money calculateBalance(){
         // TODO: calculate Balance, 현재는 더미 데이터 반환
