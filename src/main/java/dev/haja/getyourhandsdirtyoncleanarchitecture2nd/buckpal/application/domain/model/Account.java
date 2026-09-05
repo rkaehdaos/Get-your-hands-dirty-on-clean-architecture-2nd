@@ -11,24 +11,27 @@ import java.util.Optional;
 public class Account {
     private final AccountId id;
     private final Money baselineBalance;
-    @Getter final ActivityWindow activityWindow;
+    @Getter
+    final ActivityWindow activityWindow;
 
     public static Account withoutId(
             Money baselineBalance,
             ActivityWindow activityWindow) {
         return new Account(null, baselineBalance, activityWindow);
     }
+
     public static Account withId(
             AccountId accountId,
             Money baselineBalance,
             ActivityWindow activityWindow) {
         return new Account(accountId, baselineBalance, activityWindow);
     }
-    public Optional<AccountId> getId(){
+
+    public Optional<AccountId> getId() {
         return Optional.ofNullable(this.id);
     }
 
-    public Money calculateBalance(){
+    public Money calculateBalance() {
         return Money.add(
                 this.baselineBalance,
                 this.activityWindow.calculateBalance(this.id));
@@ -44,8 +47,11 @@ public class Account {
      * 출금 가능 여부를 확인
      */
     private boolean mayWithdraw(Money money) {
-        //TODO: 출금 가능 여부를 확인
-        return true;
+        return Money.add(
+                        this.calculateBalance(),
+                        money.negate())
+                .isPositiveOrZero();
     }
+
     public record AccountId(Long value) {}
 }
