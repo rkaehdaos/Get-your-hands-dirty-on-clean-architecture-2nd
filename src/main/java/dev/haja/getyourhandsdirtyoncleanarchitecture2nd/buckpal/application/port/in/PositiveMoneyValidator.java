@@ -8,6 +8,6 @@ import lombok.NonNull;
 public class PositiveMoneyValidator implements ConstraintValidator<PositiveMoney, Money> {
     @Override
     public boolean isValid(Money value, ConstraintValidatorContext context) {
-        return value.isPositive();
+        return value == null || value.isPositive();
     }
 }
