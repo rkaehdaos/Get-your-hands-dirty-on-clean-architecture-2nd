@@ -10,6 +10,6 @@ public class PositiveMoneyValidator implements ConstraintValidator<PositiveMoney
     @Override
     public boolean isValid(Money money, ConstraintValidatorContext context) {
         // null일 때 true를 반환해 null 검사는 @NotNull에 위임하도록
-        return money == null || (money.amount().compareTo(BigInteger.ZERO)> 0);
+        return money == null || (money.amount() != null && money.amount().compareTo(BigInteger.ZERO)> 0);
     }
 }
