@@ -17,6 +17,7 @@ class AccountPersistenceAdapter implements
         LoadAccountPort {
     private final AccountRepository accountRepository;
     private final ActivityRepository activityRepository;
+    private final AccountMapper accountMapper;
 
     @Override
     public Account loadAccount(
@@ -41,6 +42,10 @@ class AccountPersistenceAdapter implements
                 .orElse(0L);
 
 
-        return null;
+        return accountMapper.mapToDomainEntity(
+                account,
+                activities,
+                withdrawalBalance,
+                depositBalance);
     }
 }
