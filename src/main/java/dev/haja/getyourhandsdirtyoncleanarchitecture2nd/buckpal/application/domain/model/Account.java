@@ -4,46 +4,23 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Getter @ToString
-@AllArgsConstructor
 public class Account {
     private AccountId id;
     private Money baselineBalance;
     private ActivityWindow activityWindow;
 
-    /**
-     * 계정의 총 잔액을 계산한다.
-     *
-     * @return Money 계정의 총 잔액
-     */
-    public Money calculateBalance() {
-        return Money.add(
-                this.baselineBalance,
-                this.activityWindow.calculateBalance(this.id));
-    }
-
-
-    // TODO: 이부분임.
+    // TODO: 비즈니스 룰 검증: 원본(출금) 계좌의 잔액이 마이너스가 되어서는 안 된다
     public boolean withdraw(Money money, AccountId targetAccountId) {
         if (!mayWithdraw(money)) return false;
         return true;
     }
 
     /**
-     * 출금 가능 여부를 확인한다.
-     *
-     * @param money 출금 금액
-     * @return 출금 가능 여부
+     * 출금 가능 여부를 확인
      */
     private boolean mayWithdraw(Money money) {
-        return Money.add(
-                        this.calculateBalance(),
-                        money.negate())
-                .isPositiveOrZero();
+        //TODO: 출금 가능 여부를 확인
+        return true;
     }
-
-    @Value
-    public static class AccountId {
-        Long value;
-    }
+    public record AccountId(Long value) {}
 }
