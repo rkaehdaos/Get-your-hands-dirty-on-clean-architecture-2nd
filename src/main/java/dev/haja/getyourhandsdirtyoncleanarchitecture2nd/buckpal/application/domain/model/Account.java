@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -35,6 +36,18 @@ public class Account {
         return Money.add(
                 this.baselineBalance,
                 this.activityWindow.calculateBalance(this.id));
+    }
+
+    public boolean deposit(Money money, AccountId sourceAccountId) {
+        Activity deposit = new Activity(
+                null,
+                this.id,
+                sourceAccountId,
+                this.id,
+                LocalDateTime.now(),
+                money);
+        this.activityWindow.addActivity(deposit);
+        return true;
     }
 
     public boolean withdraw(Money money, AccountId targetAccountId) {
