@@ -1,13 +1,14 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.port.in;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model.Money;
+import jakarta.validation.constraints.NotNull;
 
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model.Account.AccountId;
 
 public record SendMoneyCommand(
-        AccountId sourceAccountId,
-        AccountId targetAccountId,
-        Money money
+        @NotNull AccountId sourceAccountId,
+        @NotNull AccountId targetAccountId,
+        @NotNull Money money
         ) {
     public SendMoneyCommand(
             AccountId sourceAccountId,
