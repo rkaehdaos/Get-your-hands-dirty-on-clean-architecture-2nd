@@ -3,7 +3,9 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.adapter.out.per
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model.Account;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model.Account.AccountId;
 
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model.Activity;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.port.out.LoadAccountPort;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.port.out.UpdateAccountStatePort;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -14,7 +16,8 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 class AccountPersistenceAdapter implements
-        LoadAccountPort {
+        LoadAccountPort,
+        UpdateAccountStatePort {
     private final AccountRepository accountRepository;
     private final ActivityRepository activityRepository;
     private final AccountMapper accountMapper;
@@ -46,5 +49,14 @@ class AccountPersistenceAdapter implements
                 activities,
                 withdrawalBalance,
                 depositBalance);
+    }
+
+    @Override
+    public void updateActivities(Account account) {
+        for (Activity activity : account.getActivityWindow().activities()) {
+            if (activity.id() == null) {
+                activityRepository.save(accountMapper.mapToJpaEntity(activity));
+            }
+        }
     }
 }
