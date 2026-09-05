@@ -4,10 +4,12 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.doma
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
+import java.math.BigInteger;
+
 public class PositiveMoneyValidator implements ConstraintValidator<PositiveMoney, Money> {
     @Override
-    public boolean isValid(Money value, ConstraintValidatorContext context) {
+    public boolean isValid(Money money, ConstraintValidatorContext context) {
         // null일 때 true를 반환해 null 검사는 @NotNull에 위임하도록
-        return value == null || value.isPositive();
+        return money == null || (money.amount() != null && money.amount().compareTo(BigInteger.ZERO)> 0);
     }
 }
