@@ -1,6 +1,7 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.port.in;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model.Money;
+import jakarta.validation.Constraint;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -11,6 +12,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Target({FIELD})
 @Retention(RUNTIME)
+@Constraint(validatedBy = PositiveMoneyValidator.class)
+
 @Documented
 public @interface PositiveMoney {
     String message() default "must be positive" +
