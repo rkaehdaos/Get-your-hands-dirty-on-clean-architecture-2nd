@@ -1,9 +1,5 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model;
 
-import lombok.*;
-
-import java.time.LocalDateTime;
-
 public class Account {
     private AccountId id;
     private Money baselineBalance;

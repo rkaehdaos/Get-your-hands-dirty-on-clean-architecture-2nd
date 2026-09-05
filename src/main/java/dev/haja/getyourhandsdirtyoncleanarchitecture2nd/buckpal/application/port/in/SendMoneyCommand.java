@@ -2,8 +2,8 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.por
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model.Money;
 import jakarta.validation.constraints.NotNull;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model.Account.AccountId;
 
-import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model.Account.AccountId;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.common.validation.Validation.*;
 
 public record SendMoneyCommand(
