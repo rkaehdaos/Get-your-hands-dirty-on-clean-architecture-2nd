@@ -7,6 +7,10 @@ import java.util.List;
 public record ActivityWindow(
         @NonNull List<Activity> activities) {
 
+    public ActivityWindow {
+        activities = new java.util.ArrayList<>(activities);
+    }
+
     public void addActivity(Activity activity) {
         this.activities.add(activity);
     }
