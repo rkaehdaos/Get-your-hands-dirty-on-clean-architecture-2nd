@@ -1,3 +1,30 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model;
 
-public class ActivityWindow {}
+import lombok.NonNull;
+
+import java.util.List;
+
+public record ActivityWindow(
+        @NonNull List<Activity> activities) {
+
+    public ActivityWindow {
+        activities = new java.util.ArrayList<>(activities);
+    }
+
+    public void addActivity(Activity activity) {
+        this.activities.add(activity);
+    }
+    public Money calculateBalance(Account.AccountId accountId) {
+        Money depositBalance = activities.stream()
+                .filter(a -> a.targetAccountId().equals(accountId))
+                .map(Activity::money)
+                .reduce(Money.ZERO, Money::add);
+
+        Money withdrawalBalance = activities.stream()
+                .filter(a -> a.sourceAccountId().equals(accountId))
+                .map(Activity::money)
+                .reduce(Money.ZERO, Money::add);
+
+        return Money.add(depositBalance, withdrawalBalance.negate());
+    }
+}

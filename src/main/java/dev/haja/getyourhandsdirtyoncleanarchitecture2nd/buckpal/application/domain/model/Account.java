@@ -1,19 +1,55 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.buckpal.application.domain.model;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.math.BigInteger;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Account {
-    private AccountId id;
-    private Money baselineBalance;
-    private ActivityWindow activityWindow;
+    private final AccountId id;
+    private final Money baselineBalance;
+    @Getter
+    final ActivityWindow activityWindow;
 
-
-    public Money calculateBalance(){
-        // TODO: calculate Balance, 현재는 더미 데이터 반환
-        return new Money (BigInteger.ZERO);
+    public static Account withoutId(
+            Money baselineBalance,
+            ActivityWindow activityWindow) {
+        return new Account(null, baselineBalance, activityWindow);
     }
 
-    // TODO: 비즈니스 룰 검증: 원본(출금) 계좌의 잔액이 마이너스가 되어서는 안 된다
+    public static Account withId(
+            AccountId accountId,
+            Money baselineBalance,
+            ActivityWindow activityWindow) {
+        return new Account(accountId, baselineBalance, activityWindow);
+    }
+
+    public Optional<AccountId> getId() {
+        return Optional.ofNullable(this.id);
+    }
+
+    public Money calculateBalance() {
+        return Money.add(
+                this.baselineBalance,
+                this.activityWindow.calculateBalance(this.id));
+    }
+
+    public boolean deposit(Money money, AccountId sourceAccountId) {
+        Activity deposit = new Activity(
+                null,
+                this.id,
+                sourceAccountId,
+                this.id,
+                LocalDateTime.now(),
+                money);
+        this.activityWindow.addActivity(deposit);
+        return true;
+    }
+
     public boolean withdraw(Money money, AccountId targetAccountId) {
         if (!mayWithdraw(money))
             return false;
@@ -24,8 +60,11 @@ public class Account {
      * 출금 가능 여부를 확인
      */
     private boolean mayWithdraw(Money money) {
-        //TODO: 출금 가능 여부를 확인
-        return true;
+        return Money.add(
+                        this.calculateBalance(),
+                        money.negate())
+                .isPositiveOrZero();
     }
+
     public record AccountId(Long value) {}
 }
