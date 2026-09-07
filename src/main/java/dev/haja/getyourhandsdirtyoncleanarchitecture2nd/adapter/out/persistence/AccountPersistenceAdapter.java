@@ -1,7 +1,9 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.adapter.out.persistence;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Activity;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.UpdateAccountStatePort;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -11,8 +13,9 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-class AccountPersistenceAdapter
-        implements LoadAccountPort {
+class AccountPersistenceAdapter implements
+        LoadAccountPort,
+        UpdateAccountStatePort {
 
     private final SpringDataAccountRepository accountRepository;
     private final ActivityRepository activityRepository;
@@ -46,5 +49,14 @@ class AccountPersistenceAdapter
                 activities,
                 withdrawalBalance,
                 depositBalance);
+    }
+
+    @Override
+    public void updateActivities(Account account) {
+        for (Activity activity : account.getActivityWindow().activities()) {
+            if (activity.id() == null) {
+                activityRepository.save(accountMapper.mapToJpaEntity(activity));
+            }
+        }
     }
 }
