@@ -142,11 +142,5 @@ class ActivityTest {
             assertThat(new Activity.ActivityId(100L)).isEqualTo(new Activity.ActivityId(100L));
         }
 
-        @Test
-        void value가_null이어도_생성된다() {
-            Activity.ActivityId id = new Activity.ActivityId(null);
-
-            assertThat(id.value()).isNull();
-        }
     }
 }

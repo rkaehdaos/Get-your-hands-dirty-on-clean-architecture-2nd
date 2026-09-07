@@ -14,6 +14,7 @@ public record Activity(
 
     /**
      * id는 아직 영속화되지 않은 신규 활동을 표현하므로 의도적으로 검증하지 않는다(nullable).
+     * 단, "id 없음"은 id 참조가 null인 것으로만 표현한다 — ActivityId(null)은 허용하지 않는다.
      */
     public Activity {
         Objects.requireNonNull(ownerAccountId, "ownerAccountId must not be null");
@@ -36,6 +37,10 @@ public record Activity(
         this(null, ownerAccountId, sourceAccountId, targetAccountId, timestamp, money);
     }
 
-    public record ActivityId(Long value) {}
+    public record ActivityId(Long value) {
+        public ActivityId {
+            Objects.requireNonNull(value, "value must not be null");
+        }
+    }
 
 }
