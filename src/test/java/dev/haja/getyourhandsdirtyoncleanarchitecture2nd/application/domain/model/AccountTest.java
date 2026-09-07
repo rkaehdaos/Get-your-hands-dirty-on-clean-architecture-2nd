@@ -52,6 +52,26 @@ class AccountTest {
     }
 
     @Nested
+    class 정적_팩터리_생성 {
+
+        @Test
+        void id_없이_생성한_계좌는_잔액_계산_시_예외가_발생한다() {
+            Account account = Account.withoutId(Money.of(500L), new ActivityWindow());
+
+            assertThatThrownBy(account::calculateBalance)
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("accountId");
+        }
+
+        @Test
+        void id로_생성한_계좌는_잔액을_계산할_수_있다() {
+            Account account = Account.withId(ACCOUNT_A, Money.of(500L), new ActivityWindow());
+
+            assertThat(account.calculateBalance()).isEqualTo(Money.of(500L));
+        }
+    }
+
+    @Nested
     class 잔액_계산 {
 
         @Test
