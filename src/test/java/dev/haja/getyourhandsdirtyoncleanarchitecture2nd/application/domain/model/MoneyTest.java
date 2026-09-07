@@ -28,7 +28,8 @@ class MoneyTest {
         @Test
         void amount가_null이면_예외가_발생한다() {
             assertThatThrownBy(() -> new Money(null))
-                    .isInstanceOf(NullPointerException.class);
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("amount");
         }
     }
 
