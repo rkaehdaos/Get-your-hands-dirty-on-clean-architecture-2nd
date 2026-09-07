@@ -36,5 +36,11 @@ out/
 ### VS Code ###
 .vscode/
 
+### macOS ###
+.DS_Store
+
 ### jdk manage
 mise.toml
+
+### Claude Code ###
+plans/
