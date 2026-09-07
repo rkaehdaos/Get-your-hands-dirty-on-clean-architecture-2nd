@@ -1,27 +1,25 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model;
 
-import lombok.NonNull;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
-public record ActivityWindow(
-        @NonNull List<Activity> activities) {
+public record ActivityWindow(List<Activity> activities) {
 
-    // Compact Constructor를 통한 방어적 복사(Defensive Copy) 및 불변 리스트 처리
+    // Compact Constructor에서 검증 먼저, 방어적 복사(Defensive Copy)와 불변 리스트화는 그다음
     public ActivityWindow {
+        Objects.requireNonNull(activities, "activities must not be null");
         activities = List.copyOf(activities);
     }
 
     // 배열 생성자 지원
     public ActivityWindow(Activity... activities) {
-        // Lombok @NonNull은 record 정규 생성자에만 체크를 삽입하므로 여기서 직접 검증한다.
+        // this(...)의 인자식은 정규 생성자보다 먼저 평가된다. 배열이 null이면
+        // compact constructor에 닿기 전에 List.of가 메시지 없는 NPE를 던지므로 여기서 직접 검증한다.
         // List.of가 배열을 복사하므로 compact constructor의 List.copyOf는 재복사하지 않는다.
-        this(List.of(Objects.requireNonNull(
-                activities, "activities is marked non-null but is null")));
+        this(List.of(Objects.requireNonNull(activities, "activities must not be null")));
     }
 
     // 가변 addActivity() 대신, 새로운 Record를 반환하도록 변경
