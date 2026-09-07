@@ -38,6 +38,16 @@ public class Account {
         return Money.add(this.calculateBalance(), money.negate()).isPositive();
     }
 
+    public boolean deposit(Money money, AccountId sourceAccountId) {
+        Activity deposit = new Activity(
+                this.id,
+                sourceAccountId,
+                this.id,
+                LocalDateTime.now(),
+                money);
+        this.activityWindow.addActivity(deposit);
+        return true;
+    }
 
     /**
      * 식별자가 있는 계좌만 표현한다. "아직 id가 없음"은 AccountId(null)이 아니라
