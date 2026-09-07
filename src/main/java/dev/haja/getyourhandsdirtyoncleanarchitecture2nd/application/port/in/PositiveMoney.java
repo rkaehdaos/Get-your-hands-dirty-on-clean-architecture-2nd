@@ -16,7 +16,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 public @interface PositiveMoney {
     String message() default "must be positive" +
-            " found: {validatedValue}";
+            " found: ${validatedValue}";
 
     Class<?>[] groups() default {};
 
