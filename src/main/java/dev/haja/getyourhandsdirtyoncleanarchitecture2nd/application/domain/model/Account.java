@@ -35,8 +35,11 @@ public class Account {
         return true;
     }
 
+    /**
+     * 출금 후 잔액이 0 이상이면 출금할 수 있다. 즉 잔액 전액 출금은 허용된다.
+     */
     private boolean mayWithdraw(Money money) {
-        return Money.add(this.calculateBalance(), money.negate()).isPositive();
+        return Money.add(this.calculateBalance(), money.negate()).isPositiveOrZero();
     }
 
     public boolean deposit(Money money, AccountId sourceAccountId) {
