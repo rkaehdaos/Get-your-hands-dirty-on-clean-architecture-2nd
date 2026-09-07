@@ -26,5 +26,6 @@ class SendMoneyController {
                 new AccountId(targetAccountId),
                 Money.of(amount));
 
+        sendMoneyUseCase.sendMoney(command);
     }
 }
