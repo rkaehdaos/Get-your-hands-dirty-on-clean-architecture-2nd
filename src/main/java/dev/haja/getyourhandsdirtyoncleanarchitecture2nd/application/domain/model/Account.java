@@ -31,7 +31,7 @@ public class Account {
                 targetAccountId,
                 LocalDateTime.now(),
                 money);
-        this.activityWindow.addActivity(withdrawal);
+        this.activityWindow = this.activityWindow.addActivity(withdrawal);
         return true;
     }
 
@@ -46,7 +46,7 @@ public class Account {
                 this.id,
                 LocalDateTime.now(),
                 money);
-        this.activityWindow.addActivity(deposit);
+        this.activityWindow = this.activityWindow.addActivity(deposit);
         return true;
     }
 
