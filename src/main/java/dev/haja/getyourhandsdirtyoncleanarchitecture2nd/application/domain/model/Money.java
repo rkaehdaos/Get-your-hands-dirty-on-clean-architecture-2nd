@@ -10,4 +10,8 @@ public record Money(@NonNull BigInteger amount) {
     public static Money of(long longValue) {
         return new Money(BigInteger.valueOf(longValue));
     }
+
+    public static Money add(Money a, Money b) { return new Money(a.amount.add(b.amount)); }
+    public static Money subtract(Money a, Money b) { return new Money(a.amount.subtract(b.amount)); }
+
 }
