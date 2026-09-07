@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -45,7 +46,15 @@ class AccountMapperTest {
     }
 
     private static Activity 입금활동(Long id, LocalDateTime timestamp, long amount) {
-        return new Activity(new ActivityId(id), 계좌_A, 계좌_B, 계좌_A, timestamp, Money.of(amount));
+        return 입금활동(id, timestamp, Money.of(amount));
+    }
+
+    private static Activity 입금활동(Long id, LocalDateTime timestamp, Money money) {
+        return new Activity(new ActivityId(id), 계좌_A, 계좌_B, 계좌_A, timestamp, money);
+    }
+
+    private static Money long_범위_밖_금액(long boundary, int offset) {
+        return new Money(BigInteger.valueOf(boundary).add(BigInteger.valueOf(offset)));
     }
 
     @Nested
@@ -123,6 +132,31 @@ class AccountMapperTest {
             ActivityJpaEntity entity = accountMapper.mapToJpaEntity(activity);
 
             assertThat(entity.getId()).isNull();
+        }
+
+        @Test
+        void long_범위_경계의_금액은_그대로_옮긴다() {
+            ActivityJpaEntity 최댓값 = accountMapper.mapToJpaEntity(입금활동(10L, T1, Long.MAX_VALUE));
+            ActivityJpaEntity 최솟값 = accountMapper.mapToJpaEntity(입금활동(11L, T1, Long.MIN_VALUE));
+
+            assertThat(최댓값.getAmount()).isEqualTo(Long.MAX_VALUE);
+            assertThat(최솟값.getAmount()).isEqualTo(Long.MIN_VALUE);
+        }
+
+        @Test
+        void long_범위를_넘는_금액은_예외가_발생한다() {
+            Activity activity = 입금활동(10L, T1, long_범위_밖_금액(Long.MAX_VALUE, 1));
+
+            assertThatThrownBy(() -> accountMapper.mapToJpaEntity(activity))
+                    .isInstanceOf(ArithmeticException.class);
+        }
+
+        @Test
+        void long_범위_아래의_금액은_예외가_발생한다() {
+            Activity activity = 입금활동(10L, T1, long_범위_밖_금액(Long.MIN_VALUE, -1));
+
+            assertThatThrownBy(() -> accountMapper.mapToJpaEntity(activity))
+                    .isInstanceOf(ArithmeticException.class);
         }
 
         @Test
