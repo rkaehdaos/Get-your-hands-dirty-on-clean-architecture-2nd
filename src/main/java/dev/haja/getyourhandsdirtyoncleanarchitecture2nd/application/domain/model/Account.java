@@ -21,6 +21,13 @@ public class Account {
                 this.activityWindow.calculateBalance(this.id));
     }
 
+    private boolean mayWithdraw(Money money) {
+        return Money.add(
+                        this.calculateBalance(),
+                        money.negate())
+                .isPositive();
+    }
+
 
     /**
      * 식별자가 있는 계좌만 표현한다. "아직 id가 없음"은 AccountId(null)이 아니라
