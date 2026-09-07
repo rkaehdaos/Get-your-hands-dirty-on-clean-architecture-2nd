@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 class AccountPersistenceAdapter {
 
+    private final SpringDataAccountRepository accountRepository;
+    private final ActivityRepository activityRepository;
     private final AccountMapper accountMapper;
 
 }
