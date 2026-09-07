@@ -1,8 +1,17 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+
 import java.util.Objects;
 
+
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Account {
+
+    private final AccountId id;
+    private final Money baselineBalance;
+    private final ActivityWindow activityWindow;
 
     /**
      * 식별자가 있는 계좌만 표현한다. "아직 id가 없음"은 AccountId(null)이 아니라
