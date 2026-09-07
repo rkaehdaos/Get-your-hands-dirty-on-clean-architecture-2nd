@@ -1,17 +1,37 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
 
 import static java.util.Objects.requireNonNull;
 
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Account {
 
     private AccountId id;
     private Money baselineBalance;
     private ActivityWindow activityWindow;
+
+    /**
+     * Creates an {@link Account} entity without an ID. Use to create a new entity that is not yet
+     * persisted.
+     */
+    public static Account withoutId(
+            Money baselineBalance,
+            ActivityWindow activityWindow) {
+        return new Account(null, baselineBalance, activityWindow);
+    }
+    /**
+     * Creates an {@link Account} entity with an ID. Use to reconstitute a persisted entity.
+     */
+    public static Account withId(
+            AccountId accountId,
+            Money baselineBalance,
+            ActivityWindow activityWindow) {
+        return new Account(accountId, baselineBalance, activityWindow);
+    }
 
     /**
      * 기준 잔액에 거래 내역의 금액을 더하여 계좌의 총 잔액을 계산.
