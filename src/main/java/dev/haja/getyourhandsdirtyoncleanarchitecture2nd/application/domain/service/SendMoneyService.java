@@ -2,7 +2,9 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.serv
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyUseCase;
+import org.springframework.stereotype.Component;
 
+@Component
 class SendMoneyService implements SendMoneyUseCase {
     @Override
     public boolean sendMoney(SendMoneyCommand sendMoneyCommand) {
