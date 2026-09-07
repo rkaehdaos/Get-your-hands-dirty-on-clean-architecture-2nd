@@ -2,8 +2,10 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.mode
 
 import lombok.NonNull;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 public record ActivityWindow(
@@ -24,5 +26,19 @@ public record ActivityWindow(
         List<Activity> newActivities = new ArrayList<>(this.activities);
         newActivities.add(activity);
         return new ActivityWindow(newActivities);
+    }
+
+    public LocalDateTime getStartTimestamp() {
+        return activities.stream()
+                .min(Comparator.comparing(Activity::timestamp))
+                .orElseThrow(IllegalStateException::new)
+                .timestamp();
+    }
+
+    public LocalDateTime getEndTimestamp() {
+        return activities.stream()
+                .max(Comparator.comparing(Activity::timestamp))
+                .orElseThrow(IllegalStateException::new)
+                .timestamp();
     }
 }
