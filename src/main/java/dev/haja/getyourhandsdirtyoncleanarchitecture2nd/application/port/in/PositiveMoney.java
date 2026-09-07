@@ -1,6 +1,7 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in;
 
 import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
@@ -13,4 +14,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Constraint(validatedBy = PositiveMoneyValidator.class)
 @Documented
-public @interface PositiveMoney {}
+public @interface PositiveMoney {
+    String message() default "must be positive" +
+            " found: {validatedValue}";
+
+    Class<?>[] groups() default {};
+
+    Class<? extends Payload>[] payload() default {};
+
+}
