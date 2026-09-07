@@ -4,12 +4,18 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyUseCase;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
 class SendMoneyController {
+
+    private final SendMoneyUseCase sendMoneyUseCase;
+
     @PostMapping(path = "/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}")
     void sendMoney(@PathVariable("sourceAccountId") Long sourceAccountId,
                    @PathVariable("targetAccountId") Long targetAccountId,
