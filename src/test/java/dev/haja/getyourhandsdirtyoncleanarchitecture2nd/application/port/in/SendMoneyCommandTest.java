@@ -56,6 +56,27 @@ class SendMoneyCommandTest {
                     .isInstanceOf(ConstraintViolationException.class)
                     .hasMessageContaining("money");
         }
+
+        @Test
+        void money가_0이면_예외가_발생한다() {
+            assertThatThrownBy(() -> new SendMoneyCommand(SOURCE, TARGET, Money.ZERO))
+                    .isInstanceOf(ConstraintViolationException.class)
+                    .hasMessageContaining("money");
+        }
+
+        @Test
+        void money가_음수면_예외가_발생한다() {
+            assertThatThrownBy(() -> new SendMoneyCommand(SOURCE, TARGET, Money.of(-1000L)))
+                    .isInstanceOf(ConstraintViolationException.class)
+                    .hasMessageContaining("money");
+        }
+
+        @Test
+        void money가_양수면_생성된다() {
+            SendMoneyCommand command = new SendMoneyCommand(SOURCE, TARGET, Money.of(1L));
+
+            assertThat(command.money()).isEqualTo(Money.of(1L));
+        }
     }
 
     @Nested
