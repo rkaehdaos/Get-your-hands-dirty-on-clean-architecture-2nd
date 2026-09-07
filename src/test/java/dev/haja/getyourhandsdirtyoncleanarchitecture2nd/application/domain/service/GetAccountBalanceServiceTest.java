@@ -10,6 +10,7 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.Loa
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 @ExtendWith(MockitoExtension.class)
 class GetAccountBalanceServiceTest {
@@ -77,6 +79,34 @@ class GetAccountBalanceServiceTest {
             Money balance = service.getAccountBalance(new GetAccountBalanceQuery(ACCOUNT_A));
 
             assertThat(balance).isEqualTo(Money.of(-200L));
+        }
+    }
+
+    @Nested
+    class 포트_호출 {
+
+        @Test
+        void 쿼리의_계좌ID를_포트에_그대로_전달한다() {
+            given(loadAccountPort.loadAccount(any(), any())).willReturn(계좌(500L));
+            ArgumentCaptor<AccountId> captor = ArgumentCaptor.forClass(AccountId.class);
+
+            service.getAccountBalance(new GetAccountBalanceQuery(ACCOUNT_B));
+
+            then(loadAccountPort).should().loadAccount(captor.capture(), any());
+            assertThat(captor.getValue()).isEqualTo(ACCOUNT_B);
+        }
+
+        @Test
+        void baselineDate로_현재_시각을_전달한다() {
+            given(loadAccountPort.loadAccount(any(), any())).willReturn(계좌(500L));
+            ArgumentCaptor<LocalDateTime> captor = ArgumentCaptor.forClass(LocalDateTime.class);
+
+            LocalDateTime before = LocalDateTime.now();
+            service.getAccountBalance(new GetAccountBalanceQuery(ACCOUNT_A));
+            LocalDateTime after = LocalDateTime.now();
+
+            then(loadAccountPort).should().loadAccount(any(), captor.capture());
+            assertThat(captor.getValue()).isBetween(before, after);
         }
     }
 }
