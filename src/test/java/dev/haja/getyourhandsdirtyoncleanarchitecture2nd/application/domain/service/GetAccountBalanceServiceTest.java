@@ -18,10 +18,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
 
 @ExtendWith(MockitoExtension.class)
 class GetAccountBalanceServiceTest {
@@ -107,6 +109,25 @@ class GetAccountBalanceServiceTest {
 
             then(loadAccountPort).should().loadAccount(any(), captor.capture());
             assertThat(captor.getValue()).isBetween(before, after);
+        }
+    }
+
+    @Nested
+    class 예외 {
+
+        @Test
+        void 쿼리가_null이면_예외가_발생한다() {
+            assertThatThrownBy(() -> service.getAccountBalance(null))
+                    .isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        void 포트가_던진_예외를_그대로_전파한다() {
+            willThrow(new IllegalStateException("계좌를 찾을 수 없습니다"))
+                    .given(loadAccountPort).loadAccount(any(), any());
+
+            assertThatThrownBy(() -> service.getAccountBalance(new GetAccountBalanceQuery(ACCOUNT_A)))
+                    .isInstanceOf(IllegalStateException.class);
         }
     }
 }
