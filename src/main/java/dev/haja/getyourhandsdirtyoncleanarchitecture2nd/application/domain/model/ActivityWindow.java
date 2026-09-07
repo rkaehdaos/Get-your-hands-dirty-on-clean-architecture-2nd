@@ -48,7 +48,7 @@ public record ActivityWindow(List<Activity> activities) {
     }
 
     /**
-     * Calculates the balance by summing up the values of all activities within this window.
+     * Calculates the balance for the supplied account by summing matching deposits and withdrawals.
      */
     public Money calculateBalance(Account.AccountId accountId) {
         // null이면 equals가 조용히 false를 반환해 잔액이 ZERO로 나오므로, 여기서 먼저 막는다.
