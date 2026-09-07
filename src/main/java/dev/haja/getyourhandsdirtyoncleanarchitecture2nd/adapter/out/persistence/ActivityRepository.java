@@ -29,4 +29,14 @@ interface ActivityRepository extends
     Optional<Long> getDepositBalanceUntil(
 			@Param("accountId") long accountId,
 			@Param("until") LocalDateTime until);
+
+	@Query("""
+			select sum(a.amount) from ActivityJpaEntity a
+			where a.sourceAccountId = :accountId
+			and a.ownerAccountId = :accountId
+			and a.timestamp < :until
+			""")
+	Optional<Long> getWithdrawalBalanceUntil(
+			@Param("accountId") long accountId,
+			@Param("until") LocalDateTime until);
 }
