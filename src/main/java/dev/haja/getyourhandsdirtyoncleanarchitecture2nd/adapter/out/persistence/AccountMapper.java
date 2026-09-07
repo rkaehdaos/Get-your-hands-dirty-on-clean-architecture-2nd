@@ -1,5 +1,6 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.adapter.out.persistence;
 
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Activity;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Activity.ActivityId;
@@ -13,6 +14,23 @@ import java.util.List;
 
 @Component
 class AccountMapper {
+
+    Account mapToDomainEntity(
+            AccountJpaEntity account,
+            List<ActivityJpaEntity> activities,
+            Long withdrawalBalance,
+            Long depositBalance) {
+
+        Money baselineBalance = Money.subtract(
+                Money.of(depositBalance),
+                Money.of(withdrawalBalance));
+
+        return Account.withId(
+                new AccountId(account.getId()),
+                baselineBalance,
+                mapToActivityWindow(activities));
+
+    }
 
     ActivityWindow mapToActivityWindow(List<ActivityJpaEntity> activities) {
         List<Activity> mappedActivities = new ArrayList<>();
