@@ -2,6 +2,7 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.mode
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
@@ -12,7 +13,7 @@ public class Account {
 
     private AccountId id;
     private Money baselineBalance;
-    private ActivityWindow activityWindow;
+    @Getter private ActivityWindow activityWindow;
 
     /**
      * Creates an {@link Account} entity without an ID. Use to create a new entity that is not yet
