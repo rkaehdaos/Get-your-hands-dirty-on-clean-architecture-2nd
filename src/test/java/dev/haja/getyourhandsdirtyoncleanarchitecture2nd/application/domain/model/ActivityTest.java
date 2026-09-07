@@ -142,5 +142,12 @@ class ActivityTest {
             assertThat(new Activity.ActivityId(100L)).isEqualTo(new Activity.ActivityId(100L));
         }
 
+        @Test
+        void value가_null이면_예외가_발생한다() {
+            assertThatThrownBy(() -> new Activity.ActivityId(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("value");
+        }
+
     }
 }
