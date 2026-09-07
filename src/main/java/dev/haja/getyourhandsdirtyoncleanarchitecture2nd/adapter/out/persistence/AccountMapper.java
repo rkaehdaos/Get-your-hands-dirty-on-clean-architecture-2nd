@@ -55,6 +55,6 @@ class AccountMapper {
                 activity.ownerAccountId().value(),
                 activity.sourceAccountId().value(),
                 activity.targetAccountId().value(),
-                activity.money().amount().longValue());
+                activity.money().amount().longValueExact());
     }
 }
