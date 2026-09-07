@@ -1,17 +1,26 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model;
 
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Objects;
 
-
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class Account {
 
-    private final AccountId id;
-    private final Money baselineBalance;
-    private final ActivityWindow activityWindow;
+    private AccountId id;
+    private Money baselineBalance;
+    private ActivityWindow activityWindow;
+
+    /**
+     * 기준 잔액에 거래 내역의 금액을 더하여 계좌의 총 잔액을 계산.
+     */
+    public Money calculateBalance() {
+        return Money.add(
+                this.baselineBalance,
+                this.activityWindow.calculateBalance(this.id));
+    }
+
 
     /**
      * 식별자가 있는 계좌만 표현한다. "아직 id가 없음"은 AccountId(null)이 아니라
