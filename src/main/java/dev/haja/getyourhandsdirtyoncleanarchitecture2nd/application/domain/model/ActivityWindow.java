@@ -4,7 +4,6 @@ import lombok.NonNull;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -19,10 +18,10 @@ public record ActivityWindow(
 
     // 배열 생성자 지원
     public ActivityWindow(Activity... activities) {
-        // Lombok @NonNull은 this(...) 위임 앞에 체크를 삽입하지 못해 무력하다.
-        // JEP 513(Java 25) 유연한 생성자 본문으로 위임 전에 직접 검증한다.
-        Objects.requireNonNull(activities, "activities is marked non-null but is null");
-        this(Arrays.asList(activities));
+        // Lombok @NonNull은 record 정규 생성자에만 체크를 삽입하므로 여기서 직접 검증한다.
+        // List.of가 배열을 복사하므로 compact constructor의 List.copyOf는 재복사하지 않는다.
+        this(List.of(Objects.requireNonNull(
+                activities, "activities is marked non-null but is null")));
     }
 
     // 가변 addActivity() 대신, 새로운 Record를 반환하도록 변경
