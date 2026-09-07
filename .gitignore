@@ -45,3 +45,4 @@ mise.toml
 ### Claude Code ###
 plans/
 CLAUDE.md
+.claude/
