@@ -25,7 +25,7 @@ class AccountTest {
     }
 
     private static Account account(long baselineBalance, Activity... activities) {
-        return new Account(ACCOUNT_A, Money.of(baselineBalance), new ActivityWindow(activities));
+        return Account.withId(ACCOUNT_A, Money.of(baselineBalance), new ActivityWindow(activities));
     }
 
     @Nested
