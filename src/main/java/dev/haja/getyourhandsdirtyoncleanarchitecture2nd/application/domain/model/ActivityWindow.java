@@ -24,6 +24,10 @@ public record ActivityWindow(List<Activity> activities) {
 
     // 가변 addActivity() 대신, 새로운 Record를 반환하도록 변경
     public ActivityWindow addActivity(Activity activity) {
+        // ArrayList는 null 원소를 받으므로, 검증 없이는 compact constructor의
+        // List.copyOf가 뒤늦게 메시지 없는 NPE를 던진다. 여기서 먼저 막는다.
+        Objects.requireNonNull(activity, "activity must not be null");
+
         List<Activity> newActivities = new ArrayList<>(this.activities);
         newActivities.add(activity);
         return new ActivityWindow(newActivities);
