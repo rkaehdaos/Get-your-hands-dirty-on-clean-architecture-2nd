@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 public record ActivityWindow(
         @NonNull List<Activity> activities) {
@@ -17,7 +18,10 @@ public record ActivityWindow(
     }
 
     // 배열 생성자 지원
-    public ActivityWindow(@NonNull Activity... activities) {
+    public ActivityWindow(Activity... activities) {
+        // Lombok @NonNull은 this(...) 위임 앞에 체크를 삽입하지 못해 무력하다.
+        // JEP 513(Java 25) 유연한 생성자 본문으로 위임 전에 직접 검증한다.
+        Objects.requireNonNull(activities, "activities is marked non-null but is null");
         this(Arrays.asList(activities));
     }
 

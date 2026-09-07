@@ -79,13 +79,15 @@ class ActivityWindowTest {
         @Test
         void 리스트가_null이면_예외가_발생한다() {
             assertThatThrownBy(() -> new ActivityWindow((List<Activity>) null))
-                    .isInstanceOf(NullPointerException.class);
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("activities");
         }
 
         @Test
         void 가변인자_배열이_null이면_예외가_발생한다() {
             assertThatThrownBy(() -> new ActivityWindow((Activity[]) null))
-                    .isInstanceOf(NullPointerException.class);
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("activities");
         }
 
         @Test
