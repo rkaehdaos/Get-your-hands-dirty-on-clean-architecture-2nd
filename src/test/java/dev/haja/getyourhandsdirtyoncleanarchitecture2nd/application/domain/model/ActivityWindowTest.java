@@ -97,6 +97,24 @@ class ActivityWindowTest {
             assertThatThrownBy(() -> new ActivityWindow(activity, null))
                     .isInstanceOf(NullPointerException.class);
         }
+
+        @Test
+        void calculateBalance에_null_계좌를_넘기면_예외가_발생한다() {
+            ActivityWindow window = new ActivityWindow(activity(ACCOUNT_B, ACCOUNT_A, T1, 100L));
+
+            assertThatThrownBy(() -> window.calculateBalance(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("accountId");
+        }
+
+        @Test
+        void 빈_윈도우에서도_calculateBalance에_null을_넘기면_예외가_발생한다() {
+            ActivityWindow window = new ActivityWindow();
+
+            assertThatThrownBy(() -> window.calculateBalance(null))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("accountId");
+        }
     }
 
     @Nested
