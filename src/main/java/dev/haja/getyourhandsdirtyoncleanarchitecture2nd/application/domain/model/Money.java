@@ -1,12 +1,13 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model;
 
 import java.math.BigInteger;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 public record Money(BigInteger amount) {
 
     public Money {
-        Objects.requireNonNull(amount, "amount must not be null");
+        requireNonNull(amount, "amount must not be null");
     }
 
     public static final Money ZERO = Money.of(0L);

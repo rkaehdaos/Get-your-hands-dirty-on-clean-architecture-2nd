@@ -1,8 +1,10 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
+
 import java.time.LocalDateTime;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 public record Activity(
         ActivityId id,
@@ -20,11 +22,11 @@ public record Activity(
      * 이어야 한다. 어느 쪽도 아닌 행은 그 계좌의 잔액에 아무 영향을 주지 못하는 무의미한 행이다.
      */
     public Activity {
-        Objects.requireNonNull(ownerAccountId, "ownerAccountId must not be null");
-        Objects.requireNonNull(sourceAccountId, "sourceAccountId must not be null");
-        Objects.requireNonNull(targetAccountId, "targetAccountId must not be null");
-        Objects.requireNonNull(timestamp, "timestamp must not be null");
-        Objects.requireNonNull(money, "money must not be null");
+        requireNonNull(ownerAccountId, "ownerAccountId must not be null");
+        requireNonNull(sourceAccountId, "sourceAccountId must not be null");
+        requireNonNull(targetAccountId, "targetAccountId must not be null");
+        requireNonNull(timestamp, "timestamp must not be null");
+        requireNonNull(money, "money must not be null");
 
         if (!ownerAccountId.equals(sourceAccountId) && !ownerAccountId.equals(targetAccountId)) {
             throw new IllegalArgumentException(
@@ -47,7 +49,7 @@ public record Activity(
 
     public record ActivityId(Long value) {
         public ActivityId {
-            Objects.requireNonNull(value, "value must not be null");
+            requireNonNull(value, "value must not be null");
         }
     }
 
