@@ -3,7 +3,8 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.mode
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 @AllArgsConstructor
 public class Account {
@@ -56,7 +57,7 @@ public class Account {
      */
     public record AccountId(Long value) {
         public AccountId {
-            Objects.requireNonNull(value, "value must not be null");
+            requireNonNull(value, "value must not be null");
         }
     }
 }
