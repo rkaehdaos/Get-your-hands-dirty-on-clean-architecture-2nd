@@ -9,6 +9,6 @@ class SendMoneyService implements SendMoneyUseCase {
         // TODO: 비즈니스 규칙 검증
         // TODO: model 상태 변경
         // TODO: return output
-        return false;
+        throw new UnsupportedOperationException("Not implemented");
     }
 }
