@@ -2,18 +2,14 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
-
-import static java.util.Objects.requireNonNull;
+import jakarta.validation.constraints.NotNull;
 
 public record SendMoneyCommand(
-        AccountId sourceAccountId,
-        AccountId targetAccountId,
-        Money money) {
+        @NotNull AccountId sourceAccountId,
+        @NotNull AccountId targetAccountId,
+        @NotNull Money money) {
 
     public SendMoneyCommand {
-        requireNonNull(sourceAccountId);
-        requireNonNull(targetAccountId);
-        requireNonNull(money);
         // TODO: money >0 검증
     }
 }
