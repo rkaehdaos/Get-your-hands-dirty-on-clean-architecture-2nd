@@ -11,9 +11,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ActivityTest {
 
-    private static final AccountId OWNER = new AccountId(1L);
-    private static final AccountId SOURCE = new AccountId(2L);
-    private static final AccountId TARGET = new AccountId(3L);
+    private static final AccountId SOURCE = new AccountId(1L);
+    private static final AccountId TARGET = new AccountId(2L);
+    private static final AccountId UNRELATED = new AccountId(3L);
+    private static final AccountId OWNER = SOURCE;
     private static final LocalDateTime TIMESTAMP = LocalDateTime.of(2026, 9, 7, 12, 0);
     private static final Money MONEY = Money.of(1000L);
 
@@ -103,6 +104,40 @@ class ActivityTest {
             assertThatThrownBy(() -> new Activity(OWNER, SOURCE, TARGET, TIMESTAMP, null))
                     .isInstanceOf(NullPointerException.class)
                     .hasMessageContaining("money");
+        }
+    }
+
+    @Nested
+    class 소유자_불변식 {
+
+        @Test
+        void owner가_source면_생성된다() {
+            Activity activity = new Activity(SOURCE, SOURCE, TARGET, TIMESTAMP, MONEY);
+
+            assertThat(activity.ownerAccountId()).isEqualTo(SOURCE);
+        }
+
+        @Test
+        void owner가_target이면_생성된다() {
+            Activity activity = new Activity(TARGET, SOURCE, TARGET, TIMESTAMP, MONEY);
+
+            assertThat(activity.ownerAccountId()).isEqualTo(TARGET);
+        }
+
+        @Test
+        void owner가_source도_target도_아니면_예외가_발생한다() {
+            assertThatThrownBy(() -> new Activity(UNRELATED, SOURCE, TARGET, TIMESTAMP, MONEY))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("ownerAccountId");
+        }
+
+        @Test
+        void 정규_생성자로_생성해도_불변식이_검증된다() {
+            Activity.ActivityId id = new Activity.ActivityId(100L);
+
+            assertThatThrownBy(() -> new Activity(id, UNRELATED, SOURCE, TARGET, TIMESTAMP, MONEY))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("ownerAccountId");
         }
     }
 
