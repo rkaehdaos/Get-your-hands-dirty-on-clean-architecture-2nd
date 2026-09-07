@@ -2,6 +2,7 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.mode
 
 import lombok.NonNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -12,8 +13,16 @@ public record ActivityWindow(
     public ActivityWindow {
         activities = List.copyOf(activities);
     }
+
     // 배열 생성자 지원
     public ActivityWindow(@NonNull Activity... activities) {
         this(Arrays.asList(activities));
+    }
+
+    // 가변 addActivity() 대신, 새로운 Record를 반환하도록 변경
+    public ActivityWindow addActivity(Activity activity) {
+        List<Activity> newActivities = new ArrayList<>(this.activities);
+        newActivities.add(activity);
+        return new ActivityWindow(newActivities);
     }
 }
