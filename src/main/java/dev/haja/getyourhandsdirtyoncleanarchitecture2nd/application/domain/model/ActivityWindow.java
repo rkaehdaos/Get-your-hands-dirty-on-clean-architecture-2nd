@@ -41,4 +41,21 @@ public record ActivityWindow(
                 .orElseThrow(IllegalStateException::new)
                 .timestamp();
     }
+
+    /**
+     * Calculates the balance by summing up the values of all activities within this window.
+     */
+    public Money calculateBalance(Account.AccountId accountId) {
+        Money depositBalance = activities.stream()
+                .filter(a -> a.targetAccountId().equals(accountId))
+                .map(Activity::money)
+                .reduce(Money.ZERO, Money::add);
+
+        Money withdrawalBalance = activities.stream()
+                .filter(a -> a.sourceAccountId().equals(accountId))
+                .map(Activity::money)
+                .reduce(Money.ZERO, Money::add);
+
+        return Money.add(depositBalance, withdrawalBalance.negate());
+    }
 }
