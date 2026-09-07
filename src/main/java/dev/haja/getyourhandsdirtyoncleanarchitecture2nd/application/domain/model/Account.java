@@ -1,8 +1,8 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model;
 
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @AllArgsConstructor
@@ -21,11 +21,21 @@ public class Account {
                 this.activityWindow.calculateBalance(this.id));
     }
 
+    public boolean withdraw(Money money, AccountId targetAccountId) {
+        if (!mayWithdraw(money)) return false;
+
+        Activity withdrawal = new Activity(
+                this.id,
+                this.id,
+                targetAccountId,
+                LocalDateTime.now(),
+                money);
+        this.activityWindow.addActivity(withdrawal);
+        return true;
+    }
+
     private boolean mayWithdraw(Money money) {
-        return Money.add(
-                        this.calculateBalance(),
-                        money.negate())
-                .isPositive();
+        return Money.add(this.calculateBalance(), money.negate()).isPositive();
     }
 
 
