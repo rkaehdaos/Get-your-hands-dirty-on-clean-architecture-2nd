@@ -66,37 +66,43 @@ class ActivityTest {
         @Test
         void ownerAccountId가_null이면_예외가_발생한다() {
             assertThatThrownBy(() -> new Activity(null, null, SOURCE, TARGET, TIMESTAMP, MONEY))
-                    .isInstanceOf(NullPointerException.class);
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("ownerAccountId");
         }
 
         @Test
         void sourceAccountId가_null이면_예외가_발생한다() {
             assertThatThrownBy(() -> new Activity(null, OWNER, null, TARGET, TIMESTAMP, MONEY))
-                    .isInstanceOf(NullPointerException.class);
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("sourceAccountId");
         }
 
         @Test
         void targetAccountId가_null이면_예외가_발생한다() {
             assertThatThrownBy(() -> new Activity(null, OWNER, SOURCE, null, TIMESTAMP, MONEY))
-                    .isInstanceOf(NullPointerException.class);
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("targetAccountId");
         }
 
         @Test
         void timestamp가_null이면_예외가_발생한다() {
             assertThatThrownBy(() -> new Activity(null, OWNER, SOURCE, TARGET, null, MONEY))
-                    .isInstanceOf(NullPointerException.class);
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("timestamp");
         }
 
         @Test
         void money가_null이면_예외가_발생한다() {
             assertThatThrownBy(() -> new Activity(null, OWNER, SOURCE, TARGET, TIMESTAMP, null))
-                    .isInstanceOf(NullPointerException.class);
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("money");
         }
 
         @Test
         void 보조_생성자로_생성해도_null이면_예외가_발생한다() {
             assertThatThrownBy(() -> new Activity(OWNER, SOURCE, TARGET, TIMESTAMP, null))
-                    .isInstanceOf(NullPointerException.class);
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessageContaining("money");
         }
     }
 
