@@ -5,6 +5,7 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.GetA
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
@@ -13,11 +14,17 @@ class GetAccountBalanceService implements
 
     private final LoadAccountPort loadAccountPort;
 
+    /**
+     * 현재 시각을 직접 가져오지 않고 Clock에게 물어본다. 시각이 주입 가능한 의존성이 되어
+     * 테스트가 baselineDate를 정확히 고정할 수 있다.
+     */
+    private final Clock clock;
+
     @Override
     public Money getAccountBalance(GetAccountBalanceQuery query) {
         return loadAccountPort.loadAccount(
                 query.accountId(),
-                LocalDateTime.now()
+                LocalDateTime.now(clock)
         ).calculateBalance();
     }
 }

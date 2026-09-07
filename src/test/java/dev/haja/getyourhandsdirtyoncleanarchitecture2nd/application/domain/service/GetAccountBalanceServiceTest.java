@@ -7,15 +7,17 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.GetAccountBalanceUseCase.GetAccountBalanceQuery;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,12 +34,18 @@ class GetAccountBalanceServiceTest {
     private static final AccountId ACCOUNT_B = new AccountId(2L);
     private static final LocalDateTime T1 = LocalDateTime.of(2026, 9, 7, 10, 0);
     private static final LocalDateTime T2 = LocalDateTime.of(2026, 9, 7, 11, 0);
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 9, 7, 12, 0);
+    private static final Clock CLOCK = Clock.fixed(NOW.toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
 
     @Mock
     private LoadAccountPort loadAccountPort;
 
-    @InjectMocks
     private GetAccountBalanceService service;
+
+    @BeforeEach
+    void setUp() {
+        service = new GetAccountBalanceService(loadAccountPort, CLOCK);
+    }
 
     private static Activity 입금활동(LocalDateTime timestamp, long amount) {
         return new Activity(ACCOUNT_A, ACCOUNT_B, ACCOUNT_A, timestamp, Money.of(amount));
@@ -99,16 +107,14 @@ class GetAccountBalanceServiceTest {
         }
 
         @Test
-        void baselineDate로_현재_시각을_전달한다() {
+        void baselineDate로_Clock의_현재_시각을_전달한다() {
             given(loadAccountPort.loadAccount(any(), any())).willReturn(계좌(500L));
             ArgumentCaptor<LocalDateTime> captor = ArgumentCaptor.forClass(LocalDateTime.class);
 
-            LocalDateTime before = LocalDateTime.now();
             service.getAccountBalance(new GetAccountBalanceQuery(ACCOUNT_A));
-            LocalDateTime after = LocalDateTime.now();
 
             then(loadAccountPort).should().loadAccount(any(), captor.capture());
-            assertThat(captor.getValue()).isBetween(before, after);
+            assertThat(captor.getValue()).isEqualTo(NOW);
         }
     }
 
