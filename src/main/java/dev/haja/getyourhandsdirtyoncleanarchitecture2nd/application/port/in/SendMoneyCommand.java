@@ -9,7 +9,7 @@ import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.validation
 public record SendMoneyCommand(
         @NotNull AccountId sourceAccountId,
         @NotNull AccountId targetAccountId,
-        @NotNull Money money) {
+        @NotNull @PositiveMoney Money money) {
 
     public SendMoneyCommand(
             AccountId sourceAccountId,
@@ -19,7 +19,6 @@ public record SendMoneyCommand(
         this.targetAccountId = targetAccountId;
         this.money = money;
 
-        // TODO: money >0 검증
         validate(this);
     }
 }
