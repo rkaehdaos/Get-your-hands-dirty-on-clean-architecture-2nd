@@ -75,8 +75,8 @@ class SendMoneyServiceTest {
     }
 
     @Test
-    @DisplayName("입금 실패 시 두 계좌 모두 잠금이 해제됨")
-    void givenDepositFails_thenBothAccountsAreReleased() {
+    @DisplayName("입금 실패 시 두 계좌 모두 잠금이 해제되고 계좌 상태는 저장되지 않음")
+    void givenDepositFails_thenBothAccountsAreReleasedAndNothingIsPersisted() {
 
         // given
         Account sourceAccount = givenSourceAccount();
@@ -103,6 +103,8 @@ class SendMoneyServiceTest {
         then(accountLock).should().lockAccount(eq(targetAccountId));
         then(accountLock).should().releaseAccount(eq(sourceAccountId));
         then(accountLock).should().releaseAccount(eq(targetAccountId));
+
+        then(updateAccountStatePort).shouldHaveNoInteractions();
     }
 
     @Test
