@@ -61,6 +61,9 @@ class SendMoneyService implements SendMoneyUseCase {
         updateAccountStatePort.updateActivities(sourceAccount);
         updateAccountStatePort.updateActivities(targetAccount);
 
+        accountLock.releaseAccount(sourceAccountId);
+        accountLock.releaseAccount(targetAccountId);
+
         // TODO: return
         return true;
     }
