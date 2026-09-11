@@ -31,8 +31,7 @@ class SendMoneyServiceTest {
             loadAccountPort,
             accountLock,
             updateAccountStatePort,
-            new MoneyTransferProperties(Money.of(1_000L)
-            ));
+            moneyTransferProperties());
 
     @Test
     @DisplayName("한도 초과 시 송금 실패")
@@ -62,5 +61,9 @@ class SendMoneyServiceTest {
         // when / then
         assertThatCode(() -> service.sendMoney(command))
                 .doesNotThrowAnyException();
+    }
+
+    private MoneyTransferProperties moneyTransferProperties() {
+        return new MoneyTransferProperties(Money.of(1_000L));
     }
 }
