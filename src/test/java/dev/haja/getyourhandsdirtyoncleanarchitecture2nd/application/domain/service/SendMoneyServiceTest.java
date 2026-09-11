@@ -69,6 +69,10 @@ class SendMoneyServiceTest {
         // then
         assertThat(sendMoneyResult).isFalse();
 
+        then(accountLock).should().lockAccount(eq(sourceAccountId));
+        then(accountLock).should().releaseAccount(eq(sourceAccountId));
+        then(accountLock).should(times(0)).lockAccount(eq(targetAccountId));
+
     }
 
 
