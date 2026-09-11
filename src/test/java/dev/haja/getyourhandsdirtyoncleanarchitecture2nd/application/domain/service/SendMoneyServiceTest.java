@@ -114,6 +114,32 @@ class SendMoneyServiceTest {
     }
 
     @Test
+    @DisplayName("출금 계좌에 ID가 없으면 IllegalStateException이 발생함")
+    void givenSourceAccountHasNoId_thenThrowsIllegalStateException() {
+
+        // given
+        AccountId sourceAccountId = new AccountId(41L);
+        AccountId targetAccountId = new AccountId(42L);
+
+        givenAnAccountWithoutId(sourceAccountId);
+        givenAnAccountWithId(targetAccountId);
+
+        SendMoneyCommand command = new SendMoneyCommand(
+                sourceAccountId,
+                targetAccountId,
+                Money.of(500L));
+
+        // when / then
+        assertThatThrownBy(() -> service.sendMoney(command))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("source account");
+
+        // ID를 얻지 못하면 잠금도 저장도 일어나지 않는다
+        then(accountLock).shouldHaveNoInteractions();
+        then(updateAccountStatePort).shouldHaveNoInteractions();
+    }
+
+    @Test
     @DisplayName("인출 실패 시 오직 출금 계좌만 잠겼다가 잠금이 해제됨")
     void givenWithdrawalFails_thenOnlySourceAccountIsLockedAndReleased() {
 
@@ -269,6 +295,16 @@ class SendMoneyServiceTest {
         given(account.getId())
                 .willReturn(Optional.of(id));
         given(loadAccountPort.loadAccount(eq(account.getId().get()), any(LocalDateTime.class)))
+                .willReturn(account);
+        return account;
+    }
+
+    // 주어진 ID로 조회되지만 정작 자신은 ID를 갖고 있지 않은 계좌
+    private @NonNull Account givenAnAccountWithoutId(AccountId loadedForId) {
+        Account account = Mockito.mock(Account.class);
+        given(account.getId())
+                .willReturn(Optional.empty());
+        given(loadAccountPort.loadAccount(eq(loadedForId), any(LocalDateTime.class)))
                 .willReturn(account);
         return account;
     }
