@@ -54,12 +54,8 @@ class SendMoneyServiceTest {
         AccountId targetAccountId = new AccountId(42L);
         Account targetAccount = givenAnAccountWithId(targetAccountId);
 
-        // 출금 계좌의 출금이 성공 mocking
-        given(sourceAccount.withdraw(any(Money.class), any(AccountId.class)))
-                .willReturn(true);
-        // 입금 계좌의 입금이 성공 mocking
-        given(targetAccount.deposit(any(Money.class), any(AccountId.class)))
-                .willReturn(true);
+        givenWithdrawalWillSucceed(sourceAccount);
+        givenDepositWillSucceed(targetAccount);
 
         Money money = Money.of(500L);
 
@@ -75,7 +71,17 @@ class SendMoneyServiceTest {
         assertThat(sendMoneyResult).isTrue();
     }
 
+    // 출금 계좌의 출금이 성공할 것이다
+    private void givenWithdrawalWillSucceed(Account account) {
+        given(account.withdraw(any(Money.class), any(AccountId.class)))
+                .willReturn(true);
+    }
 
+    // 입금 계좌의 입금이 성공할 것이다.
+    private void givenDepositWillSucceed(Account account) {
+        given(account.deposit(any(Money.class), any(AccountId.class)))
+                .willReturn(true);
+    }
 
 
     private @NonNull Account givenAnAccountWithId(AccountId id) {
