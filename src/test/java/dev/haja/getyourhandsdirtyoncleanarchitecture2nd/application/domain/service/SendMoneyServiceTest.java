@@ -204,6 +204,40 @@ class SendMoneyServiceTest {
     }
 
     @Test
+    @DisplayName("출금이 예외를 던져도 출금 계좌 잠금이 해제됨")
+    void givenWithdrawalThrows_thenSourceAccountIsReleased() {
+
+        // given
+        Account sourceAccount = givenSourceAccount();
+        Account targetAccount = givenTargetAccount();
+
+        given(sourceAccount.withdraw(any(Money.class), any(AccountId.class)))
+                .willThrow(new RuntimeException("boom"));
+
+        AccountId sourceAccountId = sourceAccount.getId().get();
+        AccountId targetAccountId = targetAccount.getId().get();
+
+        SendMoneyCommand command = new SendMoneyCommand(
+                sourceAccountId,
+                targetAccountId,
+                Money.of(300L));
+
+        // when / then
+        assertThatThrownBy(() -> service.sendMoney(command))
+                .isInstanceOf(RuntimeException.class);
+
+        // 출금 계좌 잠금만 잡힌 뒤 터졌으므로 그 잠금만 풀려야 한다
+        then(accountLock).should().lockAccount(eq(sourceAccountId));
+        then(accountLock).should().releaseAccount(eq(sourceAccountId));
+
+        // 입금 계좌는 애초에 잠기지 않았으므로 풀 것도 없다
+        then(accountLock).should(times(0)).lockAccount(eq(targetAccountId));
+        then(accountLock).should(times(0)).releaseAccount(eq(targetAccountId));
+
+        then(updateAccountStatePort).shouldHaveNoInteractions();
+    }
+
+    @Test
     @DisplayName("계좌 상태 저장이 예외를 던져도 두 계좌 모두 잠금이 해제됨")
     void givenUpdateActivitiesThrows_thenBothAccountsAreReleased() {
 
