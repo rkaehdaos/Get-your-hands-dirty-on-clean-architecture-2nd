@@ -72,8 +72,8 @@ class SendMoneyServiceTest {
     }
 
     @Test
-    @DisplayName("두 계좌를 커맨드의 ID로 조회함")
-    void loadsBothAccounts() {
+    @DisplayName("두 계좌를 커맨드의 ID와 10일 전 baselineDate로 조회함")
+    void loadsBothAccountsWithBaselineDate() {
 
         // given
         Account sourceAccount = givenSourceAccount();
@@ -90,17 +90,27 @@ class SendMoneyServiceTest {
                 targetAccountId,
                 Money.of(500L));
 
+        LocalDateTime beforeSend = LocalDateTime.now();
+
         // when
         service.sendMoney(command);
 
         // then
+        LocalDateTime afterSend = LocalDateTime.now();
+
         ArgumentCaptor<AccountId> accountIdCaptor = ArgumentCaptor.forClass(AccountId.class);
+        ArgumentCaptor<LocalDateTime> baselineDateCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
         then(loadAccountPort).should(times(2))
-                .loadAccount(accountIdCaptor.capture(), any(LocalDateTime.class));
+                .loadAccount(accountIdCaptor.capture(), baselineDateCaptor.capture());
 
         // 출금 계좌를 먼저, 입금 계좌를 그다음에 조회한다
         assertThat(accountIdCaptor.getAllValues())
                 .containsExactly(sourceAccountId, targetAccountId);
+
+        // 서비스가 시각을 직접 읽으므로 정확한 값 대신 호출 전후로 만든 범위를 쓴다
+        assertThat(baselineDateCaptor.getAllValues())
+                .allSatisfy(baselineDate -> assertThat(baselineDate)
+                        .isBetween(beforeSend.minusDays(10), afterSend.minusDays(10)));
     }
 
     @Test
