@@ -7,26 +7,30 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.Send
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import static org.mockito.BDDMockito.eq;
 import static org.mockito.BDDMockito.then;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @WebMvcTest(controllers = SendMoneyController.class)
 class SendMoneyControllerTest {
 
-    @Autowired private MockMvc mockMvc;
+    @Autowired private MockMvcTester mockMvcTester;
     @MockitoBean private SendMoneyUseCase sendMoneyUseCase;
 
     @Test
-    void testSendMoney() throws Exception {
+    void testSendMoney() {
 
-        mockMvc.perform(post("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
-                        41L, 42L, 500)
-                        .header("Content-Type", "application/json"))
-                .andExpect(status().isOk());
+        // when
+        var result = mockMvcTester.post()
+                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}", 41L, 42L, 500)
+                .header("Content-Type", "application/json")
+                .exchange();
+
+        // then
+        assertThat(result).hasStatus(HttpStatus.OK);
 
         then(sendMoneyUseCase).should()
                 .sendMoney(eq(new SendMoneyCommand(
