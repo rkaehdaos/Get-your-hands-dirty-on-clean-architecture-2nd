@@ -44,25 +44,27 @@ class SendMoneyService implements SendMoneyUseCase {
                 .orElseThrow(() -> new IllegalStateException("expected target account ID not to be empty"));
 
         accountLock.lockAccount(sourceAccountId);
-        if (!sourceAccount.withdraw(command.money(), targetAccountId)) {
+        try {
+            if (!sourceAccount.withdraw(command.money(), targetAccountId)) {
+                return false;
+            }
+
+            accountLock.lockAccount(targetAccountId);
+            try {
+                if (!targetAccount.deposit(command.money(), sourceAccountId)) {
+                    return false;
+                }
+
+                updateAccountStatePort.updateActivities(sourceAccount);
+                updateAccountStatePort.updateActivities(targetAccount);
+
+                return true;
+            } finally {
+                accountLock.releaseAccount(targetAccountId);
+            }
+        } finally {
             accountLock.releaseAccount(sourceAccountId);
-            return false;
         }
-
-        accountLock.lockAccount(targetAccountId);
-        if (!targetAccount.deposit(command.money(), sourceAccountId)) {
-            accountLock.releaseAccount(sourceAccountId);
-            accountLock.releaseAccount(targetAccountId);
-            return false;
-        }
-
-        updateAccountStatePort.updateActivities(sourceAccount);
-        updateAccountStatePort.updateActivities(targetAccount);
-
-        accountLock.releaseAccount(sourceAccountId);
-        accountLock.releaseAccount(targetAccountId);
-
-        return true;
     }
 
     private void checkThreshold(SendMoneyCommand command) {
