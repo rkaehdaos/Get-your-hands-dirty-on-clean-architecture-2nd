@@ -58,9 +58,8 @@ class SendMoneyService implements SendMoneyUseCase {
             return false;
         }
 
-
-
-
+        updateAccountStatePort.updateActivities(sourceAccount);
+        updateAccountStatePort.updateActivities(targetAccount);
 
         // TODO: return
         return true;
