@@ -166,6 +166,10 @@ class SendMoneyServiceTest {
     }
 
     private MoneyTransferProperties moneyTransferProperties() {
-        return new MoneyTransferProperties(Money.of(Long.MAX_VALUE));
+        return moneyTransferProperties(Money.of(Long.MAX_VALUE));
+    }
+
+    private MoneyTransferProperties moneyTransferProperties(Money maximumTransferThreshold) {
+        return new MoneyTransferProperties(maximumTransferThreshold);
     }
 }
