@@ -4,29 +4,48 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
+
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 class SendMoneyServiceTest {
 
     @Test
-    void sendMoneyThrowsUnsupportedOperationException() {
+    @DisplayName("한도 초과 시 송금 실패")
+    void sendMoneyFailsWhenThresholdExceeded() {
 
         // given
-        SendMoneyService service = new SendMoneyService();
-        AccountId sourceAccountId = new AccountId(41L);
-        AccountId targetAccountId = new AccountId(42L);
+        SendMoneyService service = new SendMoneyService(
+                new MoneyTransferProperties(Money.of(1_000L)));
+
         SendMoneyCommand command = new SendMoneyCommand(
-                sourceAccountId,
-                targetAccountId,
-                Money.of(300L));
+                new AccountId(41L),
+                new AccountId(42L),
+                Money.of(1_001L));
 
+        // when / then
+        assertThatThrownBy(() -> service.sendMoney(command))
+                .isInstanceOf(ThresholdExceededException.class);
+    }
 
-        // when
-        boolean result = service.sendMoney(command);
-        // then
-        assertThat(result).isTrue();
+    @Test
+    @DisplayName("금액이 임계값과 일치할 때 송금 성공")
+    void sendMoneySucceedsWhenAmountEqualsThreshold() {
 
+        // given
+        SendMoneyService service = new SendMoneyService(
+                new MoneyTransferProperties(Money.of(1_000L)));
+
+        SendMoneyCommand command = new SendMoneyCommand(
+                new AccountId(41L),
+                new AccountId(42L),
+                Money.of(1_000L));
+
+        // when / then
+        assertThatCode(() -> service.sendMoney(command))
+                .doesNotThrowAnyException();
     }
 }
