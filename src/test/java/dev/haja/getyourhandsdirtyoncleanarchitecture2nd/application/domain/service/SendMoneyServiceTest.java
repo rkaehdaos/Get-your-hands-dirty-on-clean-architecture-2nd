@@ -13,14 +13,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class SendMoneyServiceTest {
 
+    SendMoneyService service = new SendMoneyService(
+            new MoneyTransferProperties(Money.of(1_000L)));
+
     @Test
     @DisplayName("한도 초과 시 송금 실패")
     void sendMoneyFailsWhenThresholdExceeded() {
 
         // given
-        SendMoneyService service = new SendMoneyService(
-                new MoneyTransferProperties(Money.of(1_000L)));
-
         SendMoneyCommand command = new SendMoneyCommand(
                 new AccountId(41L),
                 new AccountId(42L),
@@ -36,9 +36,6 @@ class SendMoneyServiceTest {
     void sendMoneySucceedsWhenAmountEqualsThreshold() {
 
         // given
-        SendMoneyService service = new SendMoneyService(
-                new MoneyTransferProperties(Money.of(1_000L)));
-
         SendMoneyCommand command = new SendMoneyCommand(
                 new AccountId(41L),
                 new AccountId(42L),
