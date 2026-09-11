@@ -85,10 +85,12 @@ class SendMoneyServiceTest {
     }
 
     private void thenAccountsHaveBeenUpdated(AccountId... accountIds){
+        // 출금 포트가 정확히 N번 호출됨
         ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
         then(updateAccountStatePort).should(times(accountIds.length))
                 .updateActivities(accountCaptor.capture());
 
+        // 넘어간 계좌들이 기대한 ID를 포함함
         List<AccountId> updatedAccountIds = accountCaptor.getAllValues()
                 .stream()
                 .map(Account::getId)
