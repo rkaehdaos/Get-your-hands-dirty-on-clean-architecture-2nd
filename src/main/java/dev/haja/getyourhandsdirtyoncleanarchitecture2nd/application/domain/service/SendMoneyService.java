@@ -40,6 +40,12 @@ class SendMoneyService implements SendMoneyUseCase {
                 command.targetAccountId(),
                 baselineDate);
 
+        AccountId sourceAccountId = sourceAccount.getId()
+                .orElseThrow(() -> new IllegalStateException("expected source account ID not to be empty"));
+        AccountId targetAccountId = targetAccount.getId()
+                .orElseThrow(() -> new IllegalStateException("expected target account ID not to be empty"));
+
+
 
 
         // TODO: return
