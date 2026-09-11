@@ -16,11 +16,15 @@ class SendMoneyService implements SendMoneyUseCase {
     @Override
     public boolean sendMoney(SendMoneyCommand command) {
         // TODO: 비즈니스 규칙 검증
-        if(command.money().isGreaterThan(moneyTransferProperties.maximumTransferThreshold())){
-            throw new ThresholdExceededException(moneyTransferProperties.maximumTransferThreshold(), command.money());
-        }
+        checkThreshold(command);
         // TODO: model 상태 변경
         // TODO: return
         return true;
+    }
+
+    private void checkThreshold(SendMoneyCommand command) {
+        if(command.money().isGreaterThan(moneyTransferProperties.maximumTransferThreshold())){
+            throw new ThresholdExceededException(moneyTransferProperties.maximumTransferThreshold(), command.money());
+        }
     }
 }
