@@ -17,13 +17,11 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.eq;
 import static org.mockito.BDDMockito.given;
-
+import static org.mockito.BDDMockito.then;
 
 class SendMoneyServiceTest {
 
@@ -66,6 +64,18 @@ class SendMoneyServiceTest {
 
         // then
         assertThat(sendMoneyResult).isTrue();
+
+        AccountId sourceAccountId = sourceAccount.getId().get();
+        AccountId targetAccountId = targetAccount.getId().get();
+
+        then(accountLock).should().lockAccount(eq(sourceAccountId));
+        then(sourceAccount).should().withdraw(eq(money), eq(targetAccountId));
+        then(accountLock).should().releaseAccount(eq(sourceAccountId));
+
+        then(accountLock).should().lockAccount(eq(targetAccountId));
+        then(targetAccount).should().deposit(eq(money), eq(sourceAccountId));
+        then(accountLock).should().releaseAccount(eq(targetAccountId));
+
     }
 
     private Account givenSourceAccount(){
