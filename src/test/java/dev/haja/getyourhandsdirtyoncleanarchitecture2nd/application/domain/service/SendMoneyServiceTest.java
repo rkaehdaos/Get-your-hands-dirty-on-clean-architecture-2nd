@@ -1,13 +1,11 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.service;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
-
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
-import org.junit.jupiter.api.Test;
 
-//import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 class SendMoneyServiceTest {
@@ -26,11 +24,9 @@ class SendMoneyServiceTest {
 
 
         // when
+        boolean result = service.sendMoney(command);
         // then
-        assertThatThrownBy(()-> service.sendMoney(command))
-                .isInstanceOf(UnsupportedOperationException.class);
-
-
+        assertThat(result).isTrue();
 
     }
 }
