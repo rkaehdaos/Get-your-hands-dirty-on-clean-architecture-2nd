@@ -88,6 +88,6 @@ class SendMoneyServiceTest {
     }
 
     private MoneyTransferProperties moneyTransferProperties() {
-        return new MoneyTransferProperties(Money.of(1_000L));
+        return new MoneyTransferProperties(Money.of(Long.MAX_VALUE));
     }
 }
