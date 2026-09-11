@@ -32,6 +32,16 @@ class SendMoneyService implements SendMoneyUseCase {
         // TODO: model 상태 변경
         LocalDateTime baselineDate = LocalDateTime.now().minusDays(10);
 
+        Account sourceAccount = loadAccountPort.loadAccount(
+                command.sourceAccountId(),
+                baselineDate);
+
+        Account targetAccount = loadAccountPort.loadAccount(
+                command.targetAccountId(),
+                baselineDate);
+
+
+
         // TODO: return
         return true;
     }
