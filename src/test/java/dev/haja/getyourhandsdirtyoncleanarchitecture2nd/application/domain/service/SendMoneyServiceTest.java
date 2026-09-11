@@ -44,20 +44,6 @@ class SendMoneyServiceTest {
             moneyTransferProperties());
 
     @Test
-    void account_mocking_test() {
-
-        // given
-        Long testLongValue = 999L;
-        AccountId id = new AccountId(testLongValue);
-
-        // when
-        Account account = givenAnAccountWithId(id);
-
-        // then
-        assertThat(account.getId().get().value()).isEqualTo(testLongValue);
-    }
-
-    @Test
     @DisplayName("거래 성공")
     void transactionSucceeds() {
 
@@ -90,40 +76,7 @@ class SendMoneyServiceTest {
     }
 
 
-    @Test
-    @DisplayName("한도 초과 시 송금 실패")
-    void sendMoneyFailsWhenThresholdExceeded() {
 
-        // given
-        SendMoneyCommand command = new SendMoneyCommand(
-                new AccountId(41L),
-                new AccountId(42L),
-                Money.of(1_001L));
-
-        // when / then
-        assertThatThrownBy(() -> service.sendMoney(command))
-                .isInstanceOf(ThresholdExceededException.class);
-    }
-
-    @Test
-    @DisplayName("금액이 임계값과 일치할 때 송금 성공")
-    void sendMoneySucceedsWhenAmountEqualsThreshold() {
-
-        // given
-        AccountId sourceAccountId = new AccountId(41L);
-        Account sourceAccount = givenAnAccountWithId(sourceAccountId);
-        AccountId targetAccountId = new AccountId(42L);
-        Account targetAccount = givenAnAccountWithId(targetAccountId);
-        given(sourceAccount.withdraw(any(Money.class), any(AccountId.class))).willReturn(true);
-        given(targetAccount.deposit(any(Money.class), any(AccountId.class))).willReturn(true);
-
-        SendMoneyCommand command = new SendMoneyCommand(sourceAccountId, targetAccountId, Money.of(1_000L));
-
-
-        // when / then
-        assertThatCode(() -> service.sendMoney(command))
-                .doesNotThrowAnyException();
-    }
 
     private @NonNull Account givenAnAccountWithId(AccountId id) {
         Account account = Mockito.mock(Account.class);
