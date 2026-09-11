@@ -13,26 +13,42 @@ class ActivityWindowTest {
 
     @Test
     void calculatesStartTimestamp() {
+
+        // given
         ActivityWindow window = new ActivityWindow(
                 defaultActivity().withTimestamp(startDate()).build(),
                 defaultActivity().withTimestamp(inBetweenDate()).build(),
                 defaultActivity().withTimestamp(endDate()).build()
         );
-        assertThat(window.getStartTimestamp()).isEqualTo(startDate());
+
+        // when
+        LocalDateTime startTimestamp = window.getStartTimestamp();
+
+        // then
+        assertThat(startTimestamp).isEqualTo(startDate());
     }
 
     @Test
     void calculatesEndTimestamp() {
+
+        // given
         ActivityWindow window = new ActivityWindow(
                 defaultActivity().withTimestamp(startDate()).build(),
                 defaultActivity().withTimestamp(inBetweenDate()).build(),
                 defaultActivity().withTimestamp(endDate()).build()
         );
-        assertThat(window.getEndTimestamp()).isEqualTo(endDate());
+
+        // when
+        LocalDateTime endTimestamp = window.getEndTimestamp();
+
+        // then
+        assertThat(endTimestamp).isEqualTo(endDate());
     }
 
     @Test
     void calculatesBalance() {
+
+        // given
         AccountId account1 = new AccountId(1L);
         AccountId account2 = new AccountId(2L);
 
@@ -50,9 +66,13 @@ class ActivityWindowTest {
                         .withTargetAccount(account1)
                         .withMoney(Money.of(500)).build());
 
-        assertThat(window.calculateBalance(account1)).isEqualTo(Money.of(-500));
-        assertThat(window.calculateBalance(account2)).isEqualTo(Money.of(500));
+        // when
+        Money balanceOfAccount1 = window.calculateBalance(account1);
+        Money balanceOfAccount2 = window.calculateBalance(account2);
 
+        // then
+        assertThat(balanceOfAccount1).isEqualTo(Money.of(-500));
+        assertThat(balanceOfAccount2).isEqualTo(Money.of(500));
     }
 
     private static @NonNull LocalDateTime endDate() {
