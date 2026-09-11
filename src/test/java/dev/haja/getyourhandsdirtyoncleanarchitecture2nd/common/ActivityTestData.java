@@ -8,6 +8,16 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import java.time.LocalDateTime;
 
 public class ActivityTestData {
+
+    public static ActivityBuilder defaultActivity(){
+        return new ActivityBuilder()
+                .withOwnerAccount(new AccountId(42L))
+                .withSourceAccount(new AccountId(42L))
+                .withTargetAccount(new AccountId(41L))
+                .withTimestamp(LocalDateTime.now())
+                .withMoney(Money.of(999L));
+    }
+
     public static class ActivityBuilder {
         private ActivityId id;
         private AccountId ownerAccountId;

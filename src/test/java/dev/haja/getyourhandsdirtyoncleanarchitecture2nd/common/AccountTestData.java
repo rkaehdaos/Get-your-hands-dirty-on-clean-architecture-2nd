@@ -7,6 +7,16 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 
 public class AccountTestData {
+
+    public static AccountBuilder defaultAccount() {
+        return new AccountBuilder()
+                .withAccountId(new AccountId(42L))
+                .withBaselineBalance(Money.of(999L))
+                .withActivityWindow(new ActivityWindow(
+                        ActivityTestData.defaultActivity().build(),
+                        ActivityTestData.defaultActivity().build()));
+    }
+
     public static class AccountBuilder {
 
         private AccountId accountId;
