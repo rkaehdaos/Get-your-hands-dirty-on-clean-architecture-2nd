@@ -45,21 +45,50 @@ class SendMoneyServiceTest {
 
     @Test
     void account_mocking_test() {
+
+        // given
         Long testLongValue = 999L;
         AccountId id = new AccountId(testLongValue);
+
+        // when
         Account account = givenAnAccountWithId(id);
+
+        // then
         assertThat(account.getId().get().value()).isEqualTo(testLongValue);
-
     }
 
-    private @NonNull Account givenAnAccountWithId(AccountId id) {
-        Account account = Mockito.mock(Account.class);
-        given(account.getId())
-                .willReturn(Optional.of(id));
-        given(loadAccountPort.loadAccount(eq(account.getId().get()), any(LocalDateTime.class)))
-                .willReturn(account);
-        return account;
+    @Test
+    @DisplayName("거래 성공")
+    void transactionSucceeds() {
+
+        // given
+        AccountId sourceAccountId = new AccountId(41L);
+        Account sourceAccount = givenAnAccountWithId(sourceAccountId);
+
+        AccountId targetAccountId = new AccountId(42L);
+        Account targetAccount = givenAnAccountWithId(targetAccountId);
+
+        // 출금 계좌의 출금이 성공 mocking
+        given(sourceAccount.withdraw(any(Money.class), any(AccountId.class)))
+                .willReturn(true);
+        // 입금 계좌의 입금이 성공 mocking
+        given(targetAccount.deposit(any(Money.class), any(AccountId.class)))
+                .willReturn(true);
+
+        Money money = Money.of(500L);
+
+        SendMoneyCommand command = new SendMoneyCommand(
+                sourceAccount.getId().get(),
+                targetAccount.getId().get(),
+                money);
+
+        // when
+        boolean sendMoneyResult = service.sendMoney(command);
+
+        // then
+        assertThat(sendMoneyResult).isTrue();
     }
+
 
     @Test
     @DisplayName("한도 초과 시 송금 실패")
@@ -89,6 +118,15 @@ class SendMoneyServiceTest {
         // when / then
         assertThatCode(() -> service.sendMoney(command))
                 .doesNotThrowAnyException();
+    }
+
+    private @NonNull Account givenAnAccountWithId(AccountId id) {
+        Account account = Mockito.mock(Account.class);
+        given(account.getId())
+                .willReturn(Optional.of(id));
+        given(loadAccountPort.loadAccount(eq(account.getId().get()), any(LocalDateTime.class)))
+                .willReturn(account);
+        return account;
     }
 
     private MoneyTransferProperties moneyTransferProperties() {
