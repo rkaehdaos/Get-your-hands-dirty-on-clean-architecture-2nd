@@ -10,7 +10,7 @@ class SendMoneyService implements SendMoneyUseCase {
     public boolean sendMoney(SendMoneyCommand sendMoneyCommand) {
         // TODO: 비즈니스 규칙 검증
         // TODO: model 상태 변경
-        // TODO: return output
-        throw new UnsupportedOperationException("Not implemented");
+        // TODO: return
+        return true;
     }
 }
