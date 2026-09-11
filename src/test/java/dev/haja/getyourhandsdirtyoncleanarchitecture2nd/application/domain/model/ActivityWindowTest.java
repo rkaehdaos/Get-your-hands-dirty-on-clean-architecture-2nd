@@ -32,6 +32,30 @@ class ActivityWindowTest {
         assertThat(window.getEndTimestamp()).isEqualTo(endDate());
     }
 
+    @Test
+    void calculatesBalance() {
+        AccountId account1 = new AccountId(1L);
+        AccountId account2 = new AccountId(2L);
+
+        ActivityWindow window = new ActivityWindow(
+                defaultActivity()
+                        .withSourceAccount(account1)
+                        .withTargetAccount(account2)
+                        .withMoney(Money.of(999)).build(),
+                defaultActivity()
+                        .withSourceAccount(account1)
+                        .withTargetAccount(account2)
+                        .withMoney(Money.of(1)).build(),
+                defaultActivity()
+                        .withSourceAccount(account2)
+                        .withTargetAccount(account1)
+                        .withMoney(Money.of(500)).build());
+
+        assertThat(window.calculateBalance(account1)).isEqualTo(Money.of(-500));
+        assertThat(window.calculateBalance(account2)).isEqualTo(Money.of(500));
+
+    }
+
     private static @NonNull LocalDateTime endDate() {
         return LocalDateTime.of(2026, 9, 5, 0, 0);
     }
