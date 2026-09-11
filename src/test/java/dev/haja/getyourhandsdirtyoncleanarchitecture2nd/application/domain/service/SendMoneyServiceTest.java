@@ -11,10 +11,13 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.Upd
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,6 +25,7 @@ import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 class SendMoneyServiceTest {
 
@@ -76,7 +80,26 @@ class SendMoneyServiceTest {
         then(targetAccount).should().deposit(eq(money), eq(sourceAccountId));
         then(accountLock).should().releaseAccount(eq(targetAccountId));
 
+        // then Account들이 업데이트 된다.
+        thenAccountsHaveBeenUpdated(sourceAccountId, targetAccountId);
     }
+
+    private void thenAccountsHaveBeenUpdated(AccountId... accountIds){
+        ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
+        then(updateAccountStatePort).should(times(accountIds.length))
+                .updateActivities(accountCaptor.capture());
+
+        List<AccountId> updatedAccountIds = accountCaptor.getAllValues()
+                .stream()
+                .map(Account::getId)
+                .map(Optional::get)
+                .collect(Collectors.toList());
+
+        for(AccountId accountId : accountIds){
+            assertThat(updatedAccountIds).contains(accountId);
+        }
+    }
+
 
     private Account givenSourceAccount(){
         return givenAnAccountWithId(new AccountId(41L));
