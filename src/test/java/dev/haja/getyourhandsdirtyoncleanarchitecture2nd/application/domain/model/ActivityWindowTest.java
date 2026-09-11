@@ -22,6 +22,16 @@ class ActivityWindowTest {
         assertThat(window.getStartTimestamp()).isEqualTo(startDate());
     }
 
+    @Test
+    void calculatesEndTimestamp() {
+        ActivityWindow window = new ActivityWindow(
+                defaultActivity().withTimestamp(startDate()).build(),
+                defaultActivity().withTimestamp(inBetweenDate()).build(),
+                defaultActivity().withTimestamp(endDate()).build()
+        );
+        assertThat(window.getEndTimestamp()).isEqualTo(endDate());
+    }
+
     private static @NonNull LocalDateTime endDate() {
         return LocalDateTime.of(2026, 9, 5, 0, 0);
     }
