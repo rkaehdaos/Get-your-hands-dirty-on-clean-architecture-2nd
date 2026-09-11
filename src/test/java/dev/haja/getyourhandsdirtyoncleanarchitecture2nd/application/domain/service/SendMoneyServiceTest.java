@@ -38,7 +38,6 @@ class SendMoneyServiceTest {
     private final UpdateAccountStatePort updateAccountStatePort =
             Mockito.mock(UpdateAccountStatePort.class);
 
-
     SendMoneyService service = new SendMoneyService(
             loadAccountPort,
             accountLock,
@@ -75,7 +74,6 @@ class SendMoneyServiceTest {
 
     }
 
-
     @Test
     @DisplayName("거래 성공")
     void transactionSucceeds() {
@@ -111,11 +109,11 @@ class SendMoneyServiceTest {
         then(targetAccount).should().deposit(eq(money), eq(sourceAccountId));
         then(accountLock).should().releaseAccount(eq(targetAccountId));
 
-        // then Account들이 업데이트 된다.
         thenAccountsHaveBeenUpdated(sourceAccountId, targetAccountId);
     }
 
     private void thenAccountsHaveBeenUpdated(AccountId... accountIds) {
+
         // 출금 포트가 정확히 N번 호출됨
         ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
         then(updateAccountStatePort).should(times(accountIds.length))
@@ -130,7 +128,6 @@ class SendMoneyServiceTest {
 
         assertThat(updatedAccountIds).containsExactlyInAnyOrder(accountIds);
     }
-
 
     private Account givenSourceAccount() {
         return givenAnAccountWithId(new AccountId(41L));
