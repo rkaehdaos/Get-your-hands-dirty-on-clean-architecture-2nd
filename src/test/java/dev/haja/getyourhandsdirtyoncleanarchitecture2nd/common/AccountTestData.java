@@ -1,13 +1,15 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common;
 
+
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.ActivityWindow;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 
 public class AccountTestData {
     public static class AccountBuilder {
 
-        private Account.AccountId accountId;
+        private AccountId accountId;
         private Money baselineBalance;
         private ActivityWindow activityWindow;
 
