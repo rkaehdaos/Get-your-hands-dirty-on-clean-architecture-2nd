@@ -110,10 +110,15 @@ class SendMoneyServiceTest {
     void sendMoneySucceedsWhenAmountEqualsThreshold() {
 
         // given
-        SendMoneyCommand command = new SendMoneyCommand(
-                new AccountId(41L),
-                new AccountId(42L),
-                Money.of(1_000L));
+        AccountId sourceAccountId = new AccountId(41L);
+        Account sourceAccount = givenAnAccountWithId(sourceAccountId);
+        AccountId targetAccountId = new AccountId(42L);
+        Account targetAccount = givenAnAccountWithId(targetAccountId);
+        given(sourceAccount.withdraw(any(Money.class), any(AccountId.class))).willReturn(true);
+        given(targetAccount.deposit(any(Money.class), any(AccountId.class))).willReturn(true);
+
+        SendMoneyCommand command = new SendMoneyCommand(sourceAccountId, targetAccountId, Money.of(1_000L));
+
 
         // when / then
         assertThatCode(() -> service.sendMoney(command))
