@@ -97,9 +97,7 @@ class SendMoneyServiceTest {
                 .map(Optional::get)
                 .collect(Collectors.toList());
 
-        for(AccountId accountId : accountIds){
-            assertThat(updatedAccountIds).contains(accountId);
-        }
+        assertThat(updatedAccountIds).containsExactlyInAnyOrder(accountIds);
     }
 
 
