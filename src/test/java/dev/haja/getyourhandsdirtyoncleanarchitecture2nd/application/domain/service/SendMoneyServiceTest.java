@@ -1,5 +1,6 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.service;
 
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
@@ -11,8 +12,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 
 
 class SendMoneyServiceTest {
@@ -32,6 +37,19 @@ class SendMoneyServiceTest {
             accountLock,
             updateAccountStatePort,
             moneyTransferProperties());
+
+    @Test
+    void account_mocking_test(){
+        Long testLongValue=999L;
+        AccountId id = new AccountId(testLongValue);
+        Account account = Mockito.mock(Account.class);
+        given(account.getId())
+                .willReturn(Optional.of(id));
+        given(loadAccountPort.loadAccount(eq(account.getId().get()), any(LocalDateTime.class)))
+                .willReturn(account);
+        assertThat(account.getId().get().value()).isEqualTo(testLongValue);
+
+    }
 
     @Test
     @DisplayName("한도 초과 시 송금 실패")
