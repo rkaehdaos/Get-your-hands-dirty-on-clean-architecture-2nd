@@ -64,6 +64,11 @@ class SendMoneyServiceTest {
         // when / then
         assertThatThrownBy(() -> serviceWithLowThreshold.sendMoney(command))
                 .isInstanceOf(ThresholdExceededException.class);
+
+        // 임계값 체크가 가장 먼저 일어나므로 어떤 포트도 건드리지 않는다
+        then(loadAccountPort).shouldHaveNoInteractions();
+        then(accountLock).shouldHaveNoInteractions();
+        then(updateAccountStatePort).shouldHaveNoInteractions();
     }
 
     @Test
