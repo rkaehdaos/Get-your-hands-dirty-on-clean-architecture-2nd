@@ -75,6 +75,37 @@ class SendMoneyServiceTest {
     }
 
     @Test
+    @DisplayName("입금 실패 시 두 계좌 모두 잠금이 해제됨")
+    void givenDepositFails_thenBothAccountsAreReleased() {
+
+        // given
+        Account sourceAccount = givenSourceAccount();
+        Account targetAccount = givenTargetAccount();
+
+        givenWithdrawalWillSucceed(sourceAccount);
+        givenDepositWillFail(targetAccount);
+
+        AccountId sourceAccountId = sourceAccount.getId().get();
+        AccountId targetAccountId = targetAccount.getId().get();
+
+        SendMoneyCommand command = new SendMoneyCommand(
+                sourceAccountId,
+                targetAccountId,
+                Money.of(300L));
+
+        // when
+        boolean sendMoneyResult = service.sendMoney(command);
+
+        // then
+        assertThat(sendMoneyResult).isFalse();
+
+        then(accountLock).should().lockAccount(eq(sourceAccountId));
+        then(accountLock).should().lockAccount(eq(targetAccountId));
+        then(accountLock).should().releaseAccount(eq(sourceAccountId));
+        then(accountLock).should().releaseAccount(eq(targetAccountId));
+    }
+
+    @Test
     @DisplayName("거래 성공")
     void transactionSucceeds() {
 
@@ -153,6 +184,12 @@ class SendMoneyServiceTest {
     private void givenDepositWillSucceed(Account account) {
         given(account.deposit(any(Money.class), any(AccountId.class)))
                 .willReturn(true);
+    }
+
+    // 입금 계좌의 입금이 실패할 것이다.
+    private void givenDepositWillFail(Account account) {
+        given(account.deposit(any(Money.class), any(AccountId.class)))
+                .willReturn(false);
     }
 
 
