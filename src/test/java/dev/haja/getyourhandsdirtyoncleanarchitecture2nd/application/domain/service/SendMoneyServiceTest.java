@@ -8,6 +8,7 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.Send
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountLock;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.UpdateAccountStatePort;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -15,9 +16,13 @@ import org.mockito.Mockito;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.BDDMockito.*;
-import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import static org.mockito.BDDMockito.any;
+import static org.mockito.BDDMockito.eq;
+import static org.mockito.BDDMockito.given;
 
 
 class SendMoneyServiceTest {
@@ -39,16 +44,21 @@ class SendMoneyServiceTest {
             moneyTransferProperties());
 
     @Test
-    void account_mocking_test(){
-        Long testLongValue=999L;
+    void account_mocking_test() {
+        Long testLongValue = 999L;
         AccountId id = new AccountId(testLongValue);
+        Account account = givenAnAccountWithId(id);
+        assertThat(account.getId().get().value()).isEqualTo(testLongValue);
+
+    }
+
+    private @NonNull Account givenAnAccountWithId(AccountId id) {
         Account account = Mockito.mock(Account.class);
         given(account.getId())
                 .willReturn(Optional.of(id));
         given(loadAccountPort.loadAccount(eq(account.getId().get()), any(LocalDateTime.class)))
                 .willReturn(account);
-        assertThat(account.getId().get().value()).isEqualTo(testLongValue);
-
+        return account;
     }
 
     @Test
