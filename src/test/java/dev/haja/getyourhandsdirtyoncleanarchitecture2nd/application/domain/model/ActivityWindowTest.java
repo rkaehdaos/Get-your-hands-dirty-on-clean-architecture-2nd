@@ -1,7 +1,7 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
-import lombok.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
