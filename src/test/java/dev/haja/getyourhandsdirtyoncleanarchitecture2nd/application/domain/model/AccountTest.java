@@ -38,4 +38,30 @@ class AccountTest {
         assertThat(account.calculateBalance())
                 .isEqualTo(Money.of(1000L));
     }
+
+    @Test
+    void withdrawalFailure() {
+        AccountId accountId = new AccountId(1L);
+        Account account = defaultAccount()
+                .withAccountId(accountId)
+                .withBaselineBalance(Money.of(555L))
+                .withActivityWindow(new ActivityWindow(
+                        defaultActivity()
+                                .withTargetAccount(accountId)
+                                .withMoney(Money.of(999L)).build(),
+                        defaultActivity()
+                                .withTargetAccount(accountId)
+                                .withMoney(Money.of(1L)).build()))
+                .build();
+
+        boolean success = account.withdraw(Money.of(1556L), new AccountId(99L));
+
+        assertThat(success).isFalse();
+        assertThat(account
+                .getActivityWindow()
+                .activities())
+                .hasSize(2);
+        assertThat(account.calculateBalance())
+                .isEqualTo(Money.of(1555L));
+    }
 }
