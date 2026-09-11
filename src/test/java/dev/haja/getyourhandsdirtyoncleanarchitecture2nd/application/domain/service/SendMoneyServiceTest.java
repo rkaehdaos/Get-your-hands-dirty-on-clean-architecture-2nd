@@ -26,6 +26,7 @@ import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.times;
 
 class SendMoneyServiceTest {
@@ -200,6 +201,37 @@ class SendMoneyServiceTest {
         then(accountLock).should().releaseAccount(eq(targetAccountId));
 
         then(updateAccountStatePort).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("계좌 상태 저장이 예외를 던져도 두 계좌 모두 잠금이 해제됨")
+    void givenUpdateActivitiesThrows_thenBothAccountsAreReleased() {
+
+        // given
+        Account sourceAccount = givenSourceAccount();
+        Account targetAccount = givenTargetAccount();
+
+        givenWithdrawalWillSucceed(sourceAccount);
+        givenDepositWillSucceed(targetAccount);
+
+        AccountId sourceAccountId = sourceAccount.getId().get();
+        AccountId targetAccountId = targetAccount.getId().get();
+
+        willThrow(new RuntimeException("boom"))
+                .given(updateAccountStatePort).updateActivities(any(Account.class));
+
+        SendMoneyCommand command = new SendMoneyCommand(
+                sourceAccountId,
+                targetAccountId,
+                Money.of(300L));
+
+        // when / then
+        assertThatThrownBy(() -> service.sendMoney(command))
+                .isInstanceOf(RuntimeException.class);
+
+        // 저장이 실패해도 잡아 둔 잠금은 모두 풀려야 한다
+        then(accountLock).should().releaseAccount(eq(sourceAccountId));
+        then(accountLock).should().releaseAccount(eq(targetAccountId));
     }
 
     @Test
