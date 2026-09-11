@@ -72,6 +72,38 @@ class SendMoneyServiceTest {
     }
 
     @Test
+    @DisplayName("두 계좌를 커맨드의 ID로 조회함")
+    void loadsBothAccounts() {
+
+        // given
+        Account sourceAccount = givenSourceAccount();
+        Account targetAccount = givenTargetAccount();
+
+        givenWithdrawalWillSucceed(sourceAccount);
+        givenDepositWillSucceed(targetAccount);
+
+        AccountId sourceAccountId = sourceAccount.getId().get();
+        AccountId targetAccountId = targetAccount.getId().get();
+
+        SendMoneyCommand command = new SendMoneyCommand(
+                sourceAccountId,
+                targetAccountId,
+                Money.of(500L));
+
+        // when
+        service.sendMoney(command);
+
+        // then
+        ArgumentCaptor<AccountId> accountIdCaptor = ArgumentCaptor.forClass(AccountId.class);
+        then(loadAccountPort).should(times(2))
+                .loadAccount(accountIdCaptor.capture(), any(LocalDateTime.class));
+
+        // 출금 계좌를 먼저, 입금 계좌를 그다음에 조회한다
+        assertThat(accountIdCaptor.getAllValues())
+                .containsExactly(sourceAccountId, targetAccountId);
+    }
+
+    @Test
     @DisplayName("인출 실패 시 오직 출금 계좌만 잠겼다가 잠금이 해제됨")
     void givenWithdrawalFails_thenOnlySourceAccountIsLockedAndReleased() {
 
