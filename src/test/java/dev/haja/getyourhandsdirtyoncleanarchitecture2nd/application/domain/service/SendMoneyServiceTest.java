@@ -48,11 +48,8 @@ class SendMoneyServiceTest {
     void transactionSucceeds() {
 
         // given
-        AccountId sourceAccountId = new AccountId(41L);
-        Account sourceAccount = givenAnAccountWithId(sourceAccountId);
-
-        AccountId targetAccountId = new AccountId(42L);
-        Account targetAccount = givenAnAccountWithId(targetAccountId);
+        Account sourceAccount = givenSourceAccount();
+        Account targetAccount = givenTargetAccount();
 
         givenWithdrawalWillSucceed(sourceAccount);
         givenDepositWillSucceed(targetAccount);
@@ -70,6 +67,16 @@ class SendMoneyServiceTest {
         // then
         assertThat(sendMoneyResult).isTrue();
     }
+
+    private Account givenSourceAccount(){
+        return givenAnAccountWithId(new AccountId(41L));
+    }
+
+    private Account givenTargetAccount(){
+        return givenAnAccountWithId(new AccountId(42L));
+    }
+
+
 
     // 출금 계좌의 출금이 성공할 것이다
     private void givenWithdrawalWillSucceed(Account account) {
