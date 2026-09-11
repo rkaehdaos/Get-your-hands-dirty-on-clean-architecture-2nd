@@ -1,14 +1,13 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model;
-import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.ActivityTestData.defaultActivity;
-
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ActivityWindowTest {
 
