@@ -12,6 +12,8 @@ class AccountTest {
 
     @Test
     void calculatesBalance() {
+
+        // given
         AccountId accountId = new AccountId(1L);
         Account account = defaultAccount()
                 .withAccountId(accountId)
@@ -25,13 +27,17 @@ class AccountTest {
                                 .withMoney(Money.of(1L)).build()))
                 .build();
 
+        // when
         Money balance = account.calculateBalance();
 
+        // then
         assertThat(balance).isEqualTo(Money.of(1555L));
     }
 
     @Test
     void withdrawalSucceeds() {
+
+        // given
         AccountId accountId = new AccountId(1L);
         Account account = defaultAccount()
                 .withAccountId(accountId)
@@ -45,9 +51,11 @@ class AccountTest {
                                 .withMoney(Money.of(1L)).build()))
                 .build();
 
+        // when
         AccountId randomTargetAccount = new AccountId(99L);
         boolean success = account.withdraw(Money.of(555L), randomTargetAccount);
 
+        // then
         assertThat(success).isTrue();
         assertThat(account
                 .getActivityWindow()
@@ -59,6 +67,8 @@ class AccountTest {
 
     @Test
     void withdrawalFailure() {
+
+        // given
         AccountId accountId = new AccountId(1L);
         Account account = defaultAccount()
                 .withAccountId(accountId)
@@ -72,8 +82,10 @@ class AccountTest {
                                 .withMoney(Money.of(1L)).build()))
                 .build();
 
+        // when
         boolean success = account.withdraw(Money.of(1556L), new AccountId(99L));
 
+        // then
         assertThat(success).isFalse();
         assertThat(account
                 .getActivityWindow()
@@ -85,6 +97,8 @@ class AccountTest {
 
     @Test
     void depositSuccess() {
+
+        // given
         AccountId accountId = new AccountId(1L);
         Account account = defaultAccount()
                 .withAccountId(accountId)
@@ -98,8 +112,10 @@ class AccountTest {
                                 .withMoney(Money.of(1L)).build()))
                 .build();
 
+        // when
         boolean success = account.deposit(Money.of(445L), new AccountId(99L));
 
+        // then
         assertThat(success).isTrue();
         assertThat(account.
                 getActivityWindow()
