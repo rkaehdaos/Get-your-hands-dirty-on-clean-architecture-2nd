@@ -46,6 +46,33 @@ class SendMoneyServiceTest {
             moneyTransferProperties());
 
     @Test
+    @DisplayName("인출 실패 시 오직 출금 계좌만 잠겼다가 잠금이 해제됨")
+    void givenWithdrawalFails_thenOnlySourceAccountIsLockedAndReleased() {
+
+        // given
+        AccountId sourceAccountId = new AccountId(41L);
+        Account sourceAccount = givenAnAccountWithId(sourceAccountId);
+        AccountId targetAccountId = new AccountId(42L);
+        Account targetAccount = givenAnAccountWithId(targetAccountId);
+
+        givenWithdrawalWillFail(sourceAccount);
+        givenDepositWillSucceed(targetAccount);
+
+        SendMoneyCommand command = new SendMoneyCommand(
+                sourceAccountId,
+                targetAccountId,
+                Money.of(300L));
+
+        // when
+        boolean sendMoneyResult = service.sendMoney(command);
+
+        // then
+        assertThat(sendMoneyResult).isFalse();
+
+    }
+
+
+    @Test
     @DisplayName("거래 성공")
     void transactionSucceeds() {
 
@@ -84,7 +111,7 @@ class SendMoneyServiceTest {
         thenAccountsHaveBeenUpdated(sourceAccountId, targetAccountId);
     }
 
-    private void thenAccountsHaveBeenUpdated(AccountId... accountIds){
+    private void thenAccountsHaveBeenUpdated(AccountId... accountIds) {
         // 출금 포트가 정확히 N번 호출됨
         ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
         then(updateAccountStatePort).should(times(accountIds.length))
@@ -101,15 +128,19 @@ class SendMoneyServiceTest {
     }
 
 
-    private Account givenSourceAccount(){
+    private Account givenSourceAccount() {
         return givenAnAccountWithId(new AccountId(41L));
     }
 
-    private Account givenTargetAccount(){
+    private Account givenTargetAccount() {
         return givenAnAccountWithId(new AccountId(42L));
     }
 
-
+    // 출금 계좌의 출금이 실패할 것이다
+    private void givenWithdrawalWillFail(Account account) {
+        given(account.withdraw(any(Money.class), any(AccountId.class)))
+                .willReturn(false);
+    }
 
     // 출금 계좌의 출금이 성공할 것이다
     private void givenWithdrawalWillSucceed(Account account) {
