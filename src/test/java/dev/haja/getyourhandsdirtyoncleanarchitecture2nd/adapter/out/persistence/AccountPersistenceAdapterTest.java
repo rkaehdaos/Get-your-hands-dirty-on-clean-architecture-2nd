@@ -28,7 +28,7 @@ class AccountPersistenceAdapterTest {
     void loadsAccount() {
         Account account = adapterUnderTest.loadAccount(
                 new AccountId(1L),
-                LocalDateTime.of(2026, 9, 10, 0, 0));
+                LocalDateTime.of(2018, 8, 10, 0, 0));
         assertThat(account.getActivityWindow().activities()).hasSize(2);
         assertThat(account.calculateBalance()).isEqualTo(Money.of(500));
 
