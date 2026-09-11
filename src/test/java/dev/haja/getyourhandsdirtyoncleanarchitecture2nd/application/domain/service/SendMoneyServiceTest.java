@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.eq;
@@ -43,6 +44,27 @@ class SendMoneyServiceTest {
             accountLock,
             updateAccountStatePort,
             moneyTransferProperties());
+
+    @Test
+    @DisplayName("임계값을 초과하는 금액은 송금되지 않고 ThresholdExceededException이 발생함")
+    void givenMoneyExceedsThreshold_thenThrowsThresholdExceededException() {
+
+        // given
+        SendMoneyService serviceWithLowThreshold = new SendMoneyService(
+                loadAccountPort,
+                accountLock,
+                updateAccountStatePort,
+                moneyTransferProperties(Money.of(1_000L)));
+
+        SendMoneyCommand command = new SendMoneyCommand(
+                new AccountId(41L),
+                new AccountId(42L),
+                Money.of(1_001L));
+
+        // when / then
+        assertThatThrownBy(() -> serviceWithLowThreshold.sendMoney(command))
+                .isInstanceOf(ThresholdExceededException.class);
+    }
 
     @Test
     @DisplayName("인출 실패 시 오직 출금 계좌만 잠겼다가 잠금이 해제됨")
