@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
@@ -14,6 +15,10 @@ public class Account {
     private AccountId id;
     private Money baselineBalance;
     @Getter private ActivityWindow activityWindow;
+
+    public Optional<AccountId> getId(){
+        return Optional.ofNullable(this.id);
+    }
 
     /**
      * Creates an {@link Account} entity without an ID. Use to create a new entity that is not yet
