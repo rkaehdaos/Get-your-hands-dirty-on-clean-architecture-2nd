@@ -3,7 +3,9 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.serv
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.InsufficientFundsException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.ThresholdExceededException;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountLock;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
@@ -141,8 +143,8 @@ class SendMoneyServiceTest {
     }
 
     @Test
-    @DisplayName("인출 실패 시 오직 출금 계좌만 잠겼다가 잠금이 해제됨")
-    void givenWithdrawalFails_thenOnlySourceAccountIsLockedAndReleased() {
+    @DisplayName("인출 실패 시 InsufficientFundsException이 발생하고 오직 출금 계좌만 잠겼다가 잠금이 해제됨")
+    void givenWithdrawalFails_thenThrowsInsufficientFundsExceptionAndOnlySourceAccountIsLockedAndReleased() {
 
         // given
         AccountId sourceAccountId = new AccountId(41L);
@@ -158,21 +160,20 @@ class SendMoneyServiceTest {
                 targetAccountId,
                 Money.of(300L));
 
-        // when
-        boolean sendMoneyResult = service.sendMoney(command);
-
-        // then
-        assertThat(sendMoneyResult).isFalse();
+        // when / then
+        assertThatThrownBy(() -> service.sendMoney(command))
+                .isInstanceOf(InsufficientFundsException.class);
 
         then(accountLock).should().lockAccount(eq(sourceAccountId));
         then(accountLock).should().releaseAccount(eq(sourceAccountId));
         then(accountLock).should(times(0)).lockAccount(eq(targetAccountId));
 
+        then(updateAccountStatePort).shouldHaveNoInteractions();
     }
 
     @Test
-    @DisplayName("입금 실패 시 두 계좌 모두 잠금이 해제되고 계좌 상태는 저장되지 않음")
-    void givenDepositFails_thenBothAccountsAreReleasedAndNothingIsPersisted() {
+    @DisplayName("입금 실패 시 IllegalStateException이 발생하고 두 계좌 모두 잠금이 해제되고 계좌 상태는 저장되지 않음")
+    void givenDepositFails_thenThrowsIllegalStateExceptionAndBothAccountsAreReleasedAndNothingIsPersisted() {
 
         // given
         Account sourceAccount = givenSourceAccount();
@@ -189,11 +190,10 @@ class SendMoneyServiceTest {
                 targetAccountId,
                 Money.of(300L));
 
-        // when
-        boolean sendMoneyResult = service.sendMoney(command);
-
-        // then
-        assertThat(sendMoneyResult).isFalse();
+        // when / then
+        assertThatThrownBy(() -> service.sendMoney(command))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("deposit");
 
         then(accountLock).should().lockAccount(eq(sourceAccountId));
         then(accountLock).should().lockAccount(eq(targetAccountId));
@@ -352,11 +352,9 @@ class SendMoneyServiceTest {
                 money);
 
         // when
-        boolean sendMoneyResult = service.sendMoney(command);
+        service.sendMoney(command);
 
         // then
-        assertThat(sendMoneyResult).isTrue();
-
         AccountId sourceAccountId = sourceAccount.getId().get();
         AccountId targetAccountId = targetAccount.getId().get();
 
