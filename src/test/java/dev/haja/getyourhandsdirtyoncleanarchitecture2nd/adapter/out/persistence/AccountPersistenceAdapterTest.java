@@ -2,6 +2,7 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.adapter.out.persistence
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Activity;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Activity.ActivityId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.ActivityWindow;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
@@ -77,6 +78,40 @@ class AccountPersistenceAdapterTest {
 
         ActivityJpaEntity savedActivity = activityRepository.findAll().get(0);
         assertThat(savedActivity.getAmount()).isEqualTo(1L);
+    }
+
+    @Test
+    @Sql("/sql/accounts.sql")
+    @DisplayName("마이크로초까지 채운 활동 시각이 저장 후 그대로 다시 읽힘")
+    void reloadsActivityWithMicrosecondTimestampUnchanged() {
+
+        // given
+        // timestamp 컬럼은 timestamp(6)이다. 이 정밀도까지는 손실 없이 왕복해야
+        // Clock을 마이크로초로 끊어 둔 것이 의미가 있다.
+        LocalDateTime timestamp = LocalDateTime.of(2019, 8, 10, 10, 0).withNano(123_456_000);
+
+        Account account = defaultAccount()
+                .withAccountId(new AccountId(1L))
+                .withActivityWindow(new ActivityWindow(
+                        defaultActivity()
+                                .withOwnerAccount(new AccountId(1L))
+                                .withSourceAccount(new AccountId(1L))
+                                .withTargetAccount(new AccountId(2L))
+                                .withTimestamp(timestamp)
+                                .withMoney(Money.of(1L)).build()))
+                .build();
+
+        adapterUnderTest.updateActivities(account);
+
+        // when
+        Account reloaded = adapterUnderTest.loadAccount(
+                new AccountId(1L),
+                LocalDateTime.of(2019, 1, 1, 0, 0));
+
+        // then
+        assertThat(reloaded.getActivityWindow().activities())
+                .extracting(Activity::timestamp)
+                .contains(timestamp);
     }
 
     @Test
