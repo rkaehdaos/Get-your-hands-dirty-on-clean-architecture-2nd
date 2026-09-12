@@ -18,12 +18,11 @@ class AccountMapper {
     Account mapToDomainEntity(
             AccountJpaEntity account,
             List<ActivityJpaEntity> activities,
-            Long withdrawalBalance,
-            Long depositBalance) {
+            ActivityRepository.BaselineBalanceView baselineBalanceView) {
 
         Money baselineBalance = Money.subtract(
-                Money.of(depositBalance),
-                Money.of(withdrawalBalance));
+                new Money(baselineBalanceView.getDeposits()),
+                new Money(baselineBalanceView.getWithdrawals()));
 
         return Account.withId(
                 new AccountId(account.getId()),

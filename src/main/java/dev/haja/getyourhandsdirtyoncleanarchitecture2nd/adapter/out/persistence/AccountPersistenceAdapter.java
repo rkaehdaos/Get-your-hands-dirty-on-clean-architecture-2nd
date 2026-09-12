@@ -32,23 +32,15 @@ class AccountPersistenceAdapter implements
                         accountId.value(),
                         baselineDate);
 
-        Long withdrawalBalance = activityRepository
-                .getWithdrawalBalanceUntil(
+        ActivityRepository.BaselineBalanceView baselineBalance =
+                activityRepository.getBaselineBalanceUntil(
                         accountId.value(),
-                        baselineDate)
-                .orElse(0L);
-
-        Long depositBalance = activityRepository
-                .getDepositBalanceUntil(
-                        accountId.value(),
-                        baselineDate)
-                .orElse(0L);
+                        baselineDate);
 
         return accountMapper.mapToDomainEntity(
                 account,
                 activities,
-                withdrawalBalance,
-                depositBalance);
+                baselineBalance);
     }
 
     @Override
