@@ -49,6 +49,9 @@ class SendMoneySystemTest {
         Money initialSourceBalance = sourceAccount().calculateBalance();
         Money initialTargetBalance = targetAccount().calculateBalance();
 
+        // 이체가 잔액 한계선에 걸치지 않는다 — 500을 보내고도 500이 남는다
+        then(initialSourceBalance).isEqualTo(Money.of(1000L));
+
         // when
         ResponseEntity<Object> response = whenSendMoney(
                 sourceAccountId(),
