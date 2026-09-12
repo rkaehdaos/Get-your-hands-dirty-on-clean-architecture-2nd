@@ -18,6 +18,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.defaultAccount;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.ActivityTestData.defaultActivity;
@@ -73,6 +75,33 @@ class AccountPersistenceAdapterTest {
 
         ActivityJpaEntity savedActivity = activityRepository.findAll().get(0);
         assertThat(savedActivity.getAmount()).isEqualTo(1L);
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @DisplayName("한 활동의 매핑이 실패하면 아무 활동도 저장되지 않음")
+    void givenOneActivityCannotBeMapped_thenNothingIsPersisted() {
+
+        // given
+        // 클래스의 테스트 트랜잭션을 끄고 실제 커밋 경계를 본다(그래서 이 테스트에는
+        // @Sql을 붙이면 안 된다 — 픽스처가 커밋되어 다른 테스트를 오염시킨다).
+        // 두 번째 활동의 금액이 long 컬럼 범위를 넘어 매퍼가 ArithmeticException을 던진다.
+        Money tooLargeForColumn = new Money(BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE));
+
+        Account account = defaultAccount()
+                .withActivityWindow(new ActivityWindow(
+                        defaultActivity().withMoney(Money.of(1L)).build(),
+                        defaultActivity().withMoney(tooLargeForColumn).build()))
+                .build();
+
+        // when / then
+        assertThatThrownBy(() -> adapterUnderTest.updateActivities(account))
+                .isInstanceOf(ArithmeticException.class);
+
+        // 첫 활동도 저장되지 않는다. 어댑터에서 트랜잭션 경계를 걷어내고 루프에서
+        // 매핑과 저장을 번갈아 하던 예전 구현으로 되돌리면, 첫 활동이 자기 트랜잭션으로
+        // 커밋되어 이 단언이 1로 깨진다.
+        assertThat(activityRepository.count()).isZero();
     }
 
     @Test
