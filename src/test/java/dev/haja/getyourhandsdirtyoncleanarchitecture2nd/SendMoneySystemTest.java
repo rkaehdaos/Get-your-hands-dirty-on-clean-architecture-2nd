@@ -10,13 +10,12 @@ import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDateTime;
+
+import static org.assertj.core.api.BDDAssertions.then;
 
 
 @AutoConfigureTestRestTemplate
@@ -53,6 +52,8 @@ class SendMoneySystemTest {
                 transferredAmount.amount());
 
         // then
+        then(response.getStatusCode())
+                .isEqualTo(HttpStatus.OK);
 
     }
 
