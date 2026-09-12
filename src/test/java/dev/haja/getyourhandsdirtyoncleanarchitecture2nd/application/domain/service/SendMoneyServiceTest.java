@@ -389,11 +389,12 @@ class SendMoneyServiceTest {
         AccountId targetAccountId = targetAccount.getId().get();
 
         then(accountLock).should().lockAccount(eq(sourceAccountId));
-        then(sourceAccount).should().withdraw(eq(money), eq(targetAccountId), any(LocalDateTime.class));
+        // 활동의 시각은 주입된 Clock에서 온다
+        then(sourceAccount).should().withdraw(eq(money), eq(targetAccountId), eq(NOW));
         then(accountLock).should().releaseAccount(eq(sourceAccountId));
 
         then(accountLock).should().lockAccount(eq(targetAccountId));
-        then(targetAccount).should().deposit(eq(money), eq(sourceAccountId), any(LocalDateTime.class));
+        then(targetAccount).should().deposit(eq(money), eq(sourceAccountId), eq(NOW));
         then(accountLock).should().releaseAccount(eq(targetAccountId));
 
         thenAccountsHaveBeenUpdated(sourceAccountId, targetAccountId);

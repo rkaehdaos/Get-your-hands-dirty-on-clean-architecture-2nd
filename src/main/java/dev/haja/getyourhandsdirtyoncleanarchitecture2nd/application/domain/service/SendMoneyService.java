@@ -39,7 +39,10 @@ class SendMoneyService implements SendMoneyUseCase {
 
         checkThreshold(command);
 
-        LocalDateTime baselineDate = LocalDateTime.now(clock).minusDays(10);
+        // 시각을 한 번만 읽어 baselineDate와 새 활동의 시각에 함께 쓴다.
+        // 출금 활동과 입금 활동은 한 이체의 두 면이므로 같은 시각이어야 한다.
+        LocalDateTime now = LocalDateTime.now(clock);
+        LocalDateTime baselineDate = now.minusDays(10);
 
         Account sourceAccount = loadAccount(command.sourceAccountId(), baselineDate);
         Account targetAccount = loadAccount(command.targetAccountId(), baselineDate);
@@ -51,13 +54,13 @@ class SendMoneyService implements SendMoneyUseCase {
 
         accountLock.lockAccount(sourceAccountId);
         try {
-            if (!sourceAccount.withdraw(command.money(), targetAccountId, LocalDateTime.now())) {
+            if (!sourceAccount.withdraw(command.money(), targetAccountId, now)) {
                 throw new InsufficientFundsException(sourceAccountId, command.money());
             }
 
             accountLock.lockAccount(targetAccountId);
             try {
-                if (!targetAccount.deposit(command.money(), sourceAccountId, LocalDateTime.now())) {
+                if (!targetAccount.deposit(command.money(), sourceAccountId, now)) {
                     throw new IllegalStateException("expected deposit to target account to succeed");
                 }
 

@@ -68,6 +68,10 @@ class AccountTest {
                 .hasSize(3);
         assertThat(account.calculateBalance())
                 .isEqualTo(Money.of(1000L));
+
+        // 넘긴 시각이 새 활동에 그대로 기록된다
+        assertThat(account.getActivityWindow().activities().getLast().timestamp())
+                .isEqualTo(NOW);
     }
 
     @Test
@@ -128,5 +132,9 @@ class AccountTest {
                 .hasSize(3);
         assertThat(account.calculateBalance())
                 .isEqualTo(Money.of(2000L));
+
+        // 넘긴 시각이 새 활동에 그대로 기록된다
+        assertThat(account.getActivityWindow().activities().getLast().timestamp())
+                .isEqualTo(NOW);
     }
 }
