@@ -2,6 +2,7 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.serv
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.InsufficientFundsException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyUseCase;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.ThresholdExceededException;
@@ -25,7 +26,7 @@ class SendMoneyService implements SendMoneyUseCase {
     private final MoneyTransferProperties moneyTransferProperties;
 
     @Override
-    public boolean sendMoney(SendMoneyCommand command) {
+    public void sendMoney(SendMoneyCommand command) {
 
         checkThreshold(command);
 
@@ -47,19 +48,17 @@ class SendMoneyService implements SendMoneyUseCase {
         accountLock.lockAccount(sourceAccountId);
         try {
             if (!sourceAccount.withdraw(command.money(), targetAccountId)) {
-                return false;
+                throw new InsufficientFundsException(sourceAccountId, command.money());
             }
 
             accountLock.lockAccount(targetAccountId);
             try {
                 if (!targetAccount.deposit(command.money(), sourceAccountId)) {
-                    return false;
+                    throw new IllegalStateException("expected deposit to target account to succeed");
                 }
 
                 updateAccountStatePort.updateActivities(sourceAccount);
                 updateAccountStatePort.updateActivities(targetAccount);
-
-                return true;
             } finally {
                 accountLock.releaseAccount(targetAccountId);
             }
