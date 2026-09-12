@@ -12,14 +12,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.time.LocalDateTime;
 
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @AutoConfigureTestRestTemplate
-@SpringBootTest(webEnvironment = RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class SendMoneySystemTest {
 
     @Autowired private TestRestTemplate testRestTemplate;
@@ -42,7 +42,7 @@ class SendMoneySystemTest {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
         HttpEntity<Void> request = new HttpEntity<>(null, headers);
-        testRestTemplate.exchange(
+        ResponseEntity<Object> response = testRestTemplate.exchange(
                 "/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                 HttpMethod.POST,
                 request,
