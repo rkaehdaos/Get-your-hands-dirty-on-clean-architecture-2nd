@@ -6,6 +6,7 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -88,6 +89,25 @@ class AccountPersistenceAdapterTest {
                 values (1001, '2019-08-09 10:00:00.0', 1, 1, 2, null)
                 """))
                 .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    @DisplayName("owner·timestamp 복합 인덱스가 스키마에 존재함")
+    void hasOwnerTimestampIndex() {
+
+        // given
+        // @Index의 columnList는 논리명이라 물리 명명 전략을 거쳐야 컬럼명이 맞는데,
+        // 이름이 틀려도 DDL 오류는 로그로만 남는다. 인덱스의 존재를 여기서 고정한다.
+
+        // when
+        List<String> indexedColumns = jdbcTemplate.queryForList("""
+                select column_name from information_schema.index_columns
+                where index_name = 'IDX_ACTIVITY_OWNER_TIMESTAMP'
+                order by ordinal_position
+                """, String.class);
+
+        // then
+        assertThat(indexedColumns).containsExactly("OWNER_ACCOUNT_ID", "TIMESTAMP");
     }
 
 }
