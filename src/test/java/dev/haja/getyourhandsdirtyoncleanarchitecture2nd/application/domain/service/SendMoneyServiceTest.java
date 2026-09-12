@@ -10,13 +10,14 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.Thre
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountLock;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.UpdateAccountStatePort;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,6 +34,9 @@ import static org.mockito.Mockito.times;
 
 class SendMoneyServiceTest {
 
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 9, 12, 12, 0);
+    private static final Clock CLOCK = Clock.fixed(NOW.toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
+
     private final LoadAccountPort loadAccountPort =
             Mockito.mock(LoadAccountPort.class);
 
@@ -46,7 +50,8 @@ class SendMoneyServiceTest {
             loadAccountPort,
             accountLock,
             updateAccountStatePort,
-            moneyTransferProperties());
+            moneyTransferProperties(),
+            CLOCK);
 
     @Test
     @DisplayName("임계값을 초과하는 금액은 송금되지 않고 ThresholdExceededException이 발생함")
@@ -57,7 +62,8 @@ class SendMoneyServiceTest {
                 loadAccountPort,
                 accountLock,
                 updateAccountStatePort,
-                moneyTransferProperties(Money.of(1_000L)));
+                moneyTransferProperties(Money.of(1_000L)),
+                CLOCK);
 
         SendMoneyCommand command = new SendMoneyCommand(
                 new AccountId(41L),
@@ -75,7 +81,7 @@ class SendMoneyServiceTest {
     }
 
     @Test
-    @DisplayName("두 계좌를 커맨드의 ID와 10일 전 baselineDate로 조회함")
+    @DisplayName("두 계좌를 커맨드의 ID와 고정된 시각 기준 10일 전 baselineDate로 조회함")
     void loadsBothAccountsWithBaselineDate() {
 
         // given
@@ -93,14 +99,10 @@ class SendMoneyServiceTest {
                 targetAccountId,
                 Money.of(500L));
 
-        LocalDateTime beforeSend = LocalDateTime.now();
-
         // when
         service.sendMoney(command);
 
         // then
-        LocalDateTime afterSend = LocalDateTime.now();
-
         ArgumentCaptor<AccountId> accountIdCaptor = ArgumentCaptor.forClass(AccountId.class);
         ArgumentCaptor<LocalDateTime> baselineDateCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
         then(loadAccountPort).should(times(2))
@@ -110,10 +112,9 @@ class SendMoneyServiceTest {
         assertThat(accountIdCaptor.getAllValues())
                 .containsExactly(sourceAccountId, targetAccountId);
 
-        // 서비스가 시각을 직접 읽으므로 정확한 값 대신 호출 전후로 만든 범위를 쓴다
+        // baselineDate를 한 번 계산해 두 조회에 같은 값을 넘긴다
         assertThat(baselineDateCaptor.getAllValues())
-                .allSatisfy(baselineDate -> assertThat(baselineDate)
-                        .isBetween(beforeSend.minusDays(10), afterSend.minusDays(10)));
+                .containsExactly(NOW.minusDays(10), NOW.minusDays(10));
     }
 
     @Test
@@ -419,7 +420,7 @@ class SendMoneyServiceTest {
     }
 
 
-    private @NonNull Account givenAnAccountWithId(AccountId id) {
+    private Account givenAnAccountWithId(AccountId id) {
         Account account = Mockito.mock(Account.class);
         given(account.getId())
                 .willReturn(Optional.of(id));
@@ -429,7 +430,7 @@ class SendMoneyServiceTest {
     }
 
     // 주어진 ID로 조회되지만 정작 자신은 ID를 갖고 있지 않은 계좌
-    private @NonNull Account givenAnAccountWithoutId(AccountId loadedForId) {
+    private Account givenAnAccountWithoutId(AccountId loadedForId) {
         Account account = Mockito.mock(Account.class);
         given(account.getId())
                 .willReturn(Optional.empty());

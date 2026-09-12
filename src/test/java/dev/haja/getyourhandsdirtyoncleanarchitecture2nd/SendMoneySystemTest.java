@@ -5,7 +5,6 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
 
-import org.jspecify.annotations.NonNull;
 import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,6 +28,15 @@ import static org.assertj.core.api.BDDAssertions.then;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class SendMoneySystemTest {
 
+    /**
+     * 검증용 조회의 기준 시각. 픽스처의 2018년 활동은 baseline 잔액으로 합산되고
+     * (ActivityRepository가 {@code timestamp < until}로 더한다), 2019년 활동과
+     * 이체가 새로 만든 활동은 ActivityWindow로 적재된다({@code timestamp >= since}).
+     * {@code now()}로 조회하면 모든 활동이 baseline으로 흘러가 윈도우가 비어 버려,
+     * 두 경로 중 하나가 검증되지 않은 채 남는다.
+     */
+    private static final LocalDateTime BASELINE_DATE = LocalDateTime.of(2019, 1, 1, 0, 0);
+
     @Autowired private TestRestTemplate testRestTemplate;
     @Autowired private LoadAccountPort loadAccountPort;
 
@@ -39,6 +47,9 @@ class SendMoneySystemTest {
         // given
         Money initialSourceBalance = sourceAccount().calculateBalance();
         Money initialTargetBalance = targetAccount().calculateBalance();
+
+        // 이체가 잔액 한계선에 걸치지 않는다 — 500을 보내고도 500이 남는다
+        then(initialSourceBalance).isEqualTo(Money.of(1000L));
 
         // when
         ResponseEntity<Object> response = whenSendMoney(
@@ -67,10 +78,10 @@ class SendMoneySystemTest {
     }
 
     private Account loadAccount(AccountId accountId) {
-        return loadAccountPort.loadAccount(accountId, LocalDateTime.now());
+        return loadAccountPort.loadAccount(accountId, BASELINE_DATE);
     }
 
-    private @NonNull ResponseEntity<Object> whenSendMoney(AccountId sourceAccountId, AccountId targetAccountId, Money transferredAmount) {
+    private ResponseEntity<Object> whenSendMoney(AccountId sourceAccountId, AccountId targetAccountId, Money transferredAmount) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
         HttpEntity<Void> request = new HttpEntity<>(null, headers);

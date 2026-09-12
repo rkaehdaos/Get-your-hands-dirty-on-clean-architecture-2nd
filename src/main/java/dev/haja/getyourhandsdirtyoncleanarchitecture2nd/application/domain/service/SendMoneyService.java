@@ -13,6 +13,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 @Component
@@ -25,12 +26,18 @@ class SendMoneyService implements SendMoneyUseCase {
     private final UpdateAccountStatePort updateAccountStatePort;
     private final MoneyTransferProperties moneyTransferProperties;
 
+    /**
+     * 현재 시각을 직접 가져오지 않고 Clock에게 물어본다. 시각이 주입 가능한 의존성이 되어
+     * 테스트가 baselineDate를 정확히 고정할 수 있다.
+     */
+    private final Clock clock;
+
     @Override
     public void sendMoney(SendMoneyCommand command) {
 
         checkThreshold(command);
 
-        LocalDateTime baselineDate = LocalDateTime.now().minusDays(10);
+        LocalDateTime baselineDate = LocalDateTime.now(clock).minusDays(10);
 
         Account sourceAccount = loadAccountPort.loadAccount(
                 command.sourceAccountId(),
