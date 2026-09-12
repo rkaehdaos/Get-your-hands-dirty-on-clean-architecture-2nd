@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-
 @AutoConfigureTestRestTemplate
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class SendMoneySystemTest {
@@ -54,6 +53,11 @@ class SendMoneySystemTest {
         // then
         then(response.getStatusCode())
                 .isEqualTo(HttpStatus.OK);
+        then(sourceAccount.calculateBalance())
+                .isEqualTo(initialSourceBalance.minus(transferredAmount));
+
+        then(targetAccount.calculateBalance())
+                .isEqualTo(initialTargetBalance.plus(transferredAmount));
 
     }
 
