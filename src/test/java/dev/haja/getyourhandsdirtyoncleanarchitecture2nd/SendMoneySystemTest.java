@@ -4,6 +4,7 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture;
 
 import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
@@ -22,6 +23,8 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture.SOURCE_ACCOUNT_ID;
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture.TARGET_ACCOUNT_ID;
 import static org.assertj.core.api.BDDAssertions.then;
 
 @AutoConfigureTestRestTemplate
@@ -41,7 +44,7 @@ class SendMoneySystemTest {
     @Autowired private LoadAccountPort loadAccountPort;
 
     @Test
-    @Sql("/sql/accounts.sql")
+    @Sql(AccountFixture.SQL)
     void sendMoney() {
 
         // given
@@ -53,8 +56,8 @@ class SendMoneySystemTest {
 
         // when
         ResponseEntity<Object> response = whenSendMoney(
-                sourceAccountId(),
-                targetAccountId(),
+                SOURCE_ACCOUNT_ID,
+                TARGET_ACCOUNT_ID,
                 transferredAmount());
 
         // then
@@ -70,11 +73,11 @@ class SendMoneySystemTest {
     }
 
     private Account sourceAccount() {
-        return loadAccount(sourceAccountId());
+        return loadAccount(SOURCE_ACCOUNT_ID);
     }
 
     private Account targetAccount() {
-        return loadAccount(targetAccountId());
+        return loadAccount(TARGET_ACCOUNT_ID);
     }
 
     private Account loadAccount(AccountId accountId) {
@@ -97,14 +100,6 @@ class SendMoneySystemTest {
 
     private Money transferredAmount() {
         return Money.of(500L);
-    }
-
-    private AccountId sourceAccountId() {
-        return new AccountId(1L);
-    }
-
-    private AccountId targetAccountId() {
-        return new AccountId(2L);
     }
 
 }

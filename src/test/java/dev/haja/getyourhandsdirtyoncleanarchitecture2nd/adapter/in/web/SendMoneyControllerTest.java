@@ -15,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.DEFAULT_ACCOUNT_ID;
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.OTHER_ACCOUNT_ID;
 import static org.mockito.BDDMockito.any;
 import static org.mockito.BDDMockito.eq;
 import static org.mockito.BDDMockito.then;
@@ -32,7 +34,8 @@ class SendMoneyControllerTest {
 
         // when
         var result = mockMvcTester.post()
-                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}", 41L, 42L, 500)
+                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
+                        OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 500)
                 .header("Content-Type", "application/json")
                 .exchange();
 
@@ -41,8 +44,8 @@ class SendMoneyControllerTest {
 
         then(sendMoneyUseCase).should()
                 .sendMoney(eq(new SendMoneyCommand(
-                        new AccountId(41L),
-                        new AccountId(42L),
+                        OTHER_ACCOUNT_ID,
+                        DEFAULT_ACCOUNT_ID,
                         Money.of(500L))));
     }
 
@@ -51,12 +54,13 @@ class SendMoneyControllerTest {
     void givenInsufficientFunds_thenRespondsWithUnprocessableEntity() {
 
         // given
-        willThrow(new InsufficientFundsException(new AccountId(41L), Money.of(500L)))
+        willThrow(new InsufficientFundsException(OTHER_ACCOUNT_ID, Money.of(500L)))
                 .given(sendMoneyUseCase).sendMoney(any(SendMoneyCommand.class));
 
         // when
         var result = mockMvcTester.post()
-                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}", 41L, 42L, 500)
+                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
+                        OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 500)
                 .header("Content-Type", "application/json")
                 .exchange();
 
@@ -80,7 +84,8 @@ class SendMoneyControllerTest {
 
         // when
         var result = mockMvcTester.post()
-                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}", 41L, 42L, 2_000_000)
+                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
+                        OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 2_000_000)
                 .header("Content-Type", "application/json")
                 .exchange();
 
@@ -104,7 +109,8 @@ class SendMoneyControllerTest {
 
         // when
         var result = mockMvcTester.post()
-                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}", 999L, 42L, 500)
+                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
+                        999L, DEFAULT_ACCOUNT_ID.value(), 500)
                 .header("Content-Type", "application/json")
                 .exchange();
 
@@ -125,7 +131,8 @@ class SendMoneyControllerTest {
         // when
         // 유스케이스 목을 스터빙할 필요가 없다 — 컨트롤러가 커맨드를 만드는 자리에서 터진다
         var result = mockMvcTester.post()
-                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}", 41L, 42L, 0)
+                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
+                        OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 0)
                 .header("Content-Type", "application/json")
                 .exchange();
 

@@ -24,6 +24,12 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture;
+
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture.SOURCE_ACCOUNT_ID;
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture.TARGET_ACCOUNT_ID;
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.DEFAULT_ACCOUNT_ID;
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.OTHER_ACCOUNT_ID;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.defaultAccount;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.ActivityTestData.defaultActivity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,7 +46,7 @@ class AccountPersistenceAdapterTest {
     @Autowired private JdbcTemplate jdbcTemplate;
 
     @Test
-    @Sql("/sql/accounts.sql")
+    @Sql(AccountFixture.SQL)
     void loadsAccount() {
 
         // given
@@ -48,7 +54,7 @@ class AccountPersistenceAdapterTest {
 
         // when
         Account account = adapterUnderTest.loadAccount(
-                new AccountId(1L),
+                SOURCE_ACCOUNT_ID,
                 LocalDateTime.of(2018, 8, 10, 0, 0));
 
         // then
@@ -81,7 +87,7 @@ class AccountPersistenceAdapterTest {
     }
 
     @Test
-    @Sql("/sql/accounts.sql")
+    @Sql(AccountFixture.SQL)
     @DisplayName("마이크로초까지 채운 활동 시각이 저장 후 그대로 다시 읽힘")
     void reloadsActivityWithMicrosecondTimestampUnchanged() {
 
@@ -91,12 +97,12 @@ class AccountPersistenceAdapterTest {
         LocalDateTime timestamp = LocalDateTime.of(2019, 8, 10, 10, 0).withNano(123_456_000);
 
         Account account = defaultAccount()
-                .withAccountId(new AccountId(1L))
+                .withAccountId(SOURCE_ACCOUNT_ID)
                 .withActivityWindow(new ActivityWindow(
                         defaultActivity()
-                                .withOwnerAccount(new AccountId(1L))
-                                .withSourceAccount(new AccountId(1L))
-                                .withTargetAccount(new AccountId(2L))
+                                .withOwnerAccount(SOURCE_ACCOUNT_ID)
+                                .withSourceAccount(SOURCE_ACCOUNT_ID)
+                                .withTargetAccount(TARGET_ACCOUNT_ID)
                                 .withTimestamp(timestamp)
                                 .withMoney(Money.of(1L)).build()))
                 .build();
@@ -105,7 +111,7 @@ class AccountPersistenceAdapterTest {
 
         // when
         Account reloaded = adapterUnderTest.loadAccount(
-                new AccountId(1L),
+                SOURCE_ACCOUNT_ID,
                 LocalDateTime.of(2019, 1, 1, 0, 0));
 
         // then
@@ -158,10 +164,10 @@ class AccountPersistenceAdapterTest {
         // 계좌 42의 원장에 계좌 41 소유의 활동이 들어 있다. 도메인은 이 규칙을 강제하지
         // 않는다 — 행 간 규칙이라 Activity 하나만 보고는 표현할 수 없기 때문이다.
         Account account = defaultAccount()
-                .withAccountId(new AccountId(42L))
+                .withAccountId(DEFAULT_ACCOUNT_ID)
                 .withActivityWindow(new ActivityWindow(
                         defaultActivity()
-                                .withOwnerAccount(new AccountId(41L)).build()))
+                                .withOwnerAccount(OTHER_ACCOUNT_ID).build()))
                 .build();
 
         // when / then
@@ -208,14 +214,19 @@ class AccountPersistenceAdapterTest {
         // 합계를 long으로 읽으면 이 자리에서 깨진다 — Money는 이미 BigInteger다.
         long almostMax = Long.MAX_VALUE - 1;
 
-        jdbcTemplate.update("insert into account (id) values (1)");
+        long ownerAccountId = SOURCE_ACCOUNT_ID.value();
+        long otherAccountId = TARGET_ACCOUNT_ID.value();
+
+        jdbcTemplate.update("insert into account (id) values (?)", ownerAccountId);
         activityRepository.saveAll(List.of(
-                new ActivityJpaEntity(null, LocalDateTime.of(2018, 8, 8, 8, 0), 1L, 2L, 1L, almostMax),
-                new ActivityJpaEntity(null, LocalDateTime.of(2018, 8, 9, 8, 0), 1L, 2L, 1L, almostMax)));
+                new ActivityJpaEntity(null, LocalDateTime.of(2018, 8, 8, 8, 0),
+                        ownerAccountId, otherAccountId, ownerAccountId, almostMax),
+                new ActivityJpaEntity(null, LocalDateTime.of(2018, 8, 9, 8, 0),
+                        ownerAccountId, otherAccountId, ownerAccountId, almostMax)));
 
         // when
         Account account = adapterUnderTest.loadAccount(
-                new AccountId(1L),
+                SOURCE_ACCOUNT_ID,
                 LocalDateTime.of(2018, 8, 10, 0, 0));
 
         // then

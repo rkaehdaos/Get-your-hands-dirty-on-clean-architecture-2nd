@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.DEFAULT_ACCOUNT_ID;
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.OTHER_ACCOUNT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -68,8 +70,8 @@ class SendMoneyServiceTest {
                 CLOCK);
 
         SendMoneyCommand command = new SendMoneyCommand(
-                new AccountId(41L),
-                new AccountId(42L),
+                OTHER_ACCOUNT_ID,
+                DEFAULT_ACCOUNT_ID,
                 Money.of(1_001L));
 
         // when / then
@@ -124,8 +126,8 @@ class SendMoneyServiceTest {
     void givenSourceAccountDoesNotExist_thenThrowsNoSuchAccountException() {
 
         // given
-        AccountId sourceAccountId = new AccountId(41L);
-        AccountId targetAccountId = new AccountId(42L);
+        AccountId sourceAccountId = OTHER_ACCOUNT_ID;
+        AccountId targetAccountId = DEFAULT_ACCOUNT_ID;
 
         given(loadAccountPort.loadAccount(eq(sourceAccountId), any(LocalDateTime.class)))
                 .willThrow(new AccountNotFoundException(sourceAccountId));
@@ -151,8 +153,8 @@ class SendMoneyServiceTest {
     void givenSourceAccountHasNoId_thenThrowsIllegalStateException() {
 
         // given
-        AccountId sourceAccountId = new AccountId(41L);
-        AccountId targetAccountId = new AccountId(42L);
+        AccountId sourceAccountId = OTHER_ACCOUNT_ID;
+        AccountId targetAccountId = DEFAULT_ACCOUNT_ID;
 
         givenAnAccountWithoutId(sourceAccountId);
         givenAnAccountWithId(targetAccountId);
@@ -177,9 +179,9 @@ class SendMoneyServiceTest {
     void givenWithdrawalFails_thenThrowsInsufficientFundsExceptionAndOnlySourceAccountIsLockedAndReleased() {
 
         // given
-        AccountId sourceAccountId = new AccountId(41L);
+        AccountId sourceAccountId = OTHER_ACCOUNT_ID;
         Account sourceAccount = givenAnAccountWithId(sourceAccountId);
-        AccountId targetAccountId = new AccountId(42L);
+        AccountId targetAccountId = DEFAULT_ACCOUNT_ID;
         Account targetAccount = givenAnAccountWithId(targetAccountId);
 
         givenWithdrawalWillFail(sourceAccount);
@@ -418,11 +420,11 @@ class SendMoneyServiceTest {
     }
 
     private Account givenSourceAccount() {
-        return givenAnAccountWithId(new AccountId(41L));
+        return givenAnAccountWithId(OTHER_ACCOUNT_ID);
     }
 
     private Account givenTargetAccount() {
-        return givenAnAccountWithId(new AccountId(42L));
+        return givenAnAccountWithId(DEFAULT_ACCOUNT_ID);
     }
 
     // 출금 계좌의 출금이 실패할 것이다

@@ -8,9 +8,19 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 
 public class AccountTestData {
 
+    /**
+     * 빌더가 만드는 계좌의 ID. 활동의 소유자·출금 계좌도 이 계좌다.
+     */
+    public static final AccountId DEFAULT_ACCOUNT_ID = new AccountId(42L);
+
+    /**
+     * 이체 상대로 쓰는 두 번째 계좌의 ID. 기본 활동의 입금 계좌다.
+     */
+    public static final AccountId OTHER_ACCOUNT_ID = new AccountId(41L);
+
     public static AccountBuilder defaultAccount() {
         return new AccountBuilder()
-                .withAccountId(new AccountId(42L))
+                .withAccountId(DEFAULT_ACCOUNT_ID)
                 .withBaselineBalance(Money.of(999L))
                 .withActivityWindow(new ActivityWindow(
                         ActivityTestData.defaultActivity().build(),
