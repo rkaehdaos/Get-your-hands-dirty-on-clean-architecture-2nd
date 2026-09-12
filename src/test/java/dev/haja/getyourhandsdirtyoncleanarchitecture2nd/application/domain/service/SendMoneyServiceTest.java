@@ -4,10 +4,12 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.InsufficientFundsException;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.NoSuchAccountException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.ThresholdExceededException;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountLock;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountNotFoundException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.UpdateAccountStatePort;
 import org.junit.jupiter.api.DisplayName;
@@ -115,6 +117,33 @@ class SendMoneyServiceTest {
         // baselineDate를 한 번 계산해 두 조회에 같은 값을 넘긴다
         assertThat(baselineDateCaptor.getAllValues())
                 .containsExactly(NOW.minusDays(10), NOW.minusDays(10));
+    }
+
+    @Test
+    @DisplayName("출금 계좌가 없으면 NoSuchAccountException이 발생하고 잠금도 저장도 일어나지 않음")
+    void givenSourceAccountDoesNotExist_thenThrowsNoSuchAccountException() {
+
+        // given
+        AccountId sourceAccountId = new AccountId(41L);
+        AccountId targetAccountId = new AccountId(42L);
+
+        given(loadAccountPort.loadAccount(eq(sourceAccountId), any(LocalDateTime.class)))
+                .willThrow(new AccountNotFoundException(sourceAccountId));
+
+        SendMoneyCommand command = new SendMoneyCommand(
+                sourceAccountId,
+                targetAccountId,
+                Money.of(500L));
+
+        // when / then
+        // 아웃바운드 포트의 예외가 아니라 유스케이스의 예외가 올라온다
+        assertThatThrownBy(() -> service.sendMoney(command))
+                .isInstanceOf(NoSuchAccountException.class)
+                .hasMessageContaining("41");
+
+        // 조회가 잠금보다 먼저이므로 잠금도 저장도 일어나지 않는다
+        then(accountLock).shouldHaveNoInteractions();
+        then(updateAccountStatePort).shouldHaveNoInteractions();
     }
 
     @Test
