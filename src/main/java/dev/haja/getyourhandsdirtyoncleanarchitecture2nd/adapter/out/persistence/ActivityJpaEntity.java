@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity @Data
-@Table(name = "Activity")
+@Table(name = "activity")
 @EqualsAndHashCode(of = {"id"})
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
