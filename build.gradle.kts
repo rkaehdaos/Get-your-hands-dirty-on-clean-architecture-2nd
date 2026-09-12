@@ -34,7 +34,10 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-restclient")
     testImplementation("org.springframework.boot:spring-boot-resttestclient")
     testImplementation("org.mockito:mockito-junit-jupiter")
-    testRuntimeOnly("com.h2database:h2")
+
+    // bootRun이 내장 DB로 뜨려면 런타임 클래스패스에 있어야 한다. testRuntimeOnly는
+    // runtimeOnly를 상속하므로 테스트도 이 선언 하나로 H2를 얻는다.
+    runtimeOnly("com.h2database:h2")
     testCompileOnly("org.projectlombok:lombok")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testAnnotationProcessor("org.projectlombok:lombok")

@@ -8,6 +8,9 @@ import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.validation
 
 public interface GetAccountBalanceUseCase {
 
+    /**
+     * @throws NoSuchAccountException 조회할 계좌가 없으면
+     */
     Money getAccountBalance(GetAccountBalanceQuery query);
 
     record GetAccountBalanceQuery(

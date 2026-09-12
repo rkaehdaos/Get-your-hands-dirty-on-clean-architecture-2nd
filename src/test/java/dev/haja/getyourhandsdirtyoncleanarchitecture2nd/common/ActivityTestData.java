@@ -11,9 +11,9 @@ public class ActivityTestData {
 
     public static ActivityBuilder defaultActivity(){
         return new ActivityBuilder()
-                .withOwnerAccount(new AccountId(42L))
-                .withSourceAccount(new AccountId(42L))
-                .withTargetAccount(new AccountId(41L))
+                .withOwnerAccount(AccountTestData.DEFAULT_ACCOUNT_ID)
+                .withSourceAccount(AccountTestData.DEFAULT_ACCOUNT_ID)
+                .withTargetAccount(AccountTestData.OTHER_ACCOUNT_ID)
                 .withTimestamp(LocalDateTime.now())
                 .withMoney(Money.of(999L));
     }

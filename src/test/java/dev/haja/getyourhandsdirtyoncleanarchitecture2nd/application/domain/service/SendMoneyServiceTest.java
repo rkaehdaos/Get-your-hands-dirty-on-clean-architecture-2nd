@@ -4,10 +4,12 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.InsufficientFundsException;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.NoSuchAccountException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.ThresholdExceededException;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountLock;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountNotFoundException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.UpdateAccountStatePort;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +24,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.DEFAULT_ACCOUNT_ID;
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.OTHER_ACCOUNT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -66,8 +70,8 @@ class SendMoneyServiceTest {
                 CLOCK);
 
         SendMoneyCommand command = new SendMoneyCommand(
-                new AccountId(41L),
-                new AccountId(42L),
+                OTHER_ACCOUNT_ID,
+                DEFAULT_ACCOUNT_ID,
                 Money.of(1_001L));
 
         // when / then
@@ -118,12 +122,39 @@ class SendMoneyServiceTest {
     }
 
     @Test
+    @DisplayName("출금 계좌가 없으면 NoSuchAccountException이 발생하고 잠금도 저장도 일어나지 않음")
+    void givenSourceAccountDoesNotExist_thenThrowsNoSuchAccountException() {
+
+        // given
+        AccountId sourceAccountId = OTHER_ACCOUNT_ID;
+        AccountId targetAccountId = DEFAULT_ACCOUNT_ID;
+
+        given(loadAccountPort.loadAccount(eq(sourceAccountId), any(LocalDateTime.class)))
+                .willThrow(new AccountNotFoundException(sourceAccountId));
+
+        SendMoneyCommand command = new SendMoneyCommand(
+                sourceAccountId,
+                targetAccountId,
+                Money.of(500L));
+
+        // when / then
+        // 아웃바운드 포트의 예외가 아니라 유스케이스의 예외가 올라온다
+        assertThatThrownBy(() -> service.sendMoney(command))
+                .isInstanceOf(NoSuchAccountException.class)
+                .hasMessageContaining("41");
+
+        // 조회가 잠금보다 먼저이므로 잠금도 저장도 일어나지 않는다
+        then(accountLock).shouldHaveNoInteractions();
+        then(updateAccountStatePort).shouldHaveNoInteractions();
+    }
+
+    @Test
     @DisplayName("출금 계좌에 ID가 없으면 IllegalStateException이 발생함")
     void givenSourceAccountHasNoId_thenThrowsIllegalStateException() {
 
         // given
-        AccountId sourceAccountId = new AccountId(41L);
-        AccountId targetAccountId = new AccountId(42L);
+        AccountId sourceAccountId = OTHER_ACCOUNT_ID;
+        AccountId targetAccountId = DEFAULT_ACCOUNT_ID;
 
         givenAnAccountWithoutId(sourceAccountId);
         givenAnAccountWithId(targetAccountId);
@@ -148,9 +179,9 @@ class SendMoneyServiceTest {
     void givenWithdrawalFails_thenThrowsInsufficientFundsExceptionAndOnlySourceAccountIsLockedAndReleased() {
 
         // given
-        AccountId sourceAccountId = new AccountId(41L);
+        AccountId sourceAccountId = OTHER_ACCOUNT_ID;
         Account sourceAccount = givenAnAccountWithId(sourceAccountId);
-        AccountId targetAccountId = new AccountId(42L);
+        AccountId targetAccountId = DEFAULT_ACCOUNT_ID;
         Account targetAccount = givenAnAccountWithId(targetAccountId);
 
         givenWithdrawalWillFail(sourceAccount);
@@ -212,7 +243,7 @@ class SendMoneyServiceTest {
         Account sourceAccount = givenSourceAccount();
         Account targetAccount = givenTargetAccount();
 
-        given(sourceAccount.withdraw(any(Money.class), any(AccountId.class)))
+        given(sourceAccount.withdraw(any(Money.class), any(AccountId.class), any(LocalDateTime.class)))
                 .willThrow(new RuntimeException("boom"));
 
         AccountId sourceAccountId = sourceAccount.getId().get();
@@ -312,7 +343,7 @@ class SendMoneyServiceTest {
         Account targetAccount = givenTargetAccount();
 
         givenWithdrawalWillSucceed(sourceAccount);
-        given(targetAccount.deposit(any(Money.class), any(AccountId.class)))
+        given(targetAccount.deposit(any(Money.class), any(AccountId.class), any(LocalDateTime.class)))
                 .willThrow(new RuntimeException("boom"));
 
         AccountId sourceAccountId = sourceAccount.getId().get();
@@ -360,11 +391,12 @@ class SendMoneyServiceTest {
         AccountId targetAccountId = targetAccount.getId().get();
 
         then(accountLock).should().lockAccount(eq(sourceAccountId));
-        then(sourceAccount).should().withdraw(eq(money), eq(targetAccountId));
+        // 활동의 시각은 주입된 Clock에서 온다
+        then(sourceAccount).should().withdraw(eq(money), eq(targetAccountId), eq(NOW));
         then(accountLock).should().releaseAccount(eq(sourceAccountId));
 
         then(accountLock).should().lockAccount(eq(targetAccountId));
-        then(targetAccount).should().deposit(eq(money), eq(sourceAccountId));
+        then(targetAccount).should().deposit(eq(money), eq(sourceAccountId), eq(NOW));
         then(accountLock).should().releaseAccount(eq(targetAccountId));
 
         thenAccountsHaveBeenUpdated(sourceAccountId, targetAccountId);
@@ -388,34 +420,34 @@ class SendMoneyServiceTest {
     }
 
     private Account givenSourceAccount() {
-        return givenAnAccountWithId(new AccountId(41L));
+        return givenAnAccountWithId(OTHER_ACCOUNT_ID);
     }
 
     private Account givenTargetAccount() {
-        return givenAnAccountWithId(new AccountId(42L));
+        return givenAnAccountWithId(DEFAULT_ACCOUNT_ID);
     }
 
     // 출금 계좌의 출금이 실패할 것이다
     private void givenWithdrawalWillFail(Account account) {
-        given(account.withdraw(any(Money.class), any(AccountId.class)))
+        given(account.withdraw(any(Money.class), any(AccountId.class), any(LocalDateTime.class)))
                 .willReturn(false);
     }
 
     // 출금 계좌의 출금이 성공할 것이다
     private void givenWithdrawalWillSucceed(Account account) {
-        given(account.withdraw(any(Money.class), any(AccountId.class)))
+        given(account.withdraw(any(Money.class), any(AccountId.class), any(LocalDateTime.class)))
                 .willReturn(true);
     }
 
     // 입금 계좌의 입금이 성공할 것이다.
     private void givenDepositWillSucceed(Account account) {
-        given(account.deposit(any(Money.class), any(AccountId.class)))
+        given(account.deposit(any(Money.class), any(AccountId.class), any(LocalDateTime.class)))
                 .willReturn(true);
     }
 
     // 입금 계좌의 입금이 실패할 것이다.
     private void givenDepositWillFail(Account account) {
-        given(account.deposit(any(Money.class), any(AccountId.class)))
+        given(account.deposit(any(Money.class), any(AccountId.class), any(LocalDateTime.class)))
                 .willReturn(false);
     }
 
