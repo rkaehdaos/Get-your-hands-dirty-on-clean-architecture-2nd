@@ -5,6 +5,7 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Activity.ActivityId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.ActivityWindow;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountNotFoundException;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -76,6 +77,22 @@ class AccountPersistenceAdapterTest {
 
         ActivityJpaEntity savedActivity = activityRepository.findAll().get(0);
         assertThat(savedActivity.getAmount()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("없는 계좌를 조회하면 AccountNotFoundException이 발생함")
+    void givenUnknownAccountId_thenThrowsAccountNotFoundException() {
+
+        // given
+        // 비어 있는 스키마 — 계좌 999는 없다
+
+        // when / then
+        // 영속성 기술의 예외가 포트 경계를 넘지 않는다
+        assertThatThrownBy(() -> adapterUnderTest.loadAccount(
+                new AccountId(999L),
+                LocalDateTime.of(2018, 8, 10, 0, 0)))
+                .isInstanceOf(AccountNotFoundException.class)
+                .hasMessageContaining("999");
     }
 
     @Test

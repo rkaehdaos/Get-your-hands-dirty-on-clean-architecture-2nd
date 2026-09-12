@@ -3,9 +3,9 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.adapter.out.persistence
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Activity;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountNotFoundException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.UpdateAccountStatePort;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +35,7 @@ class AccountPersistenceAdapter implements
     public Account loadAccount(AccountId accountId, LocalDateTime baselineDate) {
         AccountJpaEntity account =
                 accountRepository.findById(accountId.value())
-                        .orElseThrow(EntityNotFoundException::new);
+                        .orElseThrow(() -> new AccountNotFoundException(accountId));
 
         List<ActivityJpaEntity> activities =
                 activityRepository.findByOwnerSince(
