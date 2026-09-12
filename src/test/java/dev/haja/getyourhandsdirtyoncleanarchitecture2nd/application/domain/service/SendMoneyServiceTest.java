@@ -10,7 +10,6 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.Thre
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountLock;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.UpdateAccountStatePort;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -421,7 +420,7 @@ class SendMoneyServiceTest {
     }
 
 
-    private @NonNull Account givenAnAccountWithId(AccountId id) {
+    private Account givenAnAccountWithId(AccountId id) {
         Account account = Mockito.mock(Account.class);
         given(account.getId())
                 .willReturn(Optional.of(id));
@@ -431,7 +430,7 @@ class SendMoneyServiceTest {
     }
 
     // 주어진 ID로 조회되지만 정작 자신은 ID를 갖고 있지 않은 계좌
-    private @NonNull Account givenAnAccountWithoutId(AccountId loadedForId) {
+    private Account givenAnAccountWithoutId(AccountId loadedForId) {
         Account account = Mockito.mock(Account.class);
         given(account.getId())
                 .willReturn(Optional.empty());

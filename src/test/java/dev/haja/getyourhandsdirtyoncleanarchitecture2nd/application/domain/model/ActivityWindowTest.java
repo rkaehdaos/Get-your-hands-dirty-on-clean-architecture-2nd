@@ -1,7 +1,6 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -75,15 +74,15 @@ class ActivityWindowTest {
         assertThat(balanceOfAccount2).isEqualTo(Money.of(500));
     }
 
-    private static @NonNull LocalDateTime endDate() {
+    private static LocalDateTime endDate() {
         return LocalDateTime.of(2026, 9, 5, 0, 0);
     }
 
-    private static @NonNull LocalDateTime inBetweenDate() {
+    private static LocalDateTime inBetweenDate() {
         return LocalDateTime.of(2026, 9, 4, 0, 0);
     }
 
-    private static @NonNull LocalDateTime startDate() {
+    private static LocalDateTime startDate() {
         return LocalDateTime.of(2026, 9, 3, 0, 0);
     }
 }
