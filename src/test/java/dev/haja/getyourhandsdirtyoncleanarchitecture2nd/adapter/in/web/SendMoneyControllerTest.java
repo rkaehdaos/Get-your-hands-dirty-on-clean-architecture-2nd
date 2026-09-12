@@ -92,4 +92,27 @@ class SendMoneyControllerTest {
                 .asString()
                 .contains("1000000", "2000000");
     }
+
+    @Test
+    @DisplayName("금액이 양수가 아니면 커맨드 검증에 실패해 400 Bad Request가 응답됨")
+    void givenNonPositiveAmount_thenRespondsWithBadRequest() {
+
+        // when
+        // 유스케이스 목을 스터빙할 필요가 없다 — 컨트롤러가 커맨드를 만드는 자리에서 터진다
+        var result = mockMvcTester.post()
+                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}", 41L, 42L, 0)
+                .header("Content-Type", "application/json")
+                .exchange();
+
+        // then
+        assertThat(result)
+                .hasStatus(HttpStatus.BAD_REQUEST)
+                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .extractingPath("$.detail")
+                .asString()
+                .contains("money");
+
+        then(sendMoneyUseCase).shouldHaveNoInteractions();
+    }
 }
