@@ -2,6 +2,7 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.adapter.out.persistence
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Activity.ActivityId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.ActivityWindow;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 
@@ -75,6 +76,26 @@ class AccountPersistenceAdapterTest {
 
         ActivityJpaEntity savedActivity = activityRepository.findAll().get(0);
         assertThat(savedActivity.getAmount()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("이미 id가 있는 활동은 다시 저장하지 않음")
+    void doesNotPersistActivitiesThatAlreadyHaveAnId() {
+
+        // given
+        // 포트 계약의 절반이다 — 나머지 절반("생성된 id를 도메인에 되돌리지 않는다")은
+        // 관찰할 방법이 없어 Javadoc으로만 남아 있다.
+        Account account = defaultAccount()
+                .withActivityWindow(new ActivityWindow(
+                        defaultActivity()
+                                .withId(new ActivityId(1001L)).build()))
+                .build();
+
+        // when
+        adapterUnderTest.updateActivities(account);
+
+        // then
+        assertThat(activityRepository.count()).isZero();
     }
 
     @Test
