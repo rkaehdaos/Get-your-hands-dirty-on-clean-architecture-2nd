@@ -5,6 +5,7 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.ActivityWindow;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -72,6 +73,31 @@ class AccountPersistenceAdapterTest {
 
         ActivityJpaEntity savedActivity = activityRepository.findAll().get(0);
         assertThat(savedActivity.getAmount()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("기준 잔액 합계가 long 범위를 넘어도 정확히 조회됨")
+    void loadsAccountWhoseBaselineBalanceExceedsLongRange() {
+
+        // given
+        // 각각은 long에 담기지만 둘을 더하면 넘치는 입금 두 건.
+        // 합계를 long으로 읽으면 이 자리에서 깨진다 — Money는 이미 BigInteger다.
+        long almostMax = Long.MAX_VALUE - 1;
+
+        jdbcTemplate.update("insert into account (id) values (1)");
+        activityRepository.saveAll(List.of(
+                new ActivityJpaEntity(null, LocalDateTime.of(2018, 8, 8, 8, 0), 1L, 2L, 1L, almostMax),
+                new ActivityJpaEntity(null, LocalDateTime.of(2018, 8, 9, 8, 0), 1L, 2L, 1L, almostMax)));
+
+        // when
+        Account account = adapterUnderTest.loadAccount(
+                new AccountId(1L),
+                LocalDateTime.of(2018, 8, 10, 0, 0));
+
+        // then
+        // 두 활동 모두 기준일 이전이므로 윈도우는 비고 잔액은 전부 baseline에서 온다
+        assertThat(account.calculateBalance())
+                .isEqualTo(new Money(BigInteger.valueOf(almostMax).multiply(BigInteger.TWO)));
     }
 
     @Test
