@@ -31,6 +31,7 @@ dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+    testImplementation("org.springframework.boot:spring-boot-restclient")
     testImplementation("org.mockito:mockito-junit-jupiter")
     testRuntimeOnly("com.h2database:h2")
     testCompileOnly("org.projectlombok:lombok")
