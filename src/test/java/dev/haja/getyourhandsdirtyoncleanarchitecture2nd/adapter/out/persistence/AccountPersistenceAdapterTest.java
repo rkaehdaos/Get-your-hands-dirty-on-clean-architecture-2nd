@@ -7,16 +7,20 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 
 import java.time.LocalDateTime;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.defaultAccount;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.ActivityTestData.defaultActivity;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @Import({
@@ -26,6 +30,7 @@ class AccountPersistenceAdapterTest {
 
     @Autowired private AccountPersistenceAdapter adapterUnderTest;
     @Autowired private ActivityRepository activityRepository;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     @Test
     @Sql("/sql/accounts.sql")
@@ -66,6 +71,23 @@ class AccountPersistenceAdapterTest {
 
         ActivityJpaEntity savedActivity = activityRepository.findAll().get(0);
         assertThat(savedActivity.getAmount()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("컬럼이 null인 활동 행은 스키마가 거부함")
+    void rejectsNullAmount() {
+
+        // given
+        // 스키마의 유일한 출처가 엔티티이므로, 이 테스트가 not null 제약의 존재를 고정한다.
+        // 엔티티를 거치지 않고 직접 넣어야 제약이 DB에 있는지를 확인할 수 있다.
+
+        // when / then
+        assertThatThrownBy(() -> jdbcTemplate.update("""
+                insert into activity
+                (id, timestamp, owner_account_id, source_account_id, target_account_id, amount)
+                values (1001, '2019-08-09 10:00:00.0', 1, 1, 2, null)
+                """))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
 }
