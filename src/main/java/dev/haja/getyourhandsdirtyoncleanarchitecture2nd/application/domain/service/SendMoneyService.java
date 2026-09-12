@@ -51,13 +51,13 @@ class SendMoneyService implements SendMoneyUseCase {
 
         accountLock.lockAccount(sourceAccountId);
         try {
-            if (!sourceAccount.withdraw(command.money(), targetAccountId)) {
+            if (!sourceAccount.withdraw(command.money(), targetAccountId, LocalDateTime.now())) {
                 throw new InsufficientFundsException(sourceAccountId, command.money());
             }
 
             accountLock.lockAccount(targetAccountId);
             try {
-                if (!targetAccount.deposit(command.money(), sourceAccountId)) {
+                if (!targetAccount.deposit(command.money(), sourceAccountId, LocalDateTime.now())) {
                     throw new IllegalStateException("expected deposit to target account to succeed");
                 }
 

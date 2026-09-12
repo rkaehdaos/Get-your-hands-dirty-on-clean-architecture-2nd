@@ -3,12 +3,17 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.mode
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
+
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.defaultAccount;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.ActivityTestData.defaultActivity;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
 class AccountTest {
+
+    // 도메인이 현재 시각을 읽지 않으므로 활동의 시각은 테스트가 정한다
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 9, 12, 12, 0);
 
     @Test
     void calculatesBalance() {
@@ -53,7 +58,7 @@ class AccountTest {
 
         // when
         AccountId randomTargetAccount = new AccountId(99L);
-        boolean success = account.withdraw(Money.of(555L), randomTargetAccount);
+        boolean success = account.withdraw(Money.of(555L), randomTargetAccount, NOW);
 
         // then
         assertThat(success).isTrue();
@@ -83,7 +88,7 @@ class AccountTest {
                 .build();
 
         // when
-        boolean success = account.withdraw(Money.of(1556L), new AccountId(99L));
+        boolean success = account.withdraw(Money.of(1556L), new AccountId(99L), NOW);
 
         // then
         assertThat(success).isFalse();
@@ -113,7 +118,7 @@ class AccountTest {
                 .build();
 
         // when
-        boolean success = account.deposit(Money.of(445L), new AccountId(99L));
+        boolean success = account.deposit(Money.of(445L), new AccountId(99L), NOW);
 
         // then
         assertThat(success).isTrue();

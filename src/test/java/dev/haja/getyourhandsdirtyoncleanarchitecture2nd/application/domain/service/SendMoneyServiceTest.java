@@ -241,7 +241,7 @@ class SendMoneyServiceTest {
         Account sourceAccount = givenSourceAccount();
         Account targetAccount = givenTargetAccount();
 
-        given(sourceAccount.withdraw(any(Money.class), any(AccountId.class)))
+        given(sourceAccount.withdraw(any(Money.class), any(AccountId.class), any(LocalDateTime.class)))
                 .willThrow(new RuntimeException("boom"));
 
         AccountId sourceAccountId = sourceAccount.getId().get();
@@ -341,7 +341,7 @@ class SendMoneyServiceTest {
         Account targetAccount = givenTargetAccount();
 
         givenWithdrawalWillSucceed(sourceAccount);
-        given(targetAccount.deposit(any(Money.class), any(AccountId.class)))
+        given(targetAccount.deposit(any(Money.class), any(AccountId.class), any(LocalDateTime.class)))
                 .willThrow(new RuntimeException("boom"));
 
         AccountId sourceAccountId = sourceAccount.getId().get();
@@ -389,11 +389,11 @@ class SendMoneyServiceTest {
         AccountId targetAccountId = targetAccount.getId().get();
 
         then(accountLock).should().lockAccount(eq(sourceAccountId));
-        then(sourceAccount).should().withdraw(eq(money), eq(targetAccountId));
+        then(sourceAccount).should().withdraw(eq(money), eq(targetAccountId), any(LocalDateTime.class));
         then(accountLock).should().releaseAccount(eq(sourceAccountId));
 
         then(accountLock).should().lockAccount(eq(targetAccountId));
-        then(targetAccount).should().deposit(eq(money), eq(sourceAccountId));
+        then(targetAccount).should().deposit(eq(money), eq(sourceAccountId), any(LocalDateTime.class));
         then(accountLock).should().releaseAccount(eq(targetAccountId));
 
         thenAccountsHaveBeenUpdated(sourceAccountId, targetAccountId);
@@ -426,25 +426,25 @@ class SendMoneyServiceTest {
 
     // 출금 계좌의 출금이 실패할 것이다
     private void givenWithdrawalWillFail(Account account) {
-        given(account.withdraw(any(Money.class), any(AccountId.class)))
+        given(account.withdraw(any(Money.class), any(AccountId.class), any(LocalDateTime.class)))
                 .willReturn(false);
     }
 
     // 출금 계좌의 출금이 성공할 것이다
     private void givenWithdrawalWillSucceed(Account account) {
-        given(account.withdraw(any(Money.class), any(AccountId.class)))
+        given(account.withdraw(any(Money.class), any(AccountId.class), any(LocalDateTime.class)))
                 .willReturn(true);
     }
 
     // 입금 계좌의 입금이 성공할 것이다.
     private void givenDepositWillSucceed(Account account) {
-        given(account.deposit(any(Money.class), any(AccountId.class)))
+        given(account.deposit(any(Money.class), any(AccountId.class), any(LocalDateTime.class)))
                 .willReturn(true);
     }
 
     // 입금 계좌의 입금이 실패할 것이다.
     private void givenDepositWillFail(Account account) {
-        given(account.deposit(any(Money.class), any(AccountId.class)))
+        given(account.deposit(any(Money.class), any(AccountId.class), any(LocalDateTime.class)))
                 .willReturn(false);
     }
 
