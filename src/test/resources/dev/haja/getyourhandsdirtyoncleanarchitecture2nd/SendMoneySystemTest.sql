@@ -1,3 +1,8 @@
+-- 시스템 테스트에는 트랜잭션 롤백이 없다. 앞선 테스트가 남긴 행을 먼저 지워
+-- 매 테스트가 같은 상태에서 시작하게 한다.
+delete from activity;
+delete from account;
+
 insert into account (id) values (1);
 insert into account (id) values (2);
 
