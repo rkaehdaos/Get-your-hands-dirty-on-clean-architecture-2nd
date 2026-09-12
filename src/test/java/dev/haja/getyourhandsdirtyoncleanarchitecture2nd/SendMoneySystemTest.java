@@ -53,6 +53,9 @@ class SendMoneySystemTest {
         // then
         then(response.getStatusCode())
                 .isEqualTo(HttpStatus.OK);
+        // DB와 연결된 살아 있는 살아있는 계좌 엔티티 다시 로드
+        sourceAccount = loadAccount(sourceAccountId);
+        targetAccount = loadAccount(targetAccountId);
         then(sourceAccount.calculateBalance())
                 .isEqualTo(initialSourceBalance.minus(transferredAmount));
 
