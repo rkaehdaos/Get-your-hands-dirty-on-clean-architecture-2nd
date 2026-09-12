@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.jdbc.Sql;
 
 import org.junit.jupiter.api.Test;
+
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.BDDAssertions.then;
@@ -36,36 +37,44 @@ class SendMoneySystemTest {
     void sendMoney() {
 
         // given
-        AccountId sourceAccountId = new AccountId(1L);
-        AccountId targetAccountId = new AccountId(2L);
-        Account sourceAccount = loadAccount(sourceAccountId);
-        Account targetAccount = loadAccount(targetAccountId);
-        Money transferredAmount = Money.of(500L);
-        Money initialSourceBalance = sourceAccount.calculateBalance();
-        Money initialTargetBalance = targetAccount.calculateBalance();
+        Money initialSourceBalance = sourceAccount().calculateBalance();
+        Money initialTargetBalance = targetAccount().calculateBalance();
 
         // when
-        ResponseEntity<Object> response = whenSendMoney(sourceAccountId, targetAccountId, transferredAmount);
+        ResponseEntity<Object> response = whenSendMoney(
+                sourceAccountId(),
+                targetAccountId(),
+                transferredAmount());
 
         // then
         then(response.getStatusCode())
                 .isEqualTo(HttpStatus.OK);
-        // DB와 연결된 살아있는 계좌 엔티티 다시 로드
-        sourceAccount = loadAccount(sourceAccountId);
-        targetAccount = loadAccount(targetAccountId);
-        then(sourceAccount.calculateBalance())
-                .isEqualTo(initialSourceBalance.minus(transferredAmount));
 
-        then(targetAccount.calculateBalance())
-                .isEqualTo(initialTargetBalance.plus(transferredAmount));
+        then(sourceAccount().calculateBalance())
+                .isEqualTo(initialSourceBalance.minus(transferredAmount()));
 
+        then(targetAccount().calculateBalance())
+                .isEqualTo(initialTargetBalance.plus(transferredAmount()));
+
+    }
+
+    private Account sourceAccount() {
+        return loadAccount(sourceAccountId());
+    }
+
+    private Account targetAccount() {
+        return loadAccount(targetAccountId());
+    }
+
+    private Account loadAccount(AccountId accountId) {
+        return loadAccountPort.loadAccount(accountId, LocalDateTime.now());
     }
 
     private @NonNull ResponseEntity<Object> whenSendMoney(AccountId sourceAccountId, AccountId targetAccountId, Money transferredAmount) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Type", "application/json");
         HttpEntity<Void> request = new HttpEntity<>(null, headers);
-        ResponseEntity<Object> response = testRestTemplate.exchange(
+        return testRestTemplate.exchange(
                 "/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                 HttpMethod.POST,
                 request,
@@ -73,13 +82,18 @@ class SendMoneySystemTest {
                 sourceAccountId.value(),
                 targetAccountId.value(),
                 transferredAmount.amount());
-        return response;
     }
 
-    private Account loadAccount(AccountId accountId) {
-        return loadAccountPort.loadAccount(
-                accountId,
-                LocalDateTime.now());
+    private Money transferredAmount() {
+        return Money.of(500L);
+    }
+
+    private AccountId sourceAccountId() {
+        return new AccountId(1L);
+    }
+
+    private AccountId targetAccountId() {
+        return new AccountId(2L);
     }
 
 }
