@@ -29,6 +29,8 @@ class SendMoneySystemTest {
         // given
         AccountId sourceAccountId = new AccountId(1L);
         AccountId targetAccountId = new AccountId(2L);
+        Account sourceAccount = loadAccount(sourceAccountId);
+        Account targetAccount = loadAccount(targetAccountId);
 
         // when
 
