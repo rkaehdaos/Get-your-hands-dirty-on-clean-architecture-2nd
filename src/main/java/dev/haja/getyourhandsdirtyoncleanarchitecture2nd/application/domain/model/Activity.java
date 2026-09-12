@@ -18,7 +18,8 @@ import static java.util.Objects.requireNonNull;
  * "owner는 source 또는 target 중 하나여야 한다"는 규칙을 여기서 강제하지 않는다. 실제 규칙은
  * 위의 두 행이 짝을 이뤄야 한다는 행 간(cross-row) 규칙이라 Activity 하나만 보고는 표현할 수
  * 없고(출금 행에 owner를 target으로 잘못 달아도 그 검사는 통과한다), 강제할 자리는 도메인이
- * 아니라 영속성이다 — DB CHECK 제약이나 어댑터 테스트.
+ * 아니라 영속성이다 — {@code AccountPersistenceAdapter.updateActivities}가 저장 전에
+ * owner가 계좌 id와 같은지 검사한다.
  */
 public record Activity(
         ActivityId id,

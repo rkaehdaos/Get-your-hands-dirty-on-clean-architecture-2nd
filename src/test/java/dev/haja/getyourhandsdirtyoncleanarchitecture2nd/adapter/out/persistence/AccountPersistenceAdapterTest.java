@@ -78,6 +78,28 @@ class AccountPersistenceAdapterTest {
     }
 
     @Test
+    @DisplayName("소유자가 다른 활동이 섞여 있으면 저장을 거부함")
+    void givenActivityOwnedByAnotherAccount_thenRejectsWithoutPersisting() {
+
+        // given
+        // 계좌 42의 원장에 계좌 41 소유의 활동이 들어 있다. 도메인은 이 규칙을 강제하지
+        // 않는다 — 행 간 규칙이라 Activity 하나만 보고는 표현할 수 없기 때문이다.
+        Account account = defaultAccount()
+                .withAccountId(new AccountId(42L))
+                .withActivityWindow(new ActivityWindow(
+                        defaultActivity()
+                                .withOwnerAccount(new AccountId(41L)).build()))
+                .build();
+
+        // when / then
+        assertThatThrownBy(() -> adapterUnderTest.updateActivities(account))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("owner");
+
+        assertThat(activityRepository.count()).isZero();
+    }
+
+    @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     @DisplayName("한 활동의 매핑이 실패하면 아무 활동도 저장되지 않음")
     void givenOneActivityCannotBeMapped_thenNothingIsPersisted() {
