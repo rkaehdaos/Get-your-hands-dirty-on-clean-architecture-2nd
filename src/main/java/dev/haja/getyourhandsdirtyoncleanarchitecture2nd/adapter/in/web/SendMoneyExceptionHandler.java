@@ -1,6 +1,7 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.adapter.in.web;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.InsufficientFundsException;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.NoSuchAccountException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.ThresholdExceededException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,14 @@ class SendMoneyExceptionHandler {
     @ExceptionHandler({ThresholdExceededException.class, InsufficientFundsException.class})
     ProblemDetail handleTransferRejected(RuntimeException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, e.getMessage());
+    }
+
+    /**
+     * 계좌가 없는 것은 이체를 거부당한 것이 아니라 요청한 자원이 없는 것이므로 404다.
+     */
+    @ExceptionHandler(NoSuchAccountException.class)
+    ProblemDetail handleNoSuchAccount(NoSuchAccountException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
     /**

@@ -3,6 +3,7 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.adapter.in.web;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.InsufficientFundsException;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.NoSuchAccountException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyUseCase;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.ThresholdExceededException;
@@ -91,6 +92,30 @@ class SendMoneyControllerTest {
                 .extractingPath("$.detail")
                 .asString()
                 .contains("1000000", "2000000");
+    }
+
+    @Test
+    @DisplayName("계좌가 없으면 404 Not Found가 응답됨")
+    void givenNoSuchAccount_thenRespondsWithNotFound() {
+
+        // given
+        willThrow(new NoSuchAccountException(new AccountId(999L), new RuntimeException("boom")))
+                .given(sendMoneyUseCase).sendMoney(any(SendMoneyCommand.class));
+
+        // when
+        var result = mockMvcTester.post()
+                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}", 999L, 42L, 500)
+                .header("Content-Type", "application/json")
+                .exchange();
+
+        // then
+        assertThat(result)
+                .hasStatus(HttpStatus.NOT_FOUND)
+                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .extractingPath("$.detail")
+                .asString()
+                .contains("999");
     }
 
     @Test
