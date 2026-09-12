@@ -28,7 +28,7 @@ class AccountPersistenceAdapterTest {
     @Autowired private ActivityRepository activityRepository;
 
     @Test
-    @Sql("AccountPersistenceAdapterTest.sql")
+    @Sql("/sql/accounts.sql")
     void loadsAccount() {
 
         // given
@@ -40,8 +40,10 @@ class AccountPersistenceAdapterTest {
                 LocalDateTime.of(2018, 8, 10, 0, 0));
 
         // then
+        // 기준일 이전 활동은 baseline 잔액으로(1000 입금 − 500 출금 = 500),
+        // 이후 활동은 윈도우로(1500 입금 − 1000 출금 = 500) 갈라진다
         assertThat(account.getActivityWindow().activities()).hasSize(2);
-        assertThat(account.calculateBalance()).isEqualTo(Money.of(500));
+        assertThat(account.calculateBalance()).isEqualTo(Money.of(1000));
     }
 
     @Test

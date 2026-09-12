@@ -41,7 +41,7 @@ class SendMoneySystemTest {
     @Autowired private LoadAccountPort loadAccountPort;
 
     @Test
-    @Sql("SendMoneySystemTest.sql")
+    @Sql("/sql/accounts.sql")
     void sendMoney() {
 
         // given
