@@ -2,18 +2,17 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
-
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.test.context.jdbc.Sql;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
@@ -36,6 +35,8 @@ class SendMoneySystemTest {
         Account sourceAccount = loadAccount(sourceAccountId);
         Account targetAccount = loadAccount(targetAccountId);
         Money transferredAmount = Money.of(500L);
+        Money initialSourceBalance = sourceAccount.calculateBalance();
+        Money initialTargetBalance = targetAccount.calculateBalance();
 
         // when
         HttpHeaders headers = new HttpHeaders();
