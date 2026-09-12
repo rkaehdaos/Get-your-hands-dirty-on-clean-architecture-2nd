@@ -5,6 +5,7 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,17 +45,7 @@ class SendMoneySystemTest {
         Money initialTargetBalance = targetAccount.calculateBalance();
 
         // when
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", "application/json");
-        HttpEntity<Void> request = new HttpEntity<>(null, headers);
-        ResponseEntity<Object> response = testRestTemplate.exchange(
-                "/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
-                HttpMethod.POST,
-                request,
-                Object.class,
-                sourceAccountId.value(),
-                targetAccountId.value(),
-                transferredAmount.amount());
+        ResponseEntity<Object> response = whenSendMoney(sourceAccountId, targetAccountId, transferredAmount);
 
         // then
         then(response.getStatusCode())
@@ -68,6 +59,21 @@ class SendMoneySystemTest {
         then(targetAccount.calculateBalance())
                 .isEqualTo(initialTargetBalance.plus(transferredAmount));
 
+    }
+
+    private @NonNull ResponseEntity<Object> whenSendMoney(AccountId sourceAccountId, AccountId targetAccountId, Money transferredAmount) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/json");
+        HttpEntity<Void> request = new HttpEntity<>(null, headers);
+        ResponseEntity<Object> response = testRestTemplate.exchange(
+                "/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
+                HttpMethod.POST,
+                request,
+                Object.class,
+                sourceAccountId.value(),
+                targetAccountId.value(),
+                transferredAmount.amount());
+        return response;
     }
 
     private Account loadAccount(AccountId accountId) {
