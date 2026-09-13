@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.validation.Validation.validate;
 
+@DistinctAccounts
 public record SendMoneyCommand(
         @NotNull AccountId sourceAccountId,
         @NotNull AccountId targetAccountId,

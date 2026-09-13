@@ -1,12 +1,46 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.adapter.out.persistence;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * 계좌 원장의 한 행. 원장은 append-only다 — 어댑터는 id가 없는 활동만 저장하고
+ * 이미 저장된 행은 건드리지 않으므로 모든 컬럼이 {@code updatable = false}다.
+ * <p>
+ * id를 뺀 나머지는 원시 타입이다. 박싱 타입이면 null이 스키마가 아니라 언박싱
+ * 시점의 NPE로 드러나는데, 그 예외에는 어느 컬럼인지가 남지 않는다. id만 {@code Long}인
+ * 것은 미영속 활동이 null id로 매핑되고 {@code @GeneratedValue}가 그 null에 의존하기 때문이다.
+ * <p>
+ * {@code timestamp}의 {@code secondPrecision = 6}은 정밀도를 방언 기본값에 맡기지 않고
+ * 엔티티에 못박는 것이다({@code timestamp(6)}). {@code BuckPalConfiguration}의
+ * {@code Clock}이 1마이크로초로 끊어 시각을 만들고 이 컬럼이 그 정밀도를 그대로 받는
+ * 짝이라, 어느 한쪽이 방언이나 플랫폼 기본값에 끌려다니면 왕복에서 값이 잘린다.
+ * <p>
+ * 다만 {@code AccountPersistenceAdapterTest.hasMicrosecondTimestampColumn}이 고정하는
+ * 것은 <b>결과 스키마의 정밀도가 그 tick(1μs)을 담을 수 있다</b>는 것까지다 — H2 방언
+ * 기본값이 이미 {@code timestamp(6)}이라 이 애노테이션을 지워도 스키마도 테스트도
+ * 그대로다. 애노테이션의 값어치는 방언이 바뀌는 날 드러난다.
+ * <p>
+ * 복합 인덱스는 {@code ActivityRepository}의 세 쿼리가 모두
+ * {@code ownerAccountId = ? and timestamp <조건> ?}로 시작하기 때문에 그 순서를 따른다.
+ * {@code columnList}에 적은 이름은 물리 컬럼명이 아니라 <b>논리명(프로퍼티명)</b>이다 —
+ * 물리 명명 전략이 스네이크 케이스로 바꿔 준다.
+ */
 @Entity @Data
-@Table(name = "Activity")
+@Table(name = "activity", indexes = @Index(
+        name = "idx_activity_owner_timestamp",
+        columnList = "ownerAccountId, timestamp"))
 @EqualsAndHashCode(of = {"id"})
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -14,9 +48,9 @@ class ActivityJpaEntity {
     @Id @GeneratedValue
     private Long id;
 
-    @Column private LocalDateTime timestamp;
-    @Column private Long ownerAccountId;
-    @Column private Long sourceAccountId;
-    @Column private Long targetAccountId;
-    @Column private Long amount;
+    @Column(nullable = false, updatable = false, secondPrecision = 6) private LocalDateTime timestamp;
+    @Column(nullable = false, updatable = false) private long ownerAccountId;
+    @Column(nullable = false, updatable = false) private long sourceAccountId;
+    @Column(nullable = false, updatable = false) private long targetAccountId;
+    @Column(nullable = false, updatable = false) private long amount;
 }

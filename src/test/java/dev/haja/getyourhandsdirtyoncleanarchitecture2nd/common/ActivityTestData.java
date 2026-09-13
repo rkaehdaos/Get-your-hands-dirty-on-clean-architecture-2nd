@@ -11,10 +11,10 @@ public class ActivityTestData {
 
     public static ActivityBuilder defaultActivity(){
         return new ActivityBuilder()
-                .withOwnerAccount(new AccountId(42L))
-                .withSourceAccount(new AccountId(42L))
-                .withTargetAccount(new AccountId(41L))
-                .withTimestamp(LocalDateTime.now())
+                .withOwnerAccount(AccountTestData.DEFAULT_ACCOUNT_ID)
+                .withSourceAccount(AccountTestData.DEFAULT_ACCOUNT_ID)
+                .withTargetAccount(AccountTestData.OTHER_ACCOUNT_ID)
+                .withTimestamp(TimeTestData.NOW)
                 .withMoney(Money.of(999L));
     }
 

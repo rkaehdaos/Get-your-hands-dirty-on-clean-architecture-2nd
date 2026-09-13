@@ -34,7 +34,11 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-restclient")
     testImplementation("org.springframework.boot:spring-boot-resttestclient")
     testImplementation("org.mockito:mockito-junit-jupiter")
-    testRuntimeOnly("com.h2database:h2")
+
+    // bootRun(developmentOnly를 상속한다)과 테스트는 H2를 얻지만 bootJar와
+    // productionRuntimeClasspath에는 실리지 않는다. runtimeOnly로 두면 프로덕션에서
+    // datasource 설정이 빠졌을 때 기동 실패 대신 빈 인메모리 DB로 조용히 떠 버린다.
+    testAndDevelopmentOnly("com.h2database:h2")
     testCompileOnly("org.projectlombok:lombok")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testAnnotationProcessor("org.projectlombok:lombok")

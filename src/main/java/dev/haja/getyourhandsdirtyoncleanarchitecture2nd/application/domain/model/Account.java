@@ -48,14 +48,19 @@ public class Account {
                 this.activityWindow.calculateBalance(this.id));
     }
 
-    public boolean withdraw(Money money, AccountId targetAccountId) {
+    /**
+     * 출금 활동을 기록한다. 활동의 시각은 <b>호출자가 값으로 넘긴다</b> — 도메인은 현재
+     * 시각을 스스로 읽지 않으므로 {@code Clock}도 알지 않는다. 시각을 고르는 것은
+     * 서비스의 몫이고, 그래야 테스트가 활동의 시각을 정확히 고정할 수 있다.
+     */
+    public boolean withdraw(Money money, AccountId targetAccountId, LocalDateTime timestamp) {
         if (!mayWithdraw(money)) return false;
 
         Activity withdrawal = new Activity(
                 this.id,
                 this.id,
                 targetAccountId,
-                LocalDateTime.now(),
+                timestamp,
                 money);
         this.activityWindow = this.activityWindow.addActivity(withdrawal);
         return true;
@@ -68,12 +73,15 @@ public class Account {
         return Money.add(this.calculateBalance(), money.negate()).isPositiveOrZero();
     }
 
-    public boolean deposit(Money money, AccountId sourceAccountId) {
+    /**
+     * 입금 활동을 기록한다. 시각을 인자로 받는 이유는 {@link #withdraw}와 같다.
+     */
+    public boolean deposit(Money money, AccountId sourceAccountId, LocalDateTime timestamp) {
         Activity deposit = new Activity(
                 this.id,
                 sourceAccountId,
                 this.id,
-                LocalDateTime.now(),
+                timestamp,
                 money);
         this.activityWindow = this.activityWindow.addActivity(deposit);
         return true;
