@@ -17,15 +17,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.DEFAULT_ACCOUNT_ID;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.OTHER_ACCOUNT_ID;
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.TimeTestData.CLOCK;
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.TimeTestData.NOW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -37,9 +37,6 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.times;
 
 class SendMoneyServiceTest {
-
-    private static final LocalDateTime NOW = LocalDateTime.of(2026, 9, 12, 12, 0);
-    private static final Clock CLOCK = Clock.fixed(NOW.toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
 
     private final LoadAccountPort loadAccountPort =
             Mockito.mock(LoadAccountPort.class);
