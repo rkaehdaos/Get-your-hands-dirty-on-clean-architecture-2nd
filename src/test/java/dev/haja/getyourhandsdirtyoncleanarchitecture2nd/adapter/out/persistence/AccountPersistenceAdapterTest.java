@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -44,6 +45,7 @@ class AccountPersistenceAdapterTest {
     @Autowired private AccountPersistenceAdapter adapterUnderTest;
     @Autowired private ActivityRepository activityRepository;
     @Autowired private JdbcTemplate jdbcTemplate;
+    @Autowired private TestEntityManager em;
 
     @Test
     @Sql(AccountFixture.SQL)
@@ -108,6 +110,12 @@ class AccountPersistenceAdapterTest {
                 .build();
 
         adapterUnderTest.updateActivities(account);
+
+        // 영속성 컨텍스트를 비워 아래 조회가 반드시 DB를 읽게 한다. 비우지 않으면
+        // 같은 테스트 트랜잭션의 1차 캐시가 방금 넣은 인스턴스를 그대로 돌려줘
+        // DB 컬럼의 정밀도와 무관하게 단언이 통과한다.
+        em.flush();
+        em.clear();
 
         // when
         Account reloaded = adapterUnderTest.loadAccount(
