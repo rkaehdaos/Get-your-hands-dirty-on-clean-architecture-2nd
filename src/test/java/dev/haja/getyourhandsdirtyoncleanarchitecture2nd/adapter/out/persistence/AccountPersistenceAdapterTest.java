@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture;
 
+import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture.BASELINE_DATE;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture.SOURCE_ACCOUNT_ID;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture.TARGET_ACCOUNT_ID;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.DEFAULT_ACCOUNT_ID;
@@ -55,9 +56,7 @@ class AccountPersistenceAdapterTest {
         // @Sql 픽스처가 계좌 1과 그에 속한 활동들을 적재한다
 
         // when
-        Account account = adapterUnderTest.loadAccount(
-                SOURCE_ACCOUNT_ID,
-                LocalDateTime.of(2018, 8, 10, 0, 0));
+        Account account = adapterUnderTest.loadAccount(SOURCE_ACCOUNT_ID, BASELINE_DATE);
 
         // then
         // 기준일 이전 활동은 baseline 잔액으로(1000 입금 − 500 출금 = 500),
@@ -118,9 +117,7 @@ class AccountPersistenceAdapterTest {
         em.clear();
 
         // when
-        Account reloaded = adapterUnderTest.loadAccount(
-                SOURCE_ACCOUNT_ID,
-                LocalDateTime.of(2019, 1, 1, 0, 0));
+        Account reloaded = adapterUnderTest.loadAccount(SOURCE_ACCOUNT_ID, BASELINE_DATE);
 
         // then
         assertThat(reloaded.getActivityWindow().activities())
