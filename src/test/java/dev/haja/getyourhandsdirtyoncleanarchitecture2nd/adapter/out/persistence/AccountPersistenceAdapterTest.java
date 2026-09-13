@@ -207,9 +207,8 @@ class AccountPersistenceAdapterTest {
         assertThatThrownBy(() -> adapterUnderTest.updateActivities(account))
                 .isInstanceOf(ArithmeticException.class);
 
-        // 첫 활동도 저장되지 않는다. 어댑터에서 트랜잭션 경계를 걷어내고 루프에서
-        // 매핑과 저장을 번갈아 하던 예전 구현으로 되돌리면, 첫 활동이 자기 트랜잭션으로
-        // 커밋되어 이 단언이 1로 깨진다.
+        // 첫 활동도 저장되지 않는다. 루프에서 매핑과 저장을 번갈아 하던 예전 구현으로
+        // 되돌리면, 두 번째 매핑이 실패하기 전에 첫 활동이 커밋되어 이 단언이 1로 깨진다.
         assertThat(activityRepository.count()).isZero();
     }
 

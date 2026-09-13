@@ -8,7 +8,6 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.Loa
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.UpdateAccountStatePort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,13 +15,18 @@ import java.util.List;
 /**
  * 계좌를 읽고 쓰는 영속성 어댑터.
  * <p>
- * {@code @Transactional}은 이 어댑터를 <b>자족적으로</b> 만들기 위한 것이다. 운영 경로에서는
- * {@code SendMoneyService}의 트랜잭션에 참여하지만(REQUIRED), 트랜잭션 없이 호출되더라도
- * {@code updateActivities}의 여러 INSERT가 전부 반영되거나 전부 취소되어야 한다.
+ * 이 어댑터는 <b>자기 트랜잭션을 갖지 않는다.</b> 트랜잭션 경계는 유스케이스의 것이고
+ * ({@code SendMoneyService}의 {@code @Transactional}) 어댑터는 거기에 참여할 뿐이다.
+ * 원자성은 이미 확보되어 있다 — {@code updateActivities}는 검사와 매핑을 모두 끝낸 뒤
+ * {@code saveAll} 한 번으로 저장하므로 부분 저장이 남을 자리가 없다.
+ * <p>
+ * 어댑터에 트랜잭션 경계를 두면 오히려 부수 효과가 생긴다. 참여 중인 서비스 트랜잭션에서
+ * {@code loadAccount}가 {@code AccountNotFoundException}을 던지면 그것이 어댑터의
+ * 트랜잭션 경계를 통과하며 바깥 트랜잭션이 rollback-only로 표시되고, 서비스가 그 예외를
+ * 번역해 정상적으로 응답하려 해도 커밋할 수 없게 된다.
  */
 @Component
 @RequiredArgsConstructor
-@Transactional
 class AccountPersistenceAdapter implements
         LoadAccountPort,
         UpdateAccountStatePort {
