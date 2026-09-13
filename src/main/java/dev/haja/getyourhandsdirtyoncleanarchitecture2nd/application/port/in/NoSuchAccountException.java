@@ -13,10 +13,18 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 public class NoSuchAccountException extends RuntimeException {
 
     public NoSuchAccountException(AccountId accountId) {
-        super(String.format("No such account: %s!", accountId.value()));
+        super(message(accountId));
     }
 
     public NoSuchAccountException(AccountId accountId, Throwable cause) {
-        super(String.format("No such account: %s!", accountId.value()), cause);
+        super(message(accountId), cause);
+    }
+
+    /**
+     * 두 생성자가 같은 문구를 쓰게 한다. 이 메시지가 웹 어댑터에서 404 ProblemDetail의
+     * detail이 되므로, 원인 예외를 넘겼는지에 따라 응답 본문이 갈리면 안 된다.
+     */
+    private static String message(AccountId accountId) {
+        return String.format("No such account: %s!", accountId.value());
     }
 }
