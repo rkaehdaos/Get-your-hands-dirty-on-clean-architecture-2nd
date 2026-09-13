@@ -283,8 +283,12 @@ class AccountPersistenceAdapterTest {
     void hasMicrosecondTimestampColumn() {
 
         // given
-        // 정밀도가 방언 기본값이 아니라 엔티티의 secondPrecision에서 온다는 것을 고정한다.
-        // 이 값이 Clock의 tick(1μs)보다 낮아지면 시각이 왕복에서 조용히 잘린다.
+        // 스키마의 정밀도가 Clock의 tick(1μs)을 담을 수 있는지를 고정한다. 이 값이
+        // tick보다 낮아지면 시각이 왕복에서 조용히 잘린다.
+        //
+        // 정밀도의 출처까지 고정하지는 못한다 — H2 방언 기본값이 이미 timestamp(6)이라
+        // ActivityJpaEntity의 secondPrecision = 6을 지워도 이 단언은 통과한다.
+        // 그 애노테이션은 방언이 바뀌는 날을 위한 명시다.
 
         // when
         Integer precision = jdbcTemplate.queryForObject("""
