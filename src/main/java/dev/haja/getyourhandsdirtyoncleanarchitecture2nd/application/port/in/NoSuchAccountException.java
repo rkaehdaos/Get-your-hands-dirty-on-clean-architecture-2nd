@@ -7,8 +7,14 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
  * <p>
  * 아웃바운드 포트의 {@code AccountNotFoundException}을 서비스가 이 예외로 번역한다.
  * 인바운드 어댑터는 {@code port.in}의 어휘만 알면 되고, 저장소가 무엇이든 같은 응답을 낸다.
+ * <p>
+ * 원인 예외는 선택이다 — 저장소 예외를 번역할 때만 넘긴다.
  */
 public class NoSuchAccountException extends RuntimeException {
+
+    public NoSuchAccountException(AccountId accountId) {
+        super(String.format("No such account: %s!", accountId.value()));
+    }
 
     public NoSuchAccountException(AccountId accountId, Throwable cause) {
         super(String.format("No such account: %s!", accountId.value()), cause);
