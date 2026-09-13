@@ -23,6 +23,11 @@ public class BuckPalConfiguration {
      * 나노초 자리가 있으면 저장되며 반올림되고(H2는 half-up), 그러면 방금 저장한 활동을 다시
      * 읽었을 때 시각이 달라져 {@code equals}가 깨진다. 정밀도를 저장소에 맞춰 두면 왕복이
      * 손실 없이 끝난다.
+     * <p>
+     * 그 {@code timestamp(6)}은 방언 기본값이 아니라 {@code ActivityJpaEntity}의
+     * {@code secondPrecision = 6}에서 오고,
+     * {@code AccountPersistenceAdapterTest.hasMicrosecondTimestampColumn}이 스키마에서
+     * 그 값을 고정한다. 여기의 tick과 그쪽의 정밀도는 함께 움직여야 한다.
      */
     @Bean
     public Clock clock(){
