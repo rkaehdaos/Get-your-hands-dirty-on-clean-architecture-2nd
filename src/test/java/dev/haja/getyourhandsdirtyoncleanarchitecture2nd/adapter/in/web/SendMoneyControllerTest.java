@@ -147,4 +147,28 @@ class SendMoneyControllerTest {
 
         then(sendMoneyUseCase).shouldHaveNoInteractions();
     }
+
+    @Test
+    @DisplayName("출금 계좌와 입금 계좌가 같으면 400 Bad Request가 응답됨")
+    void givenSameSourceAndTargetAccount_thenRespondsWithBadRequest() {
+
+        // when
+        var result = mockMvcTester.post()
+                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
+                        DEFAULT_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 500)
+                .header("Content-Type", "application/json")
+                .exchange();
+
+        // then
+        assertThat(result)
+                .hasStatus(HttpStatus.BAD_REQUEST)
+                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .extractingPath("$.detail")
+                .asString()
+                .contains("targetAccountId");
+
+        // 유스케이스에 닿지 않으므로 잠금도 원장 기록도 일어나지 않는다
+        then(sendMoneyUseCase).shouldHaveNoInteractions();
+    }
 }
