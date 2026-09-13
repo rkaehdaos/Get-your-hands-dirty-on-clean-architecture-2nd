@@ -171,9 +171,17 @@ class AccountPersistenceAdapterTest {
         // given
         // 계좌 42의 원장에 계좌 41 소유의 활동이 들어 있다. 도메인은 이 규칙을 강제하지
         // 않는다 — 행 간 규칙이라 Activity 하나만 보고는 표현할 수 없기 때문이다.
+        //
+        // 위반 활동 앞에 유효 활동을 하나 둔다. 위반 활동만 있으면 소유자 검사와 save를
+        // 루프에서 번갈아 하는 구현으로 되돌려도 저장될 것이 없어 아래 count() 단언이
+        // 통과한다. 유효 활동이 앞에 있으면 그 구현에서 먼저 저장되어 단언이 1로 깨진다
+        // (givenOneActivityCannotBeMapped_...는 매핑 단계만 덮으므로 여기를 대신
+        // 고정해 주지 않는다).
         Account account = defaultAccount()
                 .withAccountId(DEFAULT_ACCOUNT_ID)
                 .withActivityWindow(new ActivityWindow(
+                        defaultActivity()
+                                .withOwnerAccount(DEFAULT_ACCOUNT_ID).build(),
                         defaultActivity()
                                 .withOwnerAccount(OTHER_ACCOUNT_ID).build()))
                 .build();
@@ -183,6 +191,8 @@ class AccountPersistenceAdapterTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("owner");
 
+        // count()가 테스트 트랜잭션의 영속성 컨텍스트를 flush시키므로, 저장된 것이
+        // 있었다면 여기서 드러난다.
         assertThat(activityRepository.count()).isZero();
     }
 
