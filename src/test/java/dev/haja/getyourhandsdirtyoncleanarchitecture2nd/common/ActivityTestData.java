@@ -14,7 +14,7 @@ public class ActivityTestData {
                 .withOwnerAccount(AccountTestData.DEFAULT_ACCOUNT_ID)
                 .withSourceAccount(AccountTestData.DEFAULT_ACCOUNT_ID)
                 .withTargetAccount(AccountTestData.OTHER_ACCOUNT_ID)
-                .withTimestamp(LocalDateTime.now())
+                .withTimestamp(TimeTestData.NOW)
                 .withMoney(Money.of(999L));
     }
 
