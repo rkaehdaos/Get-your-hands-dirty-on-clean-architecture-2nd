@@ -35,9 +35,10 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-resttestclient")
     testImplementation("org.mockito:mockito-junit-jupiter")
 
-    // bootRun이 내장 DB로 뜨려면 런타임 클래스패스에 있어야 한다. testRuntimeOnly는
-    // runtimeOnly를 상속하므로 테스트도 이 선언 하나로 H2를 얻는다.
-    runtimeOnly("com.h2database:h2")
+    // bootRun(developmentOnly를 상속한다)과 테스트는 H2를 얻지만 bootJar와
+    // productionRuntimeClasspath에는 실리지 않는다. runtimeOnly로 두면 프로덕션에서
+    // datasource 설정이 빠졌을 때 기동 실패 대신 빈 인메모리 DB로 조용히 떠 버린다.
+    testAndDevelopmentOnly("com.h2database:h2")
     testCompileOnly("org.projectlombok:lombok")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testAnnotationProcessor("org.projectlombok:lombok")
