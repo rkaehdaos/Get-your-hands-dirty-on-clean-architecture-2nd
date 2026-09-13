@@ -3,12 +3,10 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.serv
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Account.AccountId;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.InsufficientFundsException;
-import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.NoSuchAccountException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyUseCase;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.ThresholdExceededException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountLock;
-import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountNotFoundException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.UpdateAccountStatePort;
 import jakarta.transaction.Transactional;
@@ -44,8 +42,10 @@ class SendMoneyService implements SendMoneyUseCase {
         LocalDateTime now = LocalDateTime.now(clock);
         LocalDateTime baselineDate = now.minusDays(10);
 
-        Account sourceAccount = loadAccount(command.sourceAccountId(), baselineDate);
-        Account targetAccount = loadAccount(command.targetAccountId(), baselineDate);
+        Account sourceAccount = AccountLoader.loadAccount(
+                loadAccountPort, command.sourceAccountId(), baselineDate);
+        Account targetAccount = AccountLoader.loadAccount(
+                loadAccountPort, command.targetAccountId(), baselineDate);
 
         AccountId sourceAccountId = sourceAccount.getId()
                 .orElseThrow(() -> new IllegalStateException("expected source account ID not to be empty"));
@@ -71,19 +71,6 @@ class SendMoneyService implements SendMoneyUseCase {
             }
         } finally {
             accountLock.releaseAccount(sourceAccountId);
-        }
-    }
-
-    /**
-     * 포트가 던진 예외는 감싸지 않고 그대로 전파하는 것이 기본이지만, "계좌가 없다"는
-     * 저장소의 사정이 아니라 유스케이스가 거부됐다는 사실이므로 {@code port.in}의 예외로
-     * 번역한다. 인바운드 어댑터가 {@code port.out}을 알지 않아도 된다.
-     */
-    private Account loadAccount(AccountId accountId, LocalDateTime baselineDate) {
-        try {
-            return loadAccountPort.loadAccount(accountId, baselineDate);
-        } catch (AccountNotFoundException e) {
-            throw new NoSuchAccountException(accountId, e);
         }
     }
 
