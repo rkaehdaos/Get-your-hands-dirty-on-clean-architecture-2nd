@@ -279,4 +279,22 @@ class AccountPersistenceAdapterTest {
         assertThat(indexedColumns).containsExactly("OWNER_ACCOUNT_ID", "TIMESTAMP");
     }
 
+    @Test
+    @DisplayName("timestamp 컬럼의 정밀도가 마이크로초임")
+    void hasMicrosecondTimestampColumn() {
+
+        // given
+        // 정밀도가 방언 기본값이 아니라 엔티티의 secondPrecision에서 온다는 것을 고정한다.
+        // 이 값이 Clock의 tick(1μs)보다 낮아지면 시각이 왕복에서 조용히 잘린다.
+
+        // when
+        Integer precision = jdbcTemplate.queryForObject("""
+                select datetime_precision from information_schema.columns
+                where table_name = 'ACTIVITY' and column_name = 'TIMESTAMP'
+                """, Integer.class);
+
+        // then
+        assertThat(precision).isEqualTo(6);
+    }
+
 }
