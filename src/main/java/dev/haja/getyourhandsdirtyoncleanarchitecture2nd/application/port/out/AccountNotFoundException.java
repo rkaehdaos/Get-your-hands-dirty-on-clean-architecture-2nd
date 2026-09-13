@@ -11,14 +11,7 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
  */
 public class AccountNotFoundException extends RuntimeException {
 
-    private final AccountId accountId;
-
     public AccountNotFoundException(AccountId accountId) {
         super(String.format("Account %s not found!", accountId.value()));
-        this.accountId = accountId;
-    }
-
-    public AccountId getAccountId() {
-        return accountId;
     }
 }
