@@ -21,6 +21,11 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
  * <p>
  * 현재 유일한 구현체는 아무 일도 하지 않는 {@code NoOpAccountLock}이라 대기 자체가 없고,
  * 이 계약은 아직 강제되지 않는다. 실제 잠금 구현을 도입할 때 반드시 다시 검토할 지점이다.
+ * <p>
+ * 호출자가 잠그는 두 계좌는 <b>항상 서로 다르다</b> — 자기 이체는 {@code SendMoneyCommand}의
+ * {@code @DistinctAccounts} 제약이 유스케이스에 닿기 전에 거부한다. 따라서
+ * <b>구현체는 재진입성을 갖출 필요가 없다.</b> 같은 계좌에 대한 중첩 {@code lockAccount}
+ * 호출은 발생하지 않는다.
  */
 public interface AccountLock {
 
