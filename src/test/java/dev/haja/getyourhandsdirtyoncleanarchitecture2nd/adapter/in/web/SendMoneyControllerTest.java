@@ -104,7 +104,7 @@ class SendMoneyControllerTest {
     void givenNoSuchAccount_thenRespondsWithNotFound() {
 
         // given
-        willThrow(new NoSuchAccountException(new AccountId(999L), new RuntimeException("boom")))
+        willThrow(new NoSuchAccountException(new AccountId(999L)))
                 .given(sendMoneyUseCase).sendMoney(any(SendMoneyCommand.class));
 
         // when
