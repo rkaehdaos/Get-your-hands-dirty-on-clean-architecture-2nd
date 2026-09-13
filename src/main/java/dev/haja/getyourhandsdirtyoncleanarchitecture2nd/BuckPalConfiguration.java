@@ -24,10 +24,13 @@ public class BuckPalConfiguration {
      * 읽었을 때 시각이 달라져 {@code equals}가 깨진다. 정밀도를 저장소에 맞춰 두면 왕복이
      * 손실 없이 끝난다.
      * <p>
-     * 그 {@code timestamp(6)}은 방언 기본값이 아니라 {@code ActivityJpaEntity}의
-     * {@code secondPrecision = 6}에서 오고,
-     * {@code AccountPersistenceAdapterTest.hasMicrosecondTimestampColumn}이 스키마에서
-     * 그 값을 고정한다. 여기의 tick과 그쪽의 정밀도는 함께 움직여야 한다.
+     * 반대편 짝은 {@code ActivityJpaEntity}의 {@code secondPrecision = 6}이고,
+     * {@code AccountPersistenceAdapterTest.hasMicrosecondTimestampColumn}이 스키마에
+     * 남은 정밀도를 고정한다. 다만 그 테스트가 실제로 고정하는 것은 <b>컬럼 정밀도가
+     * 여기의 tick(1μs)을 담을 수 있다</b>는 것까지다 — H2 방언 기본값이 이미
+     * {@code timestamp(6)}이라 엔티티의 애노테이션을 지워도 그 단언은 통과한다.
+     * 애노테이션은 정밀도를 방언에 맡기지 않겠다는 명시이고, 그 값어치는 방언이
+     * 바뀌는 날 드러난다. 여기의 tick과 그쪽의 정밀도는 함께 움직여야 한다.
      */
     @Bean
     public Clock clock(){
