@@ -22,6 +22,13 @@ import java.time.LocalDateTime;
  * 시점의 NPE로 드러나는데, 그 예외에는 어느 컬럼인지가 남지 않는다. id만 {@code Long}인
  * 것은 미영속 활동이 null id로 매핑되고 {@code @GeneratedValue}가 그 null에 의존하기 때문이다.
  * <p>
+ * {@code timestamp}의 정밀도는 방언 기본값이 아니라 엔티티가 정한다
+ * ({@code secondPrecision = 6} → {@code timestamp(6)}). {@code BuckPalConfiguration}의
+ * {@code Clock}이 1마이크로초로 끊어 시각을 만들고 이 컬럼이 그 정밀도를 그대로 받는
+ * 짝이라, 어느 한쪽이 방언이나 플랫폼 기본값에 끌려다니면 왕복에서 값이 잘린다.
+ * 그래서 {@code AccountPersistenceAdapterTest.hasMicrosecondTimestampColumn}이
+ * 스키마의 정밀도를 고정한다.
+ * <p>
  * 복합 인덱스는 {@code ActivityRepository}의 세 쿼리가 모두
  * {@code ownerAccountId = ? and timestamp <조건> ?}로 시작하기 때문에 그 순서를 따른다.
  * {@code columnList}에 적은 이름은 물리 컬럼명이 아니라 <b>논리명(프로퍼티명)</b>이다 —
@@ -38,7 +45,7 @@ class ActivityJpaEntity {
     @Id @GeneratedValue
     private Long id;
 
-    @Column(nullable = false, updatable = false) private LocalDateTime timestamp;
+    @Column(nullable = false, updatable = false, secondPrecision = 6) private LocalDateTime timestamp;
     @Column(nullable = false, updatable = false) private long ownerAccountId;
     @Column(nullable = false, updatable = false) private long sourceAccountId;
     @Column(nullable = false, updatable = false) private long targetAccountId;
