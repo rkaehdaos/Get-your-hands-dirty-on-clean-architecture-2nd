@@ -15,7 +15,7 @@
 - **서비스** `SendMoneyService`(`@Component` + `jakarta.transaction.Transactional`), `GetAccountBalanceService`. **`GetAccountBalanceService`는 빈이 아니다** — 쓰려면 `new`나 `@Import`로 조립한다. 둘이 공유하는 헬퍼 `AccountLoader`가 서비스 패키지에 있다.
 - **인바운드 어댑터** `SendMoneyController`, `SendMoneyExceptionHandler`(`@RestControllerAdvice`).
 - **아웃바운드 어댑터** `AccountPersistenceAdapter`(`LoadAccountPort`·`UpdateAccountStatePort`를 함께 구현), `NoOpAccountLock`(아무것도 잠그지 않는 자리표시자).
-- **설정**(루트 패키지) `BuckPalConfiguration` — `MoneyTransferProperties`·`Clock` 빈과 네이티브용 `ValidationRuntimeHints`를 등록한다. `BuckPalConfigurationProperties` — `buckpal.*` 바인딩. 아래 "설정"·"네이티브 이미지" 참고.
+- **설정**(루트 패키지) `BuckPalConfiguration` — `MoneyTransferProperties`·`Clock` 빈을 등록한다. 네이티브용 `ValidationRuntimeHints`가 중첩돼 있고, 등록은 `META-INF/spring/aot.factories`가 맡는다. `BuckPalConfigurationProperties` — `buckpal.*` 바인딩. 아래 "설정"·"네이티브 이미지" 참고.
 
 ### 패키지 구조
 
@@ -108,7 +108,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 - 제약은 record 헤더의 컴포넌트에 붙인다. null 검증은 `@NotNull`(`requireNonNull` 아님).
 - `validate`는 `common.validation.Validation.validate`의 static import다. `ValidatorFactory`를 한 번만 만들고 **닫지 않는다**(닫으면 만든 `Validator`를 쓸 수 없다).
 - 새 커맨드/쿼리는 **유스케이스 인터페이스 안의 중첩 record**로 만든다. top-level인 `SendMoneyCommand`는 먼저 만들어진 예외다.
-- **새 커맨드/쿼리를 만들면 `BuckPalConfiguration.ValidationRuntimeHints.SELF_VALIDATING_TYPES`에 추가한다** — 아래 "네이티브 이미지" 참고.
+- **입력 모델은 `port/in`에 둔다** — 네이티브용 리플렉션 힌트가 그 패키지를 스캔해 등록된다. **`@Valid` 캐스케이드와 컨테이너 원소 제약(`List<@NotNull Money>`)은 쓰지 않는다** — 레지스트라가 거부한다. 아래 "네이티브 이미지" 참고.
 
 #### 커스텀 제약
 
@@ -164,15 +164,20 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 
 ### 네이티브 이미지
 
-- **입력 모델의 리플렉션 힌트는 손으로 등록한다.** Spring의 `BeanValidationBeanRegistrationAotProcessor`는 빈 클래스만 훑는데 커맨드/쿼리는 빈이 아니다. 힌트가 없으면 네이티브에서 커맨드를 만드는 순간 `HV000064`로 실패한다(송금 API가 500). `ValidationRuntimeHints`가 `SELF_VALIDATING_TYPES`의 필드(`ACCESS_DECLARED_FIELDS`)와, 그 제약에서 뽑은 검증기의 생성자(`INVOKE_DECLARED_CONSTRUCTORS`)를 등록한다. **손으로 관리하는 것은 이 목록 하나다** — 빠뜨려도 JVM 테스트는 전부 통과하고 네이티브에서만 실패한다. 검증기를 추가할 때는 손댈 것이 없다.
-- **네이티브에서 돌 수 없는 테스트는 `@DisabledInNativeImage`를 붙이고, 그 빈자리를 누가 메우는지 주석으로 남긴다.** 해당하는 것: Mockito(`Mockito.mock`, `@MockitoBean` — 런타임 바이트코드 생성 불가), `ApplicationContextRunner`(런타임 설정 처리·JDK 프록시).
+- **입력 모델의 리플렉션 힌트는 우리 레지스트라가 등록한다.** Spring의 `BeanValidationBeanRegistrationAotProcessor`는 빈 클래스만 훑는데 커맨드/쿼리는 빈이 아니다. 힌트가 없으면 네이티브에서 커맨드를 만드는 순간 `HV000064`로 실패한다(송금 API가 500).
+  - `ValidationRuntimeHints`가 AOT 처리 중에 `application.port.in`을 스캔해 **제약이 하나라도 붙은 record**를 입력 모델로 본다. 그 필드(`ACCESS_DECLARED_FIELDS`)와, 제약에서 뽑은 검증기의 생성자(`INVOKE_DECLARED_CONSTRUCTORS`)를 등록한다. 입력 모델도 검증기도 손으로 나열하지 않는다. **대신 입력 모델을 `port/in` 밖에 두면 힌트가 빠지고, JVM 테스트로는 드러나지 않는다.**
+  - 등록은 `@ImportRuntimeHints`가 아니라 `META-INF/spring/aot.factories`다. 애노테이션이면 `BuckPalConfiguration`을 담은 컨텍스트가 AOT 처리될 때만 기여해, 컨텍스트 없이 도는 `SendMoneyCommandTest`의 네이티브 실행이 풀 컨텍스트 테스트의 부수효과에 기대게 된다.
+  - `@Valid` 캐스케이드와 컨테이너 원소 제약은 따라가지 않고 `IllegalStateException`으로 거부한다. 조용히 힌트를 빠뜨리는 대신 JVM 테스트와 AOT 빌드에서 실패한다. 필요해지면 레지스트라를 Spring 처리기처럼 재귀로 확장한다.
+- **네이티브에서 돌 수 없는 테스트는 `@DisabledInNativeImage`를 붙이고, 그 빈자리를 누가 메우는지 주석으로 남긴다.** 해당하는 것: Mockito(`Mockito.mock`, `@MockitoBean` — 런타임 바이트코드 생성 불가), `ApplicationContextRunner`(런타임 설정 처리·JDK 프록시), AOT 빌드 시점 코드(`RuntimeHintsRegistrar` — 네이티브 안에서는 클래스패스를 스캔할 수 없다).
 
   | 제외된 테스트 | 네이티브에서 대신 덮는 테스트 |
   |---|---|
-  | `SendMoneyServiceTest`, `SendMoneyControllerTest` | `SendMoneySystemTest`(송금 경로), `SendMoneyCommandTest`(`PositiveMoneyValidator` + `${validatedValue}` 보간을 실행하는 유일한 테스트) |
+  | `SendMoneyServiceTest`, `SendMoneyControllerTest` | `SendMoneySystemTest`(송금 **성공** 경로만 — 서비스의 실패 분기와 실패 응답의 `ProblemDetail` 매핑은 네이티브에서 실행되지 않는다), `SendMoneyCommandTest`(`PositiveMoneyValidator`를 실행하고 `${validatedValue}` 보간 결과까지 단언하는 유일한 테스트) |
   | `BuckPalConfigurationPropertiesTest` | `BuckPalConfigurationPropertiesValidationTest`(컨텍스트의 `Validator`로 기동과 같은 바인딩 경로를 밟는다) |
+  | `ValidationRuntimeHintsTest` | 없음 — 빌드 시점 코드다. 등록된 힌트는 `SendMoneyCommandTest`·`SendMoneySystemTest`가 커맨드를 만들며 쓴다 |
 
-- 힌트 등록 자체는 `BuckPalConfigurationTest.registersReflectionHintsForSelfValidatingInputModels`가 JVM `test`에서 고정한다 — `nativeTest`보다 먼저 드러난다.
+- **스프링 컨텍스트를 띄우는 테스트라면 `@DisabledInAotMode`도 함께 붙인다.** `@DisabledInNativeImage`는 실행만 막고, 그 컨텍스트는 `processTestAot`에서 여전히 AOT 처리되어 이미지에 실린다. 같은 컨텍스트를 쓰는 다른 테스트가 있으면 그쪽에도 붙여야 한다(`@DisabledInAotMode` Javadoc).
+- 힌트 등록 자체는 `ValidationRuntimeHintsTest`가 JVM `test`에서 고정한다(스캔 결과, `aot.factories` 등록, 미지원 제약 거부) — `nativeTest`보다 먼저 드러난다.
 
 ## 테스트
 
