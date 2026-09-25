@@ -3,12 +3,14 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.adapter.in.web;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.InsufficientFundsException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.NoSuchAccountException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.ThresholdExceededException;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.WebAdapter;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+@WebAdapter
 @RestControllerAdvice
 class SendMoneyExceptionHandler {
 
