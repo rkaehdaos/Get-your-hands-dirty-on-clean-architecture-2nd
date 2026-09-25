@@ -12,7 +12,7 @@ public record MoneyTransferProperties(
 
     // 검증 컴팩트 생성자(Compact Constructor)
     public MoneyTransferProperties {
-        requireNonNull(maximumTransferThreshold);
+        requireNonNull(maximumTransferThreshold, "maximumTransferThreshold must not be null");
     }
 
 }
