@@ -2,18 +2,34 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.service.MoneyTransferProperties;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.GetAccountBalanceUseCase.GetAccountBalanceQuery;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.metadata.BeanDescriptor;
+import jakarta.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.metadata.ElementDescriptor;
+import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportRuntimeHints;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
+import static jakarta.validation.Validation.buildDefaultValidatorFactory;
 import static java.util.Objects.requireNonNull;
+import static org.springframework.aot.hint.MemberCategory.ACCESS_DECLARED_FIELDS;
+import static org.springframework.aot.hint.MemberCategory.INVOKE_DECLARED_CONSTRUCTORS;
 
 @Configuration
 @EnableConfigurationProperties(BuckPalConfigurationProperties.class)
+@ImportRuntimeHints(BuckPalConfiguration.ValidationRuntimeHints.class)
 public class BuckPalConfiguration {
     /**
      * 송금 한도를 {@code Money}로 감싼다.
@@ -50,5 +66,58 @@ public class BuckPalConfiguration {
     @Bean
     public Clock clock(){
         return Clock.tick(Clock.systemDefaultZone(), Duration.of(1, ChronoUnit.MICROS));
+    }
+
+    /**
+     * 스스로 검증하는 입력 모델(커맨드/쿼리)과 그 커스텀 검증기의 리플렉션 힌트를 등록한다.
+     * <p>
+     * 네이티브 이미지에서 Hibernate Validator는 검증기를 리플렉션으로 생성하고 입력 모델의
+     * 필드를 리플렉션으로 읽는다. Spring의 {@code BeanValidationBeanRegistrationAotProcessor}가
+     * 같은 힌트를 등록해 주지만 <b>빈 클래스</b>만 훑는다 — 입력 모델은 빈이 아니라
+     * {@code common.validation.Validation}으로 스스로 검증하므로 그 시야 밖이다. 힌트가 없으면
+     * 네이티브에서 커맨드를 만드는 순간 {@code HV000064}로 실패한다(이슈 #38).
+     * <p>
+     * 등록하는 멤버 종류는 그 처리기와 같다 — 입력 모델은 필드 접근, 검증기는 생성자 호출이다.
+     * 검증기는 손으로 나열하지 않고 AOT 처리 중에 입력 모델의 제약 메타데이터에서 뽑는다.
+     * <b>새 커맨드/쿼리를 만들면 {@link #SELF_VALIDATING_TYPES}에 추가할 것.</b> 빠뜨려도 JVM에서는
+     * 멀쩡하고 네이티브에서만 실패한다.
+     */
+    static class ValidationRuntimeHints implements RuntimeHintsRegistrar {
+
+        static final List<Class<?>> SELF_VALIDATING_TYPES = List.of(
+                SendMoneyCommand.class,
+                GetAccountBalanceQuery.class);
+
+        @Override
+        public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
+            try (ValidatorFactory factory = buildDefaultValidatorFactory()) {
+                for (Class<?> type : SELF_VALIDATING_TYPES) {
+                    hints.reflection().registerType(type, ACCESS_DECLARED_FIELDS);
+
+                    constraintsOf(factory.getValidator().getConstraintsForClass(type))
+                            .flatMap(constraint -> constraint.getConstraintValidatorClasses().stream())
+                            .forEach(validator ->
+                                    hints.reflection().registerType(validator, INVOKE_DECLARED_CONSTRUCTORS));
+                }
+            }
+        }
+
+        /**
+         * 클래스 레벨 제약({@code @DistinctAccounts})과 프로퍼티 제약({@code @PositiveMoney})을
+         * 합성 제약까지 펼쳐 모은다. 내장 제약({@code @NotNull})은 검증기 목록이 비어 있어
+         * 힌트에 아무것도 더하지 않는다.
+         */
+        private static Stream<ConstraintDescriptor<?>> constraintsOf(BeanDescriptor bean) {
+            return Stream.concat(Stream.of(bean), bean.getConstrainedProperties().stream())
+                    .map(ElementDescriptor::getConstraintDescriptors)
+                    .flatMap(Set::stream)
+                    .flatMap(ValidationRuntimeHints::withComposingConstraints);
+        }
+
+        private static Stream<ConstraintDescriptor<?>> withComposingConstraints(ConstraintDescriptor<?> constraint) {
+            return Stream.concat(Stream.of(constraint),
+                    constraint.getComposingConstraints().stream()
+                            .flatMap(ValidationRuntimeHints::withComposingConstraints));
+        }
     }
 }
