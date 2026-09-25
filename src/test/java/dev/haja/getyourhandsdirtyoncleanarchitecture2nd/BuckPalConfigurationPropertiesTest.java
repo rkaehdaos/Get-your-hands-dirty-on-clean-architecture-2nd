@@ -4,11 +4,15 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.service.MoneyTransferProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledInNativeImage;
 import org.springframework.boot.context.properties.bind.validation.BindValidationException;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+// ApplicationContextRunner는 설정 클래스를 런타임에 처리하고 AssertableApplicationContext를
+// JDK 프록시로 만든다. 둘 다 AOT로 처리를 끝내 둔 네이티브 이미지와 맞지 않는다.
+@DisabledInNativeImage
 class BuckPalConfigurationPropertiesTest {
 
     // application.yml을 읽지 않으므로 설정 누락을 그대로 재현한다
