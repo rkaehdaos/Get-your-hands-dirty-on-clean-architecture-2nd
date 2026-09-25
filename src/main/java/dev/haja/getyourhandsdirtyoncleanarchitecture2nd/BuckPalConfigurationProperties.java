@@ -2,7 +2,6 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -18,11 +17,8 @@ import org.springframework.validation.annotation.Validated;
  * 위해서다. 원시 타입이면 누락이 0으로 바인딩되어 {@code @Positive} 위반만 남고, 원인이
  * 누락이라는 사실이 가려진다.
  */
-@Data
 @Validated
 @ConfigurationProperties(prefix = "buckpal")
-public class BuckPalConfigurationProperties {
-    @NotNull
-    @Positive
-    private Long transferThreshold;
+public record BuckPalConfigurationProperties(
+        @NotNull @Positive Long transferThreshold) {
 }

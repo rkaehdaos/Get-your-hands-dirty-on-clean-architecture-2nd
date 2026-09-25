@@ -15,7 +15,7 @@ import java.time.temporal.ChronoUnit;
 public class BuckPalConfiguration {
     @Bean
     public MoneyTransferProperties moneyTransferProperties(BuckPalConfigurationProperties buckPalConfigurationProperties) {
-        return new MoneyTransferProperties(Money.of(buckPalConfigurationProperties.getTransferThreshold()));
+        return new MoneyTransferProperties(Money.of(buckPalConfigurationProperties.transferThreshold()));
     }
 
     /**
