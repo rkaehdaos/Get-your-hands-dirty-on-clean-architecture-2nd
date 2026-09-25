@@ -5,11 +5,13 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyUseCase;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.WebAdapter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@WebAdapter
 @RestController
 @RequiredArgsConstructor
 class SendMoneyController {
