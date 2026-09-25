@@ -14,6 +14,7 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.Loa
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.UpdateAccountStatePort;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledInNativeImage;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -36,6 +37,9 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.times;
 
+// 네이티브 이미지는 런타임 바이트코드 생성을 지원하지 않아 Mockito가 초기화되지 않는다.
+// 서비스의 분기는 JVM 테스트로 고정하고, 네이티브의 송금 경로는 SendMoneySystemTest가 맡는다.
+@DisabledInNativeImage
 class SendMoneyServiceTest {
 
     private final LoadAccountPort loadAccountPort =

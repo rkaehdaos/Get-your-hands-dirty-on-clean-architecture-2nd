@@ -9,6 +9,7 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.Send
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.ThresholdExceededException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledInNativeImage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpStatus;
@@ -23,6 +24,9 @@ import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
 import static org.assertj.core.api.Assertions.assertThat;
 
+// 네이티브 이미지는 런타임 바이트코드 생성을 지원하지 않아 Mockito가 초기화되지 않는다.
+// HTTP 매핑은 JVM 테스트로 고정하고, 네이티브의 송금 경로는 SendMoneySystemTest가 맡는다.
+@DisabledInNativeImage
 @WebMvcTest(controllers = SendMoneyController.class)
 class SendMoneyControllerTest {
 
