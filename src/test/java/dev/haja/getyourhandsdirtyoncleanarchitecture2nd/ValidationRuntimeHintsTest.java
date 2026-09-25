@@ -8,6 +8,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
 import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import org.springframework.beans.factory.aot.AotServices;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.aot.hint.MemberCategory.ACCESS_DECLARED_FIELDS;
@@ -42,5 +46,20 @@ class ValidationRuntimeHintsTest {
                 .withMemberCategory(ACCESS_DECLARED_FIELDS)).accepts(hints);
         assertThat(reflection().onType(GetAccountBalanceQuery.class)
                 .withMemberCategory(ACCESS_DECLARED_FIELDS)).accepts(hints);
+    }
+
+    @Test
+    void isRegisteredInAotFactories() {
+
+        // when
+        List<RuntimeHintsRegistrar> registrars = AotServices.factories(getClass().getClassLoader())
+                .load(RuntimeHintsRegistrar.class)
+                .asList();
+
+        // then
+        // AOT 처리기가 컨텍스트마다 읽는 목록이다. 여기서 빠지면 JVM 테스트는 전부 통과하고
+        // 네이티브에서만 HV000064로 드러난다
+        assertThat(registrars)
+                .hasAtLeastOneElementOfType(BuckPalConfiguration.ValidationRuntimeHints.class);
     }
 }
