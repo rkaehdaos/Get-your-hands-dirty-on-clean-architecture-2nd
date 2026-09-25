@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.DEFAULT_ACCOUNT_ID;
@@ -26,7 +27,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 // 네이티브 이미지는 런타임 바이트코드 생성을 지원하지 않아 Mockito가 초기화되지 않는다.
 // HTTP 매핑은 JVM 테스트로 고정하고, 네이티브의 송금 경로는 SendMoneySystemTest가 맡는다.
+// @DisabledInNativeImage는 실행만 막을 뿐 이 컨텍스트는 여전히 AOT 처리되어 이미지에 실린다.
+// 돌지 않을 컨텍스트이므로 @DisabledInAotMode로 AOT 처리에서도 뺀다.
 @DisabledInNativeImage
+@DisabledInAotMode
 @WebMvcTest(controllers = SendMoneyController.class)
 class SendMoneyControllerTest {
 
