@@ -41,10 +41,10 @@ class BuckPalConfigurationPropertiesTest {
     void givenNoTransferThreshold_thenFailsToStart() {
 
         // given
-        ApplicationContextRunner runner = contextRunner;
+        // 송금 한도 설정을 주지 않는다
 
         // when
-        runner.run(context -> {
+        contextRunner.run(context -> {
 
             // then
             assertThat(context).getFailure()
