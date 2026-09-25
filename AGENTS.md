@@ -12,7 +12,7 @@
 
 - **인바운드 포트** `SendMoneyUseCase`, `GetAccountBalanceUseCase`. 유스케이스 실패 예외(`ThresholdExceededException`, `InsufficientFundsException`, `NoSuchAccountException`)도 `port/in`에 있다.
 - **아웃바운드 포트** `LoadAccountPort`, `UpdateAccountStatePort`, `AccountLock`. `LoadAccountPort`가 던지는 `AccountNotFoundException`은 `port/out`에 있다.
-- **서비스** `SendMoneyService`(`@Component` + `jakarta.transaction.Transactional`), `GetAccountBalanceService`. **`GetAccountBalanceService`는 빈이 아니다** — 쓰려면 `new`나 `@Import`로 조립한다. 둘이 공유하는 헬퍼 `AccountLoader`가 서비스 패키지에 있다.
+- **서비스** `SendMoneyService`(`@UseCase` + `jakarta.transaction.Transactional`), `GetAccountBalanceService`. **`GetAccountBalanceService`는 빈이 아니다** — 이 유스케이스를 쓰는 인바운드 어댑터가 아직 없어서다(책 원본도 같다). `@UseCase`는 그 어댑터를 추가하는 `feat` 커밋에서 붙이고, 트랜잭션 경계도 그때 정한다. 그 전까지 쓰려면 `new`나 `@Import`로 조립한다. 둘이 공유하는 헬퍼 `AccountLoader`가 서비스 패키지에 있다.
 - **인바운드 어댑터** `SendMoneyController`, `SendMoneyExceptionHandler`(`@RestControllerAdvice`).
 - **아웃바운드 어댑터** `AccountPersistenceAdapter`(`LoadAccountPort`·`UpdateAccountStatePort`를 함께 구현), `NoOpAccountLock`(아무것도 잠그지 않는 자리표시자).
 - **설정**(루트 패키지) `BuckPalConfiguration` — `MoneyTransferProperties`·`Clock` 빈을 등록한다. 네이티브용 `ValidationRuntimeHints`가 중첩돼 있고, 등록은 `META-INF/spring/aot.factories`가 맡는다. `BuckPalConfigurationProperties` — `buckpal.*` 바인딩. 아래 "설정"·"네이티브 이미지" 참고.
@@ -28,11 +28,13 @@ application/domain/model    도메인 모델
 application/domain/service  유스케이스 구현(서비스) + MoneyTransferProperties
 application/port/in         인바운드 포트 + 입력 모델(커맨드/쿼리) + 커스텀 제약 + 유스케이스 실패 예외
 application/port/out        아웃바운드 포트
+common                      계층 식별 스테레오타입(@WebAdapter · @UseCase · @PersistenceAdapter)
 common/validation           Validation 헬퍼 (application 바깥)
 ```
 
 - 루트 패키지에는 `BuckPalApplication`, `BuckPalConfiguration`, `BuckPalConfigurationProperties`만 둔다.
-- `src/test`에만 있는 `common` 패키지(테스트 데이터 빌더·픽스처 상수)는 `src/main`의 `common/validation`과 이름만 겹치는 별개 패키지다.
+- `common`의 스테레오타입은 표지가 아니라 **`@Component`를 메타 애노테이션으로 가진 빈 등록**이다. 빈이 아니던 클래스에 붙이면 동작 변경이다(`refactor`가 아니다). `@WebAdapter`는 `@Controller`가 아니므로 `@RestController`를 대신하지 못한다 — 빼면 핸들러로 인식되지 않으니 둘을 함께 붙인다.
+- `src/test`의 `common` 패키지(테스트 데이터 빌더·픽스처 상수)는 `src/main`의 `common`(스테레오타입)과 **같은 패키지를 소스셋만 나눠 쓴다.** 역할은 서로 무관하다.
 - `@Sql` 픽스처 스크립트는 패키지 구조를 따르지 않고 `src/test/resources/sql/`에 모은다(현재 `accounts.sql` 하나).
 - 들여쓰기·줄바꿈·인코딩은 루트 `.editorconfig`가 고정한다(Java는 공백 4칸).
 
