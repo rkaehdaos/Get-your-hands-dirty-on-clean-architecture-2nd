@@ -44,6 +44,5 @@ mise.toml
 
 ### Claude Code ###
 plans/
-AGENTS.md
 CLAUDE.md
 .claude/
