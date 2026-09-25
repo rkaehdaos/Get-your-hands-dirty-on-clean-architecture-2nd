@@ -222,7 +222,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 
 `.gitmessage.txt`가 템플릿이다. 형식은 `<이모지> <type>(<scope>): <subject>`, **subject는 한글**이다(예: `✨ feat(core): ActivityWindow에 addActivity 메서드 추가`). type/scope/이모지는 템플릿에 있는 것만 쓴다.
 
-- scope: 도메인·애플리케이션 계층(포트·서비스·입력 모델) `core`, 웹 어댑터 `api`, 영속성 어댑터 `db`, 루트 패키지 설정(`BuckPalConfiguration*`, `application.yml`) `config`, 의존성 `deps`(`🔨 build(deps)` / `📦 chore(deps)`).
+- scope: 도메인·애플리케이션 계층(포트·서비스·입력 모델) `core`, 웹 어댑터 `api`, 영속성 어댑터 `db`, 설정 `config` — 루트 패키지 설정(`BuckPalConfiguration*`, `application.yml`, `META-INF/spring/aot.factories`)과 저장소·에이전트 설정 파일(`AGENTS.md`, `.editorconfig`, `.githooks`, `.gitmessage.txt`). 문서 변경은 type `📝 docs`가 설정 변경 커밋과 구분한다. 의존성 `deps`(`🔨 build(deps)` / `📦 chore(deps)`).
 - **테스트 커밋의 scope는 대상 코드를 따른다**(`✅ test(core)`, `✅ test(config)`). scope `test`는 테스트 코드 자체가 대상일 때다(`♻️ refactor(test): AccountBuilder를 AccountTestData로 이동`, `✅ test(test): 목 기반 테스트를 네이티브 이미지에서 제외`).
 - 커밋은 매우 잘게 — 메서드 하나, 검증 하나 수준. 기능과 테스트는 별도 커밋(`feat`/`fix` → `test`).
 
