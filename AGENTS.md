@@ -33,7 +33,7 @@ common/validation           Validation 헬퍼 (application 바깥)
 ```
 
 - 루트 패키지에는 `BuckPalApplication`, `BuckPalConfiguration`, `BuckPalConfigurationProperties`만 둔다.
-- `common`의 스테레오타입은 표지가 아니라 **`@Component`를 메타 애노테이션으로 가진 빈 등록**이다. 빈이 아니던 클래스에 붙이면 동작 변경이다(`refactor`가 아니다). `@WebAdapter`는 `@RestController`와 함께 붙인다(이유는 Javadoc).
+- `common`의 스테레오타입은 표지가 아니라 **`@Component`를 메타 애노테이션으로 가진 빈 등록**이다. 빈이 아니던 클래스에 붙이면 동작 변경이다(`refactor`가 아니다). `@WebAdapter`는 `@RestController`(예외 핸들러는 `@RestControllerAdvice`)와 함께 붙인다(이유는 Javadoc).
 - `src/test`의 `common` 패키지(테스트 데이터 빌더·픽스처 상수)는 `src/main`의 `common`(스테레오타입)과 **같은 패키지를 소스셋만 나눠 쓴다.** 역할은 서로 무관하다.
 - `@Sql` 픽스처 스크립트는 패키지 구조를 따르지 않고 `src/test/resources/sql/`에 모은다(현재 `accounts.sql` 하나).
 - 들여쓰기·줄바꿈·인코딩은 루트 `.editorconfig`가 고정한다(Java는 공백 4칸).
