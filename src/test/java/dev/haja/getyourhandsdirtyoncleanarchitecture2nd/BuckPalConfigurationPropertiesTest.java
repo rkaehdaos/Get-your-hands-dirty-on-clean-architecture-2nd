@@ -5,6 +5,7 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.servi
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
+import org.springframework.boot.context.properties.bind.UnboundConfigurationPropertiesException;
 import org.springframework.boot.context.properties.bind.validation.BindValidationException;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
@@ -69,6 +70,27 @@ class BuckPalConfigurationPropertiesTest {
                     .hasRootCauseInstanceOf(BindValidationException.class)
                     .rootCause()
                     .hasMessageContaining("transferThreshold");
+        });
+    }
+
+    @Test
+    @DisplayName("송금 한도 키에 오타가 있으면 올바른 키가 있어도 기동에 실패함")
+    void givenMisspelledTransferThreshold_thenFailsToStart() {
+
+        // given
+        ApplicationContextRunner runner = contextRunner
+                .withPropertyValues(
+                        "buckpal.transferThreshold=10000",
+                        "buckpal.transferThresold=500");
+
+        // when
+        runner.run(context -> {
+
+            // then
+            assertThat(context).getFailure()
+                    .hasRootCauseInstanceOf(UnboundConfigurationPropertiesException.class)
+                    .rootCause()
+                    .hasMessageContaining("transferthresold");
         });
     }
 }
