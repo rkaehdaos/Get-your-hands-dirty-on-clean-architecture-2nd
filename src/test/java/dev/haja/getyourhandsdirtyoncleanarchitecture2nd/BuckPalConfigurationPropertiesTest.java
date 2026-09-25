@@ -76,6 +76,25 @@ class BuckPalConfigurationPropertiesTest {
     }
 
     @Test
+    @DisplayName("송금 한도가 음수이면 기동에 실패함")
+    void givenNegativeTransferThreshold_thenFailsToStart() {
+
+        // given
+        ApplicationContextRunner runner = contextRunner
+                .withPropertyValues("buckpal.transferThreshold=-1");
+
+        // when
+        runner.run(context -> {
+
+            // then
+            assertThat(context).getFailure()
+                    .hasRootCauseInstanceOf(BindValidationException.class)
+                    .rootCause()
+                    .hasMessageContaining("transferThreshold");
+        });
+    }
+
+    @Test
     @DisplayName("송금 한도 키에 오타가 있으면 올바른 키가 있어도 기동에 실패함")
     void givenMisspelledTransferThreshold_thenFailsToStart() {
 
