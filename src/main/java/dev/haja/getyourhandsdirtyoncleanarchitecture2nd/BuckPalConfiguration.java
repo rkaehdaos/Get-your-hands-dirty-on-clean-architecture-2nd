@@ -8,6 +8,7 @@ import jakarta.validation.ValidatorFactory;
 import jakarta.validation.metadata.BeanDescriptor;
 import jakarta.validation.metadata.ConstraintDescriptor;
 import jakarta.validation.metadata.ElementDescriptor;
+import jakarta.validation.metadata.PropertyDescriptor;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -90,6 +91,11 @@ public class BuckPalConfiguration {
      * 스캔해 제약이 하나라도 붙은 record를 입력 모델로 보고, 검증기는 그 제약 메타데이터에서
      * 뽑는다. <b>입력 모델을 그 패키지 밖에 두면 힌트가 등록되지 않는다</b> — JVM에서는 멀쩡하고
      * 네이티브에서만 실패한다.
+     * <p>
+     * {@code @Valid} 캐스케이드와 컨테이너 원소 제약({@code List<@NotNull Money>})은 따라가지
+     * 않는다. 그런 입력 모델을 만나면 힌트를 빠뜨리는 대신 {@code IllegalStateException}으로
+     * 실패한다 — 네이티브에서 조용히 깨지는 대신 JVM 테스트와 AOT 빌드에서 드러난다. 필요해지면
+     * Spring의 처리기처럼 그 타입까지 재귀로 따라가도록 이 레지스트라를 확장할 것.
      */
     static class ValidationRuntimeHints implements RuntimeHintsRegistrar {
 
@@ -129,12 +135,24 @@ public class BuckPalConfiguration {
         }
 
         private static void register(RuntimeHints hints, BeanDescriptor bean) {
+            rejectUnsupported(bean);
+
             hints.reflection().registerType(bean.getElementClass(), ACCESS_DECLARED_FIELDS);
 
             constraintsOf(bean)
                     .flatMap(constraint -> constraint.getConstraintValidatorClasses().stream())
                     .forEach(validator ->
                             hints.reflection().registerType(validator, INVOKE_DECLARED_CONSTRUCTORS));
+        }
+
+        private static void rejectUnsupported(BeanDescriptor bean) {
+            for (PropertyDescriptor property : bean.getConstrainedProperties()) {
+                if (property.isCascaded() || !property.getConstrainedContainerElementTypes().isEmpty()) {
+                    throw new IllegalStateException(bean.getElementClass().getName() + "."
+                            + property.getPropertyName()
+                            + ": cascaded validation and container element constraints are not supported");
+                }
+            }
         }
 
         /**
