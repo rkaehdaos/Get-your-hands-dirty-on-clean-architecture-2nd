@@ -1,3 +1,8 @@
+##
+buckpal:
+  transferThreshold: 10000
+
+## spring
 spring:
   application:
     name: Get-your-hands-dirty-on-clean-architecture-2nd
