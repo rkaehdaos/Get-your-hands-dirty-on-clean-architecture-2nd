@@ -6,8 +6,8 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountNotFoundException;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.UpdateAccountStatePort;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.PersistenceAdapter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,7 +25,7 @@ import java.util.List;
  * 트랜잭션 경계를 통과하며 바깥 트랜잭션이 rollback-only로 표시되고, 서비스가 그 예외를
  * 번역해 정상적으로 응답하려 해도 커밋할 수 없게 된다.
  */
-@Component
+@PersistenceAdapter
 @RequiredArgsConstructor
 class AccountPersistenceAdapter implements
         LoadAccountPort,
