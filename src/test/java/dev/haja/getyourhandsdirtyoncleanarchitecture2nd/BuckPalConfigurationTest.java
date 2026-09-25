@@ -13,10 +13,10 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.aot.hint.MemberCategory.ACCESS_DECLARED_FIELDS;
 import static org.springframework.aot.hint.MemberCategory.INVOKE_DECLARED_CONSTRUCTORS;
 import static org.springframework.aot.hint.predicate.RuntimeHintsPredicates.reflection;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class BuckPalConfigurationTest {
 
