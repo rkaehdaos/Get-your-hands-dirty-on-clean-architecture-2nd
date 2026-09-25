@@ -36,4 +36,17 @@ class SendMoneyCommandTest {
                 Money.of(500L)))
                 .doesNotThrowAnyException();
     }
+
+    @Test
+    @DisplayName("송금액이 양수가 아니면 커맨드 생성이 거부됨")
+    void givenNonPositiveMoney_thenThrowsConstraintViolationException() {
+
+        // when / then
+        assertThatThrownBy(() -> new SendMoneyCommand(
+                OTHER_ACCOUNT_ID,
+                DEFAULT_ACCOUNT_ID,
+                Money.of(0L)))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining("money");
+    }
 }
