@@ -1,9 +1,12 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
 
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.DistinctAccountsValidator;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.GetAccountBalanceUseCase.GetAccountBalanceQuery;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.PositiveMoneyValidator;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
@@ -14,6 +17,7 @@ import org.springframework.beans.factory.aot.AotServices;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.aot.hint.MemberCategory.ACCESS_DECLARED_FIELDS;
 import static org.springframework.aot.hint.MemberCategory.INVOKE_DECLARED_CONSTRUCTORS;
 import static org.springframework.aot.hint.predicate.RuntimeHintsPredicates.reflection;
@@ -65,4 +69,37 @@ class ValidationRuntimeHintsTest {
         assertThat(registrars)
                 .hasAtLeastOneElementOfType(BuckPalConfiguration.ValidationRuntimeHints.class);
     }
+
+    @Test
+    @DisplayName("캐스케이드(@Valid) 프로퍼티가 있는 입력 모델이면 힌트 등록이 거부됨")
+    void givenCascadedProperty_thenRejectsInputModel() {
+
+        // given
+        RuntimeHints hints = new RuntimeHints();
+
+        // when / then
+        assertThatThrownBy(() -> BuckPalConfiguration.ValidationRuntimeHints
+                .registerInputModels(hints, List.of(CascadingInput.class)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("money");
+    }
+
+    @Test
+    @DisplayName("컨테이너 원소 제약이 있는 입력 모델이면 힌트 등록이 거부됨")
+    void givenContainerElementConstraint_thenRejectsInputModel() {
+
+        // given
+        RuntimeHints hints = new RuntimeHints();
+
+        // when / then
+        assertThatThrownBy(() -> BuckPalConfiguration.ValidationRuntimeHints
+                .registerInputModels(hints, List.of(ContainerElementInput.class)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("amounts");
+    }
+
+    // 루트 패키지에 있어 레지스트라의 port.in 스캔에는 잡히지 않는다
+    record CascadingInput(@Valid Money money) {}
+
+    record ContainerElementInput(List<@NotNull Money> amounts) {}
 }
