@@ -1,0 +1,2 @@
+org.springframework.aot.hint.RuntimeHintsRegistrar=\
+  dev.haja.getyourhandsdirtyoncleanarchitecture2nd.BuckPalConfiguration$ValidationRuntimeHints
