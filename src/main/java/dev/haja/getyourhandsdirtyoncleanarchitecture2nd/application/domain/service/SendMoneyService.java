@@ -9,15 +9,15 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.Thre
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.AccountLock;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.UpdateAccountStatePort;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.UseCase;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
 
-@Component
 @RequiredArgsConstructor
+@UseCase
 @Transactional
 class SendMoneyService implements SendMoneyUseCase {
 
