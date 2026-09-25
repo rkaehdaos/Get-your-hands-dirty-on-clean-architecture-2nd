@@ -20,5 +20,4 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "buckpal")
 public record BuckPalConfigurationProperties(
-        @NotNull @Positive Long transferThreshold) {
-}
+        @NotNull @Positive Long transferThreshold) {}
