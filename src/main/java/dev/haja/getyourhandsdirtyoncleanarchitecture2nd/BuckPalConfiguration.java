@@ -13,7 +13,6 @@ import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.ImportRuntimeHints;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -29,7 +28,6 @@ import static org.springframework.aot.hint.MemberCategory.INVOKE_DECLARED_CONSTR
 
 @Configuration
 @EnableConfigurationProperties(BuckPalConfigurationProperties.class)
-@ImportRuntimeHints(BuckPalConfiguration.ValidationRuntimeHints.class)
 public class BuckPalConfiguration {
     /**
      * 송금 한도를 {@code Money}로 감싼다.
@@ -76,6 +74,12 @@ public class BuckPalConfiguration {
      * 같은 힌트를 등록해 주지만 <b>빈 클래스</b>만 훑는다 — 입력 모델은 빈이 아니라
      * {@code common.validation.Validation}으로 스스로 검증하므로 그 시야 밖이다. 힌트가 없으면
      * 네이티브에서 커맨드를 만드는 순간 {@code HV000064}로 실패한다(이슈 #38).
+     * <p>
+     * 이 레지스트라는 {@code @ImportRuntimeHints}가 아니라 {@code META-INF/spring/aot.factories}로
+     * 등록한다. 애노테이션으로 붙이면 이 설정 클래스를 담은 컨텍스트가 AOT 처리될 때만 기여한다 —
+     * 스프링 컨텍스트 없이 커맨드를 만드는 테스트의 네이티브 실행이 풀 컨텍스트 테스트가 따로
+     * 있다는 우연에 기대게 된다. {@code aot.factories}로 등록하면 어느 컨텍스트가 AOT 처리되든
+     * 기여한다.
      * <p>
      * 등록하는 멤버 종류는 그 처리기와 같다 — 입력 모델은 필드 접근, 검증기는 생성자 호출이다.
      * 검증기는 손으로 나열하지 않고 AOT 처리 중에 입력 모델의 제약 메타데이터에서 뽑는다.
