@@ -1,0 +1,117 @@
+package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
+
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.service.MoneyTransferProperties;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledInNativeImage;
+import org.springframework.boot.context.properties.bind.UnboundConfigurationPropertiesException;
+import org.springframework.boot.context.properties.bind.validation.BindValidationException;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+// ApplicationContextRunner는 설정 클래스를 런타임에 처리하고 AssertableApplicationContext를
+// JDK 프록시로 만든다. 둘 다 AOT로 처리를 끝내 둔 네이티브 이미지와 맞지 않는다.
+@DisabledInNativeImage
+class BuckPalConfigurationPropertiesTest {
+
+    // application.yml을 읽지 않으므로 설정 누락을 그대로 재현한다
+    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
+            .withUserConfiguration(BuckPalConfiguration.class);
+
+    @Test
+    void bindsTransferThreshold() {
+
+        // given
+        // application.yml의 10000과 다른 값을 쓴다. 같은 값이면 이 값이 무시되고 yml이
+        // 읽히는 회귀가 생겨도 테스트가 그대로 통과한다
+        ApplicationContextRunner runner = contextRunner
+                .withPropertyValues("buckpal.transferThreshold=12345");
+
+        // when
+        runner.run(context -> {
+
+            // then
+            assertThat(context.getBean(MoneyTransferProperties.class).maximumTransferThreshold())
+                    .isEqualTo(Money.of(12_345L));
+        });
+    }
+
+    @Test
+    @DisplayName("송금 한도 설정이 없으면 기동에 실패함")
+    void givenNoTransferThreshold_thenFailsToStart() {
+
+        // given
+        // 송금 한도 설정을 주지 않는다
+
+        // when
+        contextRunner.run(context -> {
+
+            // then
+            assertThat(context).getFailure()
+                    .hasRootCauseInstanceOf(BindValidationException.class)
+                    .rootCause()
+                    .hasMessageContaining("transferThreshold");
+        });
+    }
+
+    @Test
+    @DisplayName("송금 한도가 0이면 기동에 실패함")
+    void givenZeroTransferThreshold_thenFailsToStart() {
+
+        // given
+        ApplicationContextRunner runner = contextRunner
+                .withPropertyValues("buckpal.transferThreshold=0");
+
+        // when
+        runner.run(context -> {
+
+            // then
+            assertThat(context).getFailure()
+                    .hasRootCauseInstanceOf(BindValidationException.class)
+                    .rootCause()
+                    .hasMessageContaining("transferThreshold");
+        });
+    }
+
+    @Test
+    @DisplayName("송금 한도가 음수이면 기동에 실패함")
+    void givenNegativeTransferThreshold_thenFailsToStart() {
+
+        // given
+        ApplicationContextRunner runner = contextRunner
+                .withPropertyValues("buckpal.transferThreshold=-1");
+
+        // when
+        runner.run(context -> {
+
+            // then
+            assertThat(context).getFailure()
+                    .hasRootCauseInstanceOf(BindValidationException.class)
+                    .rootCause()
+                    .hasMessageContaining("transferThreshold");
+        });
+    }
+
+    @Test
+    @DisplayName("송금 한도 키에 오타가 있으면 올바른 키가 있어도 기동에 실패함")
+    void givenMisspelledTransferThreshold_thenFailsToStart() {
+
+        // given
+        ApplicationContextRunner runner = contextRunner
+                .withPropertyValues(
+                        "buckpal.transferThreshold=10000",
+                        "buckpal.transferThresold=500");
+
+        // when
+        runner.run(context -> {
+
+            // then
+            assertThat(context).getFailure()
+                    .hasRootCauseInstanceOf(UnboundConfigurationPropertiesException.class)
+                    .rootCause()
+                    .hasMessageContaining("transferthresold");
+        });
+    }
+}

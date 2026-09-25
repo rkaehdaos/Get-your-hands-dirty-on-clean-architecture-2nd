@@ -1,6 +1,8 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
 
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.service.MoneyTransferProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,11 +10,24 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
+import static java.util.Objects.requireNonNull;
+
 @Configuration
+@EnableConfigurationProperties(BuckPalConfigurationProperties.class)
 public class BuckPalConfiguration {
+    /**
+     * 송금 한도를 {@code Money}로 감싼다.
+     * <p>
+     * 한도가 null이 아니라는 보장은 {@code BuckPalConfigurationProperties}의 {@code @NotNull}이
+     * 먼저 맡는다. 여기서 다시 검사하는 것은 그 검증이 돌지 않았을 때를 위해서다 —
+     * {@code Money.of(long)}이 {@code Long}을 언박싱하므로, 그대로 두면 어느 설정이 빠졌는지
+     * 알 수 없는 NPE가 난다.
+     */
     @Bean
-    public MoneyTransferProperties moneyTransferProperties(){
-        return new MoneyTransferProperties();
+    public MoneyTransferProperties moneyTransferProperties(BuckPalConfigurationProperties buckPalConfigurationProperties) {
+        Long transferThreshold = requireNonNull(buckPalConfigurationProperties.transferThreshold(),
+                "buckpal.transferThreshold must not be null");
+        return new MoneyTransferProperties(Money.of(transferThreshold));
     }
 
     /**

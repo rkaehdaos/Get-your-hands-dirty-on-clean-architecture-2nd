@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class GetYourHandsDirtyOnCleanArchitecture2ndApplication {
+public class BuckPalApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(GetYourHandsDirtyOnCleanArchitecture2ndApplication.class, args);
+        SpringApplication.run(BuckPalApplication.class, args);
     }
 
 }

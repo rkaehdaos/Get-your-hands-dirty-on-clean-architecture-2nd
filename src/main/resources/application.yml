@@ -1,3 +1,10 @@
+##
+buckpal:
+  # 송금 한도. 책의 예제 값이다. 이 설정이 생기기 전에는 MoneyTransferProperties의
+  # 기본 생성자가 1,000,000을 썼으므로 한도가 100분의 1로 낮아졌다.
+  transferThreshold: 10000
+
+## spring
 spring:
   application:
     name: Get-your-hands-dirty-on-clean-architecture-2nd
