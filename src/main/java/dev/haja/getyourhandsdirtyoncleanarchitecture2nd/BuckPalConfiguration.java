@@ -2,8 +2,8 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.service.MoneyTransferProperties;
-import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.GetAccountBalanceUseCase.GetAccountBalanceQuery;
-import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyCommand;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.SendMoneyUseCase;
+import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import jakarta.validation.metadata.BeanDescriptor;
 import jakarta.validation.metadata.ConstraintDescriptor;
@@ -12,7 +12,11 @@ import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.type.filter.AssignableTypeFilter;
+import org.springframework.util.ClassUtils;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -82,28 +86,55 @@ public class BuckPalConfiguration {
      * 기여한다.
      * <p>
      * 등록하는 멤버 종류는 그 처리기와 같다 — 입력 모델은 필드 접근, 검증기는 생성자 호출이다.
-     * 검증기는 손으로 나열하지 않고 AOT 처리 중에 입력 모델의 제약 메타데이터에서 뽑는다.
-     * <b>새 커맨드/쿼리를 만들면 {@link #SELF_VALIDATING_TYPES}에 추가할 것.</b> 빠뜨려도 JVM에서는
-     * 멀쩡하고 네이티브에서만 실패한다.
+     * 입력 모델도 검증기도 손으로 나열하지 않는다. AOT 처리 중에 {@code application.port.in}을
+     * 스캔해 제약이 하나라도 붙은 record를 입력 모델로 보고, 검증기는 그 제약 메타데이터에서
+     * 뽑는다. <b>입력 모델을 그 패키지 밖에 두면 힌트가 등록되지 않는다</b> — JVM에서는 멀쩡하고
+     * 네이티브에서만 실패한다.
      */
     static class ValidationRuntimeHints implements RuntimeHintsRegistrar {
 
-        static final List<Class<?>> SELF_VALIDATING_TYPES = List.of(
-                SendMoneyCommand.class,
-                GetAccountBalanceQuery.class);
+        private static final String INPUT_MODEL_PACKAGE = SendMoneyUseCase.class.getPackageName();
 
         @Override
         public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
-            try (ValidatorFactory factory = buildDefaultValidatorFactory()) {
-                for (Class<?> type : SELF_VALIDATING_TYPES) {
-                    hints.reflection().registerType(type, ACCESS_DECLARED_FIELDS);
+            registerInputModels(hints, recordsIn(INPUT_MODEL_PACKAGE, classLoader));
+        }
 
-                    constraintsOf(factory.getValidator().getConstraintsForClass(type))
-                            .flatMap(constraint -> constraint.getConstraintValidatorClasses().stream())
-                            .forEach(validator ->
-                                    hints.reflection().registerType(validator, INVOKE_DECLARED_CONSTRUCTORS));
-                }
+        /**
+         * 후보 중 제약이 붙은 타입을 입력 모델로 보고 힌트를 등록한다. 스캔과 나눠 둔 것은
+         * 테스트가 스캔 범위 밖의 픽스처 타입으로 부르기 위해서다.
+         */
+        static void registerInputModels(RuntimeHints hints, List<Class<?>> candidates) {
+            try (ValidatorFactory factory = buildDefaultValidatorFactory()) {
+                Validator validator = factory.getValidator();
+                candidates.stream()
+                        .map(validator::getConstraintsForClass)
+                        .filter(BeanDescriptor::isBeanConstrained)
+                        .forEach(bean -> register(hints, bean));
             }
+        }
+
+        /**
+         * 패키지 아래의 record를 모두 찾는다. 유스케이스 인터페이스에 중첩된 record도 암묵적으로
+         * static이라 후보가 된다.
+         */
+        private static List<Class<?>> recordsIn(String basePackage, ClassLoader classLoader) {
+            ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
+            scanner.setResourceLoader(new DefaultResourceLoader(classLoader));
+            scanner.addIncludeFilter(new AssignableTypeFilter(Record.class));
+            return scanner.findCandidateComponents(basePackage).stream()
+                    .<Class<?>>map(candidate -> ClassUtils.resolveClassName(
+                            requireNonNull(candidate.getBeanClassName()), classLoader))
+                    .toList();
+        }
+
+        private static void register(RuntimeHints hints, BeanDescriptor bean) {
+            hints.reflection().registerType(bean.getElementClass(), ACCESS_DECLARED_FIELDS);
+
+            constraintsOf(bean)
+                    .flatMap(constraint -> constraint.getConstraintValidatorClasses().stream())
+                    .forEach(validator ->
+                            hints.reflection().registerType(validator, INVOKE_DECLARED_CONSTRUCTORS));
         }
 
         /**
