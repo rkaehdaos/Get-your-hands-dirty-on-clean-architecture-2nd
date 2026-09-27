@@ -176,6 +176,32 @@ class SendMoneyServiceTest {
     }
 
     @Test
+    @DisplayName("입금 계좌에 ID가 없으면 IllegalStateException이 발생함")
+    void givenTargetAccountHasNoId_thenThrowsIllegalStateException() {
+
+        // given
+        AccountId sourceAccountId = OTHER_ACCOUNT_ID;
+        AccountId targetAccountId = DEFAULT_ACCOUNT_ID;
+
+        givenAnAccountWithId(sourceAccountId);
+        givenAnAccountWithoutId(targetAccountId);
+
+        SendMoneyCommand command = new SendMoneyCommand(
+                sourceAccountId,
+                targetAccountId,
+                Money.of(500L));
+
+        // when / then
+        assertThatThrownBy(() -> service.sendMoney(command))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("target account");
+
+        // ID를 얻지 못하면 잠금도 저장도 일어나지 않는다
+        then(accountLock).shouldHaveNoInteractions();
+        then(updateAccountStatePort).shouldHaveNoInteractions();
+    }
+
+    @Test
     @DisplayName("인출 실패 시 InsufficientFundsException이 발생하고 오직 출금 계좌만 잠겼다가 잠금이 해제됨")
     void givenWithdrawalFails_thenThrowsInsufficientFundsExceptionAndOnlySourceAccountIsLockedAndReleased() {
 
