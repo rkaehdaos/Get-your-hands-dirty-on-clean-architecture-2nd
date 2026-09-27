@@ -194,6 +194,25 @@ class AccountPersistenceAdapterTest {
     }
 
     @Test
+    @DisplayName("ID 없는 계좌의 활동은 저장을 거부함")
+    void givenAccountWithoutId_thenRejectsWithoutPersisting() {
+
+        // given
+        // 소유자 검사의 기준이 계좌 ID라 ID 없는 계좌의 원장은 검사할 수 없다
+        Account account = Account.withoutId(
+                Money.of(555L),
+                new ActivityWindow(
+                        defaultActivity().build()));
+
+        // when / then
+        assertThatThrownBy(() -> adapterUnderTest.updateActivities(account))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("account ID");
+
+        assertThat(activityRepository.count()).isZero();
+    }
+
+    @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     @DisplayName("한 활동의 매핑이 실패하면 아무 활동도 저장되지 않음")
     void givenOneActivityCannotBeMapped_thenNothingIsPersisted() {
