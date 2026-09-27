@@ -203,7 +203,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 #### 웹 슬라이스 — `MockMvcTester`
 
 - **상태·헤더·바디를 한 AssertJ 체인으로 단언한다**(`hasStatus` → `hasContentType` → `bodyJson().extractingPath(...)`).
-- 실패 진단은 따로 챙기지 않는다. `@WebMvcTest`의 MockMvc 빈에 Boot가 `printOnlyOnFailure`로 print를 걸어 두어, **테스트가 실패하면(AssertJ 바디 단언 포함) 그 테스트의 요청·응답 전체가 출력된다.**
+- 실패 진단은 따로 챙기지 않는다. `@WebMvcTest`의 MockMvc 빈에 Boot가 `printOnlyOnFailure`로 print를 걸어 두어, **응답이 만들어진 뒤 테스트가 실패하면(AssertJ 바디 단언 포함) 그 테스트의 요청·응답 전체가 출력된다.** 처리되지 않은 예외로 요청이 중단되면 print에 닿지 않지만, 응답 단언이 `Request failed unexpectedly`와 그 예외의 스택 트레이스로 실패한다.
 - 처리되지 않은 예외는 `hasFailed()`/`failure().isInstanceOf(...)`로 타입을 검증한다.
 
 ```java
