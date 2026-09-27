@@ -62,7 +62,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
   - 그대로인 것: `@SpringBootTest`(`org.springframework.boot.test.context`), `@MockitoBean`(`org.springframework.test.context.bean.override.mockito`)
 - **H2는 `testAndDevelopmentOnly`다.** `testRuntimeOnly`면 `bootRun`이 `Failed to configure a DataSource`로 뜨지 않고, `runtimeOnly`면 `bootJar`에 실려 datasource 설정이 빠진 프로덕션이 실패 대신 빈 인메모리 DB로 조용히 뜬다. `application.yml`에 datasource 설정이 없어 `bootRun`·테스트 모두 내장 DB를 자동 구성한다. 스키마는 Hibernate `ddl-auto`에 맡기고 전역 `schema.sql`/`data.sql`은 두지 않는다(테스트별 `@Sql` 픽스처만 쓴다). `bootRun`의 DB는 비어 있다.
 - **직접 임포트하는 라이브러리는 전이 의존성에 기대지 않고 명시 선언한다**(버전은 BOM에 맡긴다). `mockito-junit-jupiter`, `spring-boot-resttestclient`가 그래서 있다.
-- **`@AutoConfigureRestTestClient`는 시스템 테스트(`RANDOM_PORT`) 전용이다.** 바인딩은 자동이다: `RANDOM_PORT`면 실제 서버, `MockMvc` 빈이 있으면(`@WebMvcTest`) 서버 없이 그 빈, 둘 다 아니면 `bindToApplicationContext`.
+- **`@AutoConfigureRestTestClient`는 시스템 테스트(`RANDOM_PORT`) 전용이다.** 바인딩은 자동이다: 내장 서버가 떠 있으면(`RANDOM_PORT`·`DEFINED_PORT`) 그 서버, `MockMvc` 빈이 있으면(`@WebMvcTest`) 서버 없이 그 빈, 둘 다 아니면 `bindToApplicationContext`.
   - 웹 슬라이스에서 쓰지 않는 이유: MockMvc 바인딩은 요청의 헤더·바디·쿠키만 옮겨 `RequestPostProcessor`(`csrf()` 등)를 끼울 수 없고, 처리되지 않은 예외를 삼켜 바디가 `ex.toString()`인 500으로 바꾸며, `MvcResult`를 버린다. 웹 슬라이스는 `MockMvcTester`다.
   - 세 번째 바인딩(`MockMvc` 빈이 없는 `@SpringBootTest`(MOCK) 등)은 Boot 커스터마이저 없이 만들어져 **보안 필터 체인을 포함한 필터가 모두 빠진다.** 실패하지 않고 조용히 우회된다.
 - `spring-boot-restclient`는 테스트 의존성에 두지 않는다. `TestRestTemplate`을 쓰던 시절 `processTestAot`가 `RestTemplateBuilder`를 찾아 필요했지만 `RestTestClient`는 그것을 참조하지 않는다. `TestRestTemplate`을 되살리면 이 의존성도 함께 돌아와야 한다(빼면 `ClassNotFoundException: ...RestTemplateBuilder`).
