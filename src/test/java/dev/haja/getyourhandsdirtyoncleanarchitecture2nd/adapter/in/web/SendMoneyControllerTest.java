@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.DEFAULT_ACCOUNT_ID;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.OTHER_ACCOUNT_ID;
 import static org.mockito.BDDMockito.any;
@@ -41,10 +42,7 @@ class SendMoneyControllerTest {
     void testSendMoney() {
 
         // when
-        var result = mockMvcTester.post()
-                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
-                        OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 500)
-                .exchange();
+        var result = whenSendMoney(OTHER_ACCOUNT_ID, DEFAULT_ACCOUNT_ID, Money.of(500L));
 
         // then
         assertThat(result).hasStatus(HttpStatus.OK);
@@ -65,10 +63,7 @@ class SendMoneyControllerTest {
                 .given(sendMoneyUseCase).sendMoney(any(SendMoneyCommand.class));
 
         // when
-        var result = mockMvcTester.post()
-                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
-                        OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 500)
-                .exchange();
+        var result = whenSendMoney(OTHER_ACCOUNT_ID, DEFAULT_ACCOUNT_ID, Money.of(500L));
 
         // then
         assertThat(result)
@@ -89,10 +84,7 @@ class SendMoneyControllerTest {
                 .given(sendMoneyUseCase).sendMoney(any(SendMoneyCommand.class));
 
         // when
-        var result = mockMvcTester.post()
-                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
-                        OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 2_000_000)
-                .exchange();
+        var result = whenSendMoney(OTHER_ACCOUNT_ID, DEFAULT_ACCOUNT_ID, Money.of(2_000_000L));
 
         // then
         assertThat(result)
@@ -113,10 +105,7 @@ class SendMoneyControllerTest {
                 .given(sendMoneyUseCase).sendMoney(any(SendMoneyCommand.class));
 
         // when
-        var result = mockMvcTester.post()
-                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
-                        999L, DEFAULT_ACCOUNT_ID.value(), 500)
-                .exchange();
+        var result = whenSendMoney(new AccountId(999L), DEFAULT_ACCOUNT_ID, Money.of(500L));
 
         // then
         assertThat(result)
@@ -134,10 +123,7 @@ class SendMoneyControllerTest {
 
         // when
         // 유스케이스 목을 스터빙할 필요가 없다 — 컨트롤러가 커맨드를 만드는 자리에서 터진다
-        var result = mockMvcTester.post()
-                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
-                        OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 0)
-                .exchange();
+        var result = whenSendMoney(OTHER_ACCOUNT_ID, DEFAULT_ACCOUNT_ID, Money.of(0L));
 
         // then
         assertThat(result)
@@ -156,10 +142,7 @@ class SendMoneyControllerTest {
     void givenSameSourceAndTargetAccount_thenRespondsWithBadRequest() {
 
         // when
-        var result = mockMvcTester.post()
-                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
-                        DEFAULT_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 500)
-                .exchange();
+        var result = whenSendMoney(DEFAULT_ACCOUNT_ID, DEFAULT_ACCOUNT_ID, Money.of(500L));
 
         // then
         assertThat(result)
@@ -172,5 +155,14 @@ class SendMoneyControllerTest {
 
         // 유스케이스에 닿지 않으므로 잠금도 원장 기록도 일어나지 않는다
         then(sendMoneyUseCase).shouldHaveNoInteractions();
+    }
+
+    private MvcTestResult whenSendMoney(AccountId sourceAccountId, AccountId targetAccountId, Money amount) {
+        return mockMvcTester.post()
+                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
+                        sourceAccountId.value(),
+                        targetAccountId.value(),
+                        amount.amount())
+                .exchange();
     }
 }
