@@ -11,14 +11,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ProblemDetail;
 import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.client.RestTestClient;
+import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.DEFAULT_ACCOUNT_ID;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.OTHER_ACCOUNT_ID;
 import static org.mockito.BDDMockito.any;
@@ -34,24 +32,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisabledInNativeImage
 @DisabledInAotMode
 @WebMvcTest(controllers = SendMoneyController.class)
-@AutoConfigureRestTestClient
 class SendMoneyControllerTest {
 
-    @Autowired private RestTestClient restTestClient;
+    @Autowired private MockMvcTester mockMvcTester;
     @MockitoBean private SendMoneyUseCase sendMoneyUseCase;
 
     @Test
     void testSendMoney() {
 
         // when
-        var response = restTestClient.post()
+        var result = mockMvcTester.post()
                 .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                         OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 500)
-                .contentType(MediaType.APPLICATION_JSON)
+                .header("Content-Type", "application/json")
                 .exchange();
 
         // then
-        response.expectStatus().isOk();
+        assertThat(result).hasStatus(HttpStatus.OK);
 
         then(sendMoneyUseCase).should()
                 .sendMoney(eq(new SendMoneyCommand(
@@ -69,20 +66,20 @@ class SendMoneyControllerTest {
                 .given(sendMoneyUseCase).sendMoney(any(SendMoneyCommand.class));
 
         // when
-        var response = restTestClient.post()
+        var result = mockMvcTester.post()
                 .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                         OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 500)
-                .contentType(MediaType.APPLICATION_JSON)
+                .header("Content-Type", "application/json")
                 .exchange();
 
         // then
-        response.expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
-                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
-
-        ProblemDetail problem = response.expectBody(ProblemDetail.class)
-                .returnResult()
-                .getResponseBody();
-        assertThat(problem.getDetail()).contains("41", "500");
+        assertThat(result)
+                .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .extractingPath("$.detail")
+                .asString()
+                .contains("41", "500");
     }
 
     @Test
@@ -94,20 +91,20 @@ class SendMoneyControllerTest {
                 .given(sendMoneyUseCase).sendMoney(any(SendMoneyCommand.class));
 
         // when
-        var response = restTestClient.post()
+        var result = mockMvcTester.post()
                 .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                         OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 2_000_000)
-                .contentType(MediaType.APPLICATION_JSON)
+                .header("Content-Type", "application/json")
                 .exchange();
 
         // then
-        response.expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)
-                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
-
-        ProblemDetail problem = response.expectBody(ProblemDetail.class)
-                .returnResult()
-                .getResponseBody();
-        assertThat(problem.getDetail()).contains("1000000", "2000000");
+        assertThat(result)
+                .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
+                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .extractingPath("$.detail")
+                .asString()
+                .contains("1000000", "2000000");
     }
 
     @Test
@@ -119,20 +116,20 @@ class SendMoneyControllerTest {
                 .given(sendMoneyUseCase).sendMoney(any(SendMoneyCommand.class));
 
         // when
-        var response = restTestClient.post()
+        var result = mockMvcTester.post()
                 .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                         999L, DEFAULT_ACCOUNT_ID.value(), 500)
-                .contentType(MediaType.APPLICATION_JSON)
+                .header("Content-Type", "application/json")
                 .exchange();
 
         // then
-        response.expectStatus().isNotFound()
-                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
-
-        ProblemDetail problem = response.expectBody(ProblemDetail.class)
-                .returnResult()
-                .getResponseBody();
-        assertThat(problem.getDetail()).contains("999");
+        assertThat(result)
+                .hasStatus(HttpStatus.NOT_FOUND)
+                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .extractingPath("$.detail")
+                .asString()
+                .contains("999");
     }
 
     @Test
@@ -141,20 +138,20 @@ class SendMoneyControllerTest {
 
         // when
         // 유스케이스 목을 스터빙할 필요가 없다 — 컨트롤러가 커맨드를 만드는 자리에서 터진다
-        var response = restTestClient.post()
+        var result = mockMvcTester.post()
                 .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                         OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 0)
-                .contentType(MediaType.APPLICATION_JSON)
+                .header("Content-Type", "application/json")
                 .exchange();
 
         // then
-        response.expectStatus().isBadRequest()
-                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
-
-        ProblemDetail problem = response.expectBody(ProblemDetail.class)
-                .returnResult()
-                .getResponseBody();
-        assertThat(problem.getDetail()).contains("money");
+        assertThat(result)
+                .hasStatus(HttpStatus.BAD_REQUEST)
+                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .extractingPath("$.detail")
+                .asString()
+                .contains("money");
 
         then(sendMoneyUseCase).shouldHaveNoInteractions();
     }
@@ -164,20 +161,20 @@ class SendMoneyControllerTest {
     void givenSameSourceAndTargetAccount_thenRespondsWithBadRequest() {
 
         // when
-        var response = restTestClient.post()
+        var result = mockMvcTester.post()
                 .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                         DEFAULT_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 500)
-                .contentType(MediaType.APPLICATION_JSON)
+                .header("Content-Type", "application/json")
                 .exchange();
 
         // then
-        response.expectStatus().isBadRequest()
-                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
-
-        ProblemDetail problem = response.expectBody(ProblemDetail.class)
-                .returnResult()
-                .getResponseBody();
-        assertThat(problem.getDetail()).contains("targetAccountId");
+        assertThat(result)
+                .hasStatus(HttpStatus.BAD_REQUEST)
+                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .extractingPath("$.detail")
+                .asString()
+                .contains("targetAccountId");
 
         // 유스케이스에 닿지 않으므로 잠금도 원장 기록도 일어나지 않는다
         then(sendMoneyUseCase).shouldHaveNoInteractions();
