@@ -66,7 +66,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
   - `jakarta.transaction-api` — Hibernate를 거쳐 오고 JPA 스타터의 목적이 아닌데, `SendMoneyService`가 `jakarta.transaction.Transactional`을 쓴다.
 - **`@AutoConfigureRestTestClient`는 시스템 테스트(`RANDOM_PORT`) 전용이다.** 바인딩은 자동이다: 내장 서버가 떠 있으면(`RANDOM_PORT`·`DEFINED_PORT`) 그 서버, `MockMvc` 빈이 있으면(`@WebMvcTest`) 서버 없이 그 빈, 둘 다 아니면 `bindToApplicationContext`.
   - 웹 슬라이스에서 쓰지 않는 이유: MockMvc 바인딩은 요청의 헤더·바디·쿠키만 옮겨 `RequestPostProcessor`(`csrf()` 등)를 끼울 수 없고, 처리되지 않은 예외를 삼켜 바디가 `ex.toString()`인 500으로 바꾸며, `MvcResult`를 버린다. 웹 슬라이스는 `MockMvcTester`다.
-  - 세 번째 바인딩(`MockMvc` 빈이 없는 `@SpringBootTest`(MOCK) 등)은 Boot 커스터마이저 없이 만들어져 **보안 필터 체인을 포함한 필터가 모두 빠진다.** 실패하지 않고 조용히 우회된다.
+  - 세 번째 바인딩(`MockMvc` 빈이 없는 `@SpringBootTest`(MOCK) 등)은 `MockMvc`를 `webAppContextSetup(context)` 기본값으로 새로 만들어 Boot의 `MockMvcBuilderCustomizer`(필터 등록·print)를 건너뛰므로 **보안 필터 체인을 포함한 필터가 모두 빠진다.** 실패하지 않고 조용히 우회된다. `RestTestClientBuilderCustomizer`(메시지 컨버터)는 세 바인딩 모두에 적용된다.
 - `spring-boot-restclient`는 테스트 의존성에 두지 않는다 — `TestRestTemplate`(`RestTemplateBuilder`)에만 필요하고 `RestTestClient`는 참조하지 않는다.
 - Bean Validation(`spring-boot-starter-validation`)은 컨텍스트 없이도 쓰므로 `implementation`이다.
 - Gradle 9.8.0 / Kotlin DSL, Hibernate ORM 플러그인(bytecode enhancement), GraalVM Native Build Tools.
