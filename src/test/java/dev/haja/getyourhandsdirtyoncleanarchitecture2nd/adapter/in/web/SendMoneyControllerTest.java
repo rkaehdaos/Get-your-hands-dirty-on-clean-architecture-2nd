@@ -44,7 +44,6 @@ class SendMoneyControllerTest {
         var result = mockMvcTester.post()
                 .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                         OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 500)
-                .contentType(MediaType.APPLICATION_JSON)
                 .exchange();
 
         // then
@@ -69,7 +68,6 @@ class SendMoneyControllerTest {
         var result = mockMvcTester.post()
                 .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                         OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 500)
-                .contentType(MediaType.APPLICATION_JSON)
                 .exchange();
 
         // then
@@ -94,7 +92,6 @@ class SendMoneyControllerTest {
         var result = mockMvcTester.post()
                 .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                         OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 2_000_000)
-                .contentType(MediaType.APPLICATION_JSON)
                 .exchange();
 
         // then
@@ -119,7 +116,6 @@ class SendMoneyControllerTest {
         var result = mockMvcTester.post()
                 .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                         999L, DEFAULT_ACCOUNT_ID.value(), 500)
-                .contentType(MediaType.APPLICATION_JSON)
                 .exchange();
 
         // then
@@ -141,7 +137,6 @@ class SendMoneyControllerTest {
         var result = mockMvcTester.post()
                 .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                         OTHER_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 0)
-                .contentType(MediaType.APPLICATION_JSON)
                 .exchange();
 
         // then
@@ -164,7 +159,6 @@ class SendMoneyControllerTest {
         var result = mockMvcTester.post()
                 .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
                         DEFAULT_ACCOUNT_ID.value(), DEFAULT_ACCOUNT_ID.value(), 500)
-                .contentType(MediaType.APPLICATION_JSON)
                 .exchange();
 
         // then
