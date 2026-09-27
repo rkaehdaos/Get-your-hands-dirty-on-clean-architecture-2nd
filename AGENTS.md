@@ -202,6 +202,8 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 
 **도구는 계층이 정한다.** 웹 슬라이스는 `MockMvcTester`, 실서버 시스템 테스트는 `RestTestClient`다. 한 계층 안에서는 섞지 않는다. `TestRestTemplate`은 쓰지 않는다.
 
+두 도구의 실패 덤프는 표준 출력으로 나간다. JVM `./gradlew test` 콘솔에는 보이지 않고, `build/test-results/test/TEST-<클래스>.xml`의 `<system-out>`(HTML 리포트에서는 해당 클래스의 Standard output 탭)에 남는다.
+
 #### 웹 슬라이스 — `MockMvcTester`
 
 - **상태·헤더·바디를 한 AssertJ 체인으로 단언한다**(`hasStatus` → `hasContentType` → `bodyJson().extractingPath(...)`).
