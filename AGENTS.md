@@ -58,11 +58,16 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
   - `@DataJpaTest` → `org.springframework.boot.data.jpa.test.autoconfigure`
   - `TestEntityManager` → `org.springframework.boot.jpa.test.autoconfigure`
   - `@WebMvcTest` → `org.springframework.boot.webmvc.test.autoconfigure`
-  - `TestRestTemplate` / `@AutoConfigureTestRestTemplate` → `org.springframework.boot.resttestclient`(+`.autoconfigure`)
+  - `@AutoConfigureRestTestClient` → `org.springframework.boot.resttestclient.autoconfigure`. `RestTestClient` 자체는 Boot가 아니라 Framework 7의 `org.springframework.test.web.servlet.client`다.
   - 그대로인 것: `@SpringBootTest`(`org.springframework.boot.test.context`), `@MockitoBean`(`org.springframework.test.context.bean.override.mockito`)
 - **H2는 `testAndDevelopmentOnly`다.** `testRuntimeOnly`면 `bootRun`이 `Failed to configure a DataSource`로 뜨지 않고, `runtimeOnly`면 `bootJar`에 실려 datasource 설정이 빠진 프로덕션이 실패 대신 빈 인메모리 DB로 조용히 뜬다. `application.yml`에 datasource 설정이 없어 `bootRun`·테스트 모두 내장 DB를 자동 구성한다. 스키마는 Hibernate `ddl-auto`에 맡기고 전역 `schema.sql`/`data.sql`은 두지 않는다(테스트별 `@Sql` 픽스처만 쓴다). `bootRun`의 DB는 비어 있다.
-- **직접 임포트하는 라이브러리는 전이 의존성에 기대지 않고 명시 선언한다**(버전은 BOM에 맡긴다). `mockito-junit-jupiter`, `spring-boot-resttestclient`가 그래서 있다.
-- `testImplementation("org.springframework.boot:spring-boot-restclient")`는 **`processTestAot`에 필요하다** — 빼면 `ClassNotFoundException: ...RestTemplateBuilder`. 지우지 말 것.
+- **직접 임포트하는 라이브러리는 전이 의존성에 기대지 않고 명시 선언한다**(버전은 BOM에 맡긴다). 예외는 **스타터가 존재하는 이유인 라이브러리**다 — 모든 스타터의 바탕인 Spring Framework 코어(spring-core·beans·context)와 Spring Boot, `spring-boot-starter-test`의 JUnit Jupiter·AssertJ·Mockito·spring-test·spring-boot-test, 슬라이스 테스트 스타터의 슬라이스 모듈(`@WebMvcTest`, `@DataJpaTest`), 본 스타터의 Spring MVC(spring-web)·JPA(Spring Data JPA)·JDBC와 트랜잭션(spring-jdbc·spring-tx — `starter-data-jpa`가 `starter-jdbc`를 포함한다)·Bean Validation. 스타터에 딸려 오거나 다른 라이브러리를 거쳐 오는 것은 선언한다. 그래서 선언한 것:
+  - `spring-boot-resttestclient` — `starter-webmvc-test`에 딸려 오지만 쓰는 곳은 웹 슬라이스가 아니라 시스템 테스트다.
+  - `jakarta.transaction-api` — Hibernate를 거쳐 오고 JPA 스타터의 목적이 아닌데, `SendMoneyService`가 `jakarta.transaction.Transactional`을 쓴다.
+- **`@AutoConfigureRestTestClient`는 시스템 테스트(`RANDOM_PORT`) 전용이다.** 바인딩은 자동이다: 내장 서버가 떠 있으면(`RANDOM_PORT`·`DEFINED_PORT`) 그 서버, `MockMvc` 빈이 있으면(`@WebMvcTest`) 서버 없이 그 빈, 둘 다 아니면 `bindToApplicationContext`.
+  - 웹 슬라이스에서 쓰지 않는 이유: MockMvc 바인딩은 요청의 헤더·바디·쿠키만 옮겨 `RequestPostProcessor`(`csrf()` 등)를 끼울 수 없고, 처리되지 않은 예외를 삼켜 바디가 `ex.toString()`인 500으로 바꾸며, `MvcResult`를 버린다. 웹 슬라이스는 `MockMvcTester`다.
+  - 세 번째 바인딩(`MockMvc` 빈이 없는 `@SpringBootTest`(MOCK) 등)은 `MockMvc`를 `webAppContextSetup(context)` 기본값으로 새로 만들어 Boot의 `MockMvcBuilderCustomizer`(필터 등록·print)를 건너뛰므로 **보안 필터 체인을 포함한 필터가 모두 빠진다.** 실패하지 않고 조용히 우회된다. `RestTestClientBuilderCustomizer`(메시지 컨버터)는 세 바인딩 모두에 적용된다.
+- `spring-boot-restclient`는 테스트 의존성에 두지 않는다 — `TestRestTemplate`(`RestTemplateBuilder`)에만 필요하고 `RestTestClient`는 참조하지 않는다.
 - Bean Validation(`spring-boot-starter-validation`)은 컨텍스트 없이도 쓰므로 `implementation`이다.
 - Gradle 9.8.0 / Kotlin DSL, Hibernate ORM 플러그인(bytecode enhancement), GraalVM Native Build Tools.
 - **Gradle을 올릴 때 `distributionUrl`을 손으로 고치지 말 것** — `distributionSha256Sum` 불일치로 실패하고 래퍼 jar·스크립트도 갱신돼야 한다. `./gradlew wrapper --gradle-version <버전> --distribution-type bin --gradle-distribution-sha256-sum <services.gradle.org의 .sha256 값>`으로 바꾼다.
@@ -193,6 +198,52 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 - 단언은 AssertJ(`assertThat`, `assertThatThrownBy(...).isInstanceOf(...)`). 우리 코드의 예외임을 고정할 때는 `.hasMessageContaining("<컴포넌트명>")`만 덧붙인다 — 문구 전체에 묶이지 않게. JDK 내부 예외에는 메시지 단언을 붙이지 않는다. 컴포넌트명이 helpful NPE에도 나타나 검사 없이도 통과하는 경우에는 **우리 코드만 넣는 문자열(설정 키 등)로 단언**한다(`BuckPalConfigurationTest`).
 - 커맨드/쿼리 자기 검증은 `ConstraintViolationException` + `.hasMessageContaining("<컴포넌트명>")`.
 
+### HTTP 단언
+
+**도구는 계층이 정한다.** 웹 슬라이스는 `MockMvcTester`, 실서버 시스템 테스트는 `RestTestClient`다. 한 계층 안에서는 섞지 않는다. `TestRestTemplate`은 쓰지 않는다.
+
+두 도구의 실패 덤프는 표준 출력으로 나간다. JVM `./gradlew test` 콘솔에는 보이지 않고, `build/test-results/test/TEST-<클래스>.xml`의 `<system-out>`(HTML 리포트에서는 해당 클래스의 Standard output 탭)에 남는다.
+
+#### 웹 슬라이스 — `MockMvcTester`
+
+- **상태·헤더·바디를 한 AssertJ 체인으로 단언한다**(`hasStatus` → `hasContentType` → `bodyJson().extractingPath(...)`).
+- 실패 진단은 따로 챙기지 않는다. `@WebMvcTest`의 MockMvc 빈에 Boot가 `printOnlyOnFailure`로 print를 걸어 두어, **응답이 만들어진 뒤 테스트가 실패하면(AssertJ 바디 단언 포함) 그 테스트의 요청·응답 전체가 출력된다.** 처리되지 않은 예외로 요청이 중단되면 print에 닿지 않지만, 응답 단언이 `Request failed unexpectedly`와 그 예외의 스택 트레이스로 실패한다.
+- 처리되지 않은 예외는 `hasFailed()`/`failure().isInstanceOf(...)`로 타입을 검증한다.
+
+```java
+// then
+assertThat(result)
+        .hasStatus(HttpStatus.NOT_FOUND)
+        .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .bodyJson()
+        .extractingPath("$.detail")
+        .asString()
+        .contains("999");
+```
+
+#### 시스템 테스트 — `RestTestClient`
+
+**HTTP 레벨은 `expect*` 체인, 바디 내용은 AssertJ.** 한 표현식에 섞지 않는다.
+
+- `// when`은 `exchange()`까지(`ResponseSpec`을 변수로), `// then`에서 단언한다.
+- **상태 코드·헤더(Content-Type 등)는 `expectStatus()`/`expectHeader()` 체인이고, 먼저 끝낸다.** `expect*` 실패는 요청·응답 전체(헤더·바디)를 로그로 덤프한다 — 상태가 틀리면 바디 역직렬화 전에 그 진단과 함께 실패해야 한다.
+- **바디는 `expectBody(<타입>.class).returnResult().getResponseBody()`로 꺼내 별도 문장에서 AssertJ로 단언한다.** 에러 응답의 타입은 `ProblemDetail`(spring-web의 Jackson 믹스인으로 역직렬화된다).
+- 반대 방향은 금지다.
+  - 상태를 AssertJ로(`RestTestClientResponse`, `getStatus()`) 단언하지 않는다 — 값만 비교해 진단 덤프를 잃는다.
+  - 바디를 `jsonPath`/`json()`/`isEqualTo`/`value(...)`로 단언하지 않는다 — 경계가 한 표현식에 섞인다.
+- `StatusAssertions`에 `isUnprocessableContent()`가 없다. 422는 `isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT)`다.
+- HTTP 레벨 단언이 늘어 한꺼번에 보고 싶어지면 `expectAll(...)`을 쓴다(전부 실행 후 실패를 모아 던진다). 지금은 상태 하나뿐이라 쓰지 않는다.
+
+```java
+// when
+ResponseSpec response = restTestClient.post()
+        .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}", ...)
+        .exchange();
+
+// then
+response.expectStatus().isOk();
+```
+
 ### 테스트 데이터 빌더 (`src/test`의 `common`)
 
 - 픽스처는 테스트 클래스 안 팩터리가 아니라 빌더로 만든다(`AccountTestData`, `ActivityTestData`). `defaultAccount()`/`defaultActivity()`(static import)가 모든 필드를 채운 빌더를 주고, 테스트는 관심 필드만 `withXxx(...)`로 덮어써 `build()`한다. 빌더는 평범한 가변 클래스이고 이름은 영문이다.
@@ -204,12 +255,14 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 ### 계층별 기준
 
 - **서비스**: 스프링 컨텍스트 없이, 포트를 **필드에서 `Mockito.mock(...)`으로 만들어** 생성자로 조립한다(`MockitoExtension`·`@Mock`·`@BeforeEach` 안 씀). 테스트마다 다른 협력자(한도)는 그 테스트에서 서비스를 새로 만든다. `Account`도 목으로 세워 `withdraw`/`deposit`/`getId()`를 제어한다. 포트 인자는 `ArgumentCaptor`로 단언한다.
+  - 이유: 조립이 `new`라 생성자가 바뀌면 테스트가 컴파일되지 않는다. `@InjectMocks`는 못 찾은 인자에 null을 넘기고 조용히 진행하는데, `Clock`·`MoneyTransferProperties`처럼 목이 아닌 협력자가 바로 그 대상이다.
+  - 대가: strict stubs가 없어 **쓰이지 않는 스텁이 실패로 드러나지 않는다.** `MockitoExtension`만 붙여도 되살아나지 않는다 — 세션이 `beforeEach`에서 시작되므로 필드에서 만든 포트 목은 추적 밖이고, 테스트 안에서 만든 `Account` 목만 검사된다(#48). 되살리려면 조립을 `@BeforeEach`로 옮겨야 하는데, 그러지 않는다. 대신 **스텁은 그 테스트의 경로에서 실제로 호출되는 것만 둔다.**
 - **Mockito는 BDD 스타일**: `given(...).willReturn(...)`, `then(mock).should()...`, `willThrow(...).given(mock)...`, `shouldHaveNoInteractions()`. `when`/`verify`는 쓰지 않는다.
 - **영속성**: `@DataJpaTest` + `@Import({AccountPersistenceAdapter.class, AccountMapper.class})`(슬라이스 스캔 대상이 아니다). 매퍼만이면 `new AccountMapper()`. 읽기 검증은 `@Sql`, 쓰기 검증은 빌더로 만든 도메인 객체.
   - 스키마 검증은 엔티티를 우회한다 — `JdbcTemplate` 직접 insert로 `DataIntegrityViolationException`, 인덱스는 H2 `INFORMATION_SCHEMA.INDEX_COLUMNS` 조회.
   - 커밋 경계를 봐야 하는 테스트만 `@Transactional(propagation = NOT_SUPPORTED)`이고, **그 메서드에는 `@Sql`을 붙이지 않는다**(픽스처가 커밋되어 다른 테스트를 오염시킨다).
 - **웹**: `@WebMvcTest(controllers = SendMoneyController.class)` + `MockMvcTester` + `@MockitoBean`. 실패 경로의 HTTP 매핑은 여기서 고정한다.
-- **시스템**: `@SpringBootTest(RANDOM_PORT)` + `@AutoConfigureTestRestTemplate` + `TestRestTemplate`. 비싸므로 **주요 경로 하나만** 둔다.
+- **시스템**: `@SpringBootTest(RANDOM_PORT)` + `@AutoConfigureRestTestClient` + `RestTestClient`. 비싸므로 **주요 경로 하나만** 둔다.
 
 ### DB 픽스처 (`sql/accounts.sql`)
 

@@ -6,18 +6,14 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.out.LoadAccountPort;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture;
 
-import org.springframework.boot.resttestclient.TestRestTemplate;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.web.servlet.client.RestTestClient;
+import org.springframework.test.web.servlet.client.RestTestClient.ResponseSpec;
 
 import org.junit.jupiter.api.Test;
 
@@ -26,11 +22,11 @@ import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFix
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture.TARGET_ACCOUNT_ID;
 import static org.assertj.core.api.BDDAssertions.then;
 
-@AutoConfigureTestRestTemplate
+@AutoConfigureRestTestClient
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 class SendMoneySystemTest {
 
-    @Autowired private TestRestTemplate testRestTemplate;
+    @Autowired private RestTestClient restTestClient;
     @Autowired private LoadAccountPort loadAccountPort;
 
     @Test
@@ -45,14 +41,13 @@ class SendMoneySystemTest {
         then(initialSourceBalance).isEqualTo(Money.of(1000L));
 
         // when
-        ResponseEntity<Object> response = whenSendMoney(
+        ResponseSpec response = whenSendMoney(
                 SOURCE_ACCOUNT_ID,
                 TARGET_ACCOUNT_ID,
                 transferredAmount());
 
         // then
-        then(response.getStatusCode())
-                .isEqualTo(HttpStatus.OK);
+        response.expectStatus().isOk();
 
         then(sourceAccount().calculateBalance())
                 .isEqualTo(initialSourceBalance.minus(transferredAmount()));
@@ -74,18 +69,13 @@ class SendMoneySystemTest {
         return loadAccountPort.loadAccount(accountId, BASELINE_DATE);
     }
 
-    private ResponseEntity<Object> whenSendMoney(AccountId sourceAccountId, AccountId targetAccountId, Money transferredAmount) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", "application/json");
-        HttpEntity<Void> request = new HttpEntity<>(null, headers);
-        return testRestTemplate.exchange(
-                "/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
-                HttpMethod.POST,
-                request,
-                Object.class,
-                sourceAccountId.value(),
-                targetAccountId.value(),
-                transferredAmount.amount());
+    private ResponseSpec whenSendMoney(AccountId sourceAccountId, AccountId targetAccountId, Money transferredAmount) {
+        return restTestClient.post()
+                .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}",
+                        sourceAccountId.value(),
+                        targetAccountId.value(),
+                        transferredAmount.amount())
+                .exchange();
     }
 
     private Money transferredAmount() {

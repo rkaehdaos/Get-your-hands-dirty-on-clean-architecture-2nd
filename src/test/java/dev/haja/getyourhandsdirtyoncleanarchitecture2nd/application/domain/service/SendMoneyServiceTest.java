@@ -51,7 +51,7 @@ class SendMoneyServiceTest {
     private final UpdateAccountStatePort updateAccountStatePort =
             Mockito.mock(UpdateAccountStatePort.class);
 
-    SendMoneyService service = new SendMoneyService(
+    private final SendMoneyService service = new SendMoneyService(
             loadAccountPort,
             accountLock,
             updateAccountStatePort,
@@ -183,10 +183,9 @@ class SendMoneyServiceTest {
         AccountId sourceAccountId = OTHER_ACCOUNT_ID;
         Account sourceAccount = givenAnAccountWithId(sourceAccountId);
         AccountId targetAccountId = DEFAULT_ACCOUNT_ID;
-        Account targetAccount = givenAnAccountWithId(targetAccountId);
+        givenAnAccountWithId(targetAccountId);
 
         givenWithdrawalWillFail(sourceAccount);
-        givenDepositWillSucceed(targetAccount);
 
         SendMoneyCommand command = new SendMoneyCommand(
                 sourceAccountId,
