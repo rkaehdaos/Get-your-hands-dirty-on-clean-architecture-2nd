@@ -8,6 +8,7 @@ import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture;
 
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.UseMainMethod;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +23,10 @@ import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFix
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountFixture.TARGET_ACCOUNT_ID;
 import static org.assertj.core.api.BDDAssertions.then;
 
+// 배포와 같은 기동 경로(main → SpringApplication.run)를 밟는다. 이 컨텍스트는
+// 이 테스트만 쓰므로 붙여도 컨텍스트가 늘지 않는다.
 @AutoConfigureRestTestClient
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, useMainMethod = UseMainMethod.ALWAYS)
 class SendMoneySystemTest {
 
     @Autowired private RestTestClient restTestClient;
