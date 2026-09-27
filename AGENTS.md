@@ -255,6 +255,8 @@ response.expectStatus().isOk();
 ### 계층별 기준
 
 - **서비스**: 스프링 컨텍스트 없이, 포트를 **필드에서 `Mockito.mock(...)`으로 만들어** 생성자로 조립한다(`MockitoExtension`·`@Mock`·`@BeforeEach` 안 씀). 테스트마다 다른 협력자(한도)는 그 테스트에서 서비스를 새로 만든다. `Account`도 목으로 세워 `withdraw`/`deposit`/`getId()`를 제어한다. 포트 인자는 `ArgumentCaptor`로 단언한다.
+  - 이유: 조립이 `new`라 생성자가 바뀌면 테스트가 컴파일되지 않는다. `@InjectMocks`는 못 찾은 인자에 null을 넘기고 조용히 진행하는데, `Clock`·`MoneyTransferProperties`처럼 목이 아닌 협력자가 바로 그 대상이다.
+  - 대가: strict stubs가 없어 **쓰이지 않는 스텁이 실패로 드러나지 않는다.** `MockitoExtension`만 붙여도 되살아나지 않는다 — 세션이 `beforeEach`에서 시작되므로 필드에서 만든 포트 목은 추적 밖이고, 테스트 안에서 만든 `Account` 목만 검사된다(#48). 되살리려면 조립을 `@BeforeEach`로 옮겨야 하는데, 그러지 않는다. 대신 **스텁은 그 테스트의 경로에서 실제로 호출되는 것만 둔다.**
 - **Mockito는 BDD 스타일**: `given(...).willReturn(...)`, `then(mock).should()...`, `willThrow(...).given(mock)...`, `shouldHaveNoInteractions()`. `when`/`verify`는 쓰지 않는다.
 - **영속성**: `@DataJpaTest` + `@Import({AccountPersistenceAdapter.class, AccountMapper.class})`(슬라이스 스캔 대상이 아니다). 매퍼만이면 `new AccountMapper()`. 읽기 검증은 `@Sql`, 쓰기 검증은 빌더로 만든 도메인 객체.
   - 스키마 검증은 엔티티를 우회한다 — `JdbcTemplate` 직접 insert로 `DataIntegrityViolationException`, 인덱스는 H2 `INFORMATION_SCHEMA.INDEX_COLUMNS` 조회.
