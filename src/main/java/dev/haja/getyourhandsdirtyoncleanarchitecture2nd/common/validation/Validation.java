@@ -16,6 +16,9 @@ public class Validation {
     private final static Validator validator =
             buildDefaultValidatorFactory().getValidator();
 
+    private Validation() {
+    }
+
     /**
      * Evaluates all Bean Validation annotations on the subject.
      */
