@@ -65,7 +65,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 - **`@AutoConfigureRestTestClient`는 시스템 테스트(`RANDOM_PORT`) 전용이다.** 바인딩은 자동이다: 내장 서버가 떠 있으면(`RANDOM_PORT`·`DEFINED_PORT`) 그 서버, `MockMvc` 빈이 있으면(`@WebMvcTest`) 서버 없이 그 빈, 둘 다 아니면 `bindToApplicationContext`.
   - 웹 슬라이스에서 쓰지 않는 이유: MockMvc 바인딩은 요청의 헤더·바디·쿠키만 옮겨 `RequestPostProcessor`(`csrf()` 등)를 끼울 수 없고, 처리되지 않은 예외를 삼켜 바디가 `ex.toString()`인 500으로 바꾸며, `MvcResult`를 버린다. 웹 슬라이스는 `MockMvcTester`다.
   - 세 번째 바인딩(`MockMvc` 빈이 없는 `@SpringBootTest`(MOCK) 등)은 Boot 커스터마이저 없이 만들어져 **보안 필터 체인을 포함한 필터가 모두 빠진다.** 실패하지 않고 조용히 우회된다.
-- `spring-boot-restclient`는 테스트 의존성에 두지 않는다. `TestRestTemplate`을 쓰던 시절 `processTestAot`가 `RestTemplateBuilder`를 찾아 필요했지만 `RestTestClient`는 그것을 참조하지 않는다. `TestRestTemplate`을 되살리면 이 의존성도 함께 돌아와야 한다(빼면 `ClassNotFoundException: ...RestTemplateBuilder`).
+- `spring-boot-restclient`는 테스트 의존성에 두지 않는다 — `TestRestTemplate`(`RestTemplateBuilder`)에만 필요하고 `RestTestClient`는 참조하지 않는다.
 - Bean Validation(`spring-boot-starter-validation`)은 컨텍스트 없이도 쓰므로 `implementation`이다.
 - Gradle 9.8.0 / Kotlin DSL, Hibernate ORM 플러그인(bytecode enhancement), GraalVM Native Build Tools.
 - **Gradle을 올릴 때 `distributionUrl`을 손으로 고치지 말 것** — `distributionSha256Sum` 불일치로 실패하고 래퍼 jar·스크립트도 갱신돼야 한다. `./gradlew wrapper --gradle-version <버전> --distribution-type bin --gradle-distribution-sha256-sum <services.gradle.org의 .sha256 값>`으로 바꾼다.
