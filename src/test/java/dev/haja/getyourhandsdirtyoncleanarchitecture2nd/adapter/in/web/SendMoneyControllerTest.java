@@ -57,8 +57,8 @@ class SendMoneyControllerTest {
     }
 
     @Test
-    @DisplayName("잔액 부족으로 이체가 거부되면 422 Unprocessable Entity가 응답됨")
-    void givenInsufficientFunds_thenRespondsWithUnprocessableEntity() {
+    @DisplayName("잔액 부족으로 이체가 거부되면 422 Unprocessable Content가 응답됨")
+    void givenInsufficientFunds_thenRespondsWithUnprocessableContent() {
 
         // given
         willThrow(new InsufficientFundsException(OTHER_ACCOUNT_ID, Money.of(500L)))
@@ -81,8 +81,8 @@ class SendMoneyControllerTest {
     }
 
     @Test
-    @DisplayName("한도를 초과한 이체가 거부되면 422 Unprocessable Entity가 응답됨")
-    void givenThresholdExceeded_thenRespondsWithUnprocessableEntity() {
+    @DisplayName("한도를 초과한 이체가 거부되면 422 Unprocessable Content가 응답됨")
+    void givenThresholdExceeded_thenRespondsWithUnprocessableContent() {
 
         // given
         willThrow(new ThresholdExceededException(Money.of(1_000_000L), Money.of(2_000_000L)))
