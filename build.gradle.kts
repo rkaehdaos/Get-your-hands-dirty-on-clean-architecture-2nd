@@ -58,3 +58,47 @@ tasks.test {
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
 }
+
+// Cleaned Code Coverage 100%: 테스트로 덮여야 하는 코드는 하나도 빠짐없이 실행돼야 한다.
+// 제외는 여기(검증 규칙)에만 두고 리포트는 actual로 남긴다 — 둘의 차이가 곧 제외된 양이다.
+tasks.jacocoTestCoverageVerification {
+    // 실행 데이터가 없으면 검증 태스크는 실패하지 않고 조용히 SKIP된다.
+    // executionData(test)는 mustRunAfter만 걸므로 단독 실행에서도 test가 먼저 돌게 한다.
+    dependsOn(tasks.test)
+
+    violationRules {
+        // LINE은 부분 커버 라인을 커버로 센다. INSTRUCTION 누락 0이면 누락 라인과 부분 커버
+        // 라인이 모두 0이고, BRANCH 누락 0이 한 번도 선택되지 않은 분기까지 잡는다.
+        // element = CLASS라 실패 메시지에 클래스 이름이 찍힌다.
+        rule {
+            element = "CLASS"
+            // Hibernate bytecode enhancement가 엔티티에 주입한 $$_hibernate_* 메서드는
+            // 라인 정보가 없어 INSTRUCTION·BRANCH만 오염시킨다. 엔티티는 아래 규칙이 맡는다.
+            excludes = listOf("*JpaEntity")
+            limit {
+                counter = "INSTRUCTION"
+                value = "MISSEDCOUNT"
+                maximum = BigDecimal.ZERO
+            }
+            limit {
+                counter = "BRANCH"
+                value = "MISSEDCOUNT"
+                maximum = BigDecimal.ZERO
+            }
+        }
+        // 엔티티는 통째로 빼지 않는다. 주입 코드가 없는 LINE으로 손으로 쓴 코드를 검사한다.
+        rule {
+            element = "CLASS"
+            includes = listOf("*JpaEntity")
+            limit {
+                counter = "LINE"
+                value = "MISSEDCOUNT"
+                maximum = BigDecimal.ZERO
+            }
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
+}
