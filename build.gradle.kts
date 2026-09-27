@@ -32,7 +32,6 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.boot:spring-boot-resttestclient")
-    testImplementation("org.mockito:mockito-junit-jupiter")
 
     // bootRun(developmentOnly를 상속한다)과 테스트는 H2를 얻지만 bootJar와
     // productionRuntimeClasspath에는 실리지 않는다. runtimeOnly로 두면 프로덕션에서
