@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.DEFAULT_ACCOUNT_ID;
 import static dev.haja.getyourhandsdirtyoncleanarchitecture2nd.common.AccountTestData.OTHER_ACCOUNT_ID;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -55,5 +56,56 @@ class SendMoneyCommandTest {
                 .isInstanceOf(ConstraintViolationException.class)
                 .hasMessageContaining("money")
                 .hasMessageContaining(zero.toString());
+    }
+
+    // null 컴포넌트는 @NotNull만 위반으로 보고한다. 커스텀 검증기(@DistinctAccounts,
+    // @PositiveMoney)가 null을 유효로 보지 않으면 같은 컴포넌트의 위반이 두 번 나온다
+
+    @Test
+    @DisplayName("출금 계좌가 null이면 sourceAccountId 위반 하나만 보고됨")
+    void givenNullSourceAccount_thenReportsSingleViolation() {
+
+        // when / then
+        assertThatThrownBy(() -> new SendMoneyCommand(
+                null,
+                DEFAULT_ACCOUNT_ID,
+                Money.of(500L)))
+                .isInstanceOfSatisfying(ConstraintViolationException.class, e ->
+                        assertThat(e.getConstraintViolations())
+                                .singleElement()
+                                .extracting(v -> v.getPropertyPath().toString())
+                                .isEqualTo("sourceAccountId"));
+    }
+
+    @Test
+    @DisplayName("입금 계좌가 null이면 targetAccountId 위반 하나만 보고됨")
+    void givenNullTargetAccount_thenReportsSingleViolation() {
+
+        // when / then
+        assertThatThrownBy(() -> new SendMoneyCommand(
+                OTHER_ACCOUNT_ID,
+                null,
+                Money.of(500L)))
+                .isInstanceOfSatisfying(ConstraintViolationException.class, e ->
+                        assertThat(e.getConstraintViolations())
+                                .singleElement()
+                                .extracting(v -> v.getPropertyPath().toString())
+                                .isEqualTo("targetAccountId"));
+    }
+
+    @Test
+    @DisplayName("송금액이 null이면 money 위반 하나만 보고됨")
+    void givenNullMoney_thenReportsSingleViolation() {
+
+        // when / then
+        assertThatThrownBy(() -> new SendMoneyCommand(
+                OTHER_ACCOUNT_ID,
+                DEFAULT_ACCOUNT_ID,
+                null))
+                .isInstanceOfSatisfying(ConstraintViolationException.class, e ->
+                        assertThat(e.getConstraintViolations())
+                                .singleElement()
+                                .extracting(v -> v.getPropertyPath().toString())
+                                .isEqualTo("money"));
     }
 }
