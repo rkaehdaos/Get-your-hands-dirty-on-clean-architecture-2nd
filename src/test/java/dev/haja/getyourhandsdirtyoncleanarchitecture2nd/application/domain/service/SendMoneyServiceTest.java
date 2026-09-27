@@ -51,7 +51,7 @@ class SendMoneyServiceTest {
     private final UpdateAccountStatePort updateAccountStatePort =
             Mockito.mock(UpdateAccountStatePort.class);
 
-    SendMoneyService service = new SendMoneyService(
+    private final SendMoneyService service = new SendMoneyService(
             loadAccountPort,
             accountLock,
             updateAccountStatePort,
