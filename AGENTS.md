@@ -231,14 +231,13 @@ assertThat(result)
 - HTTP 레벨 단언이 늘어 한꺼번에 보고 싶어지면 `expectAll(...)`을 쓴다(전부 실행 후 실패를 모아 던진다). 지금은 상태 하나뿐이라 쓰지 않는다.
 
 ```java
+// when
+ResponseSpec response = restTestClient.post()
+        .uri("/accounts/send/{sourceAccountId}/{targetAccountId}/{amount}", ...)
+        .exchange();
+
 // then
 response.expectStatus().isOk();
-
-// 바디를 볼 때는 꺼내서 별도 문장으로
-ProblemDetail problem = response.expectBody(ProblemDetail.class)
-        .returnResult()
-        .getResponseBody();
-assertThat(problem.getDetail()).contains(...);
 ```
 
 ### 테스트 데이터 빌더 (`src/test`의 `common`)
