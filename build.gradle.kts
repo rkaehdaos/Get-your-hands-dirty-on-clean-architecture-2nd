@@ -46,6 +46,14 @@ dependencies {
 
 hibernate { enhancement {} }
 
+// Lombok은 컴파일 중에 lombok.config를 읽지만 Gradle은 그 파일을 모른다. 입력으로 등록하지
+// 않으면 값을 바꿔도 컴파일이 UP-TO-DATE로 남아 커버리지 검증이 이전 바이트코드로 통과한다.
+tasks.withType<JavaCompile>().configureEach {
+    inputs.file(layout.projectDirectory.file("lombok.config"))
+        .withPropertyName("lombokConfig")
+        .withPathSensitivity(PathSensitivity.NONE)
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
 }
