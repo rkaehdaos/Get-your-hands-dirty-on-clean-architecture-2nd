@@ -69,12 +69,14 @@ tasks.jacocoTestCoverageVerification {
     violationRules {
         // LINE은 부분 커버 라인을 커버로 센다. INSTRUCTION 누락 0이면 누락 라인과 부분 커버
         // 라인이 모두 0이고, BRANCH 누락 0이 한 번도 선택되지 않은 분기까지 잡는다.
-        // element = CLASS라 실패 메시지에 클래스 이름이 찍힌다.
+        // element = METHOD라 실패 메시지에 클래스와 메서드 이름이 찍힌다. 클래스의 누락은
+        // 메서드 누락의 합이므로 메서드마다 0이면 클래스마다 0인 것과 같다.
         rule {
-            element = "CLASS"
-            // Hibernate bytecode enhancement가 엔티티에 주입한 $$_hibernate_* 메서드는
-            // 라인 정보가 없어 INSTRUCTION·BRANCH만 오염시킨다. 엔티티는 아래 규칙이 맡는다.
-            excludes = listOf("*JpaEntity")
+            element = "METHOD"
+            // Hibernate bytecode enhancement가 엔티티에 주입한 $$_hibernate_* 메서드는 손으로
+            // 쓴 코드가 아니다. 메서드 이름으로 빼므로 엔티티의 나머지 메서드는 다른 클래스와
+            // 같은 규칙을 받는다. "$"는 Ant 속성 확장이 먹어 "$$"가 "$"로 줄므로 "??"로 맞춘다.
+            excludes = listOf("*.??_hibernate_*")
             limit {
                 counter = "INSTRUCTION"
                 value = "MISSEDCOUNT"
@@ -82,16 +84,6 @@ tasks.jacocoTestCoverageVerification {
             }
             limit {
                 counter = "BRANCH"
-                value = "MISSEDCOUNT"
-                maximum = BigDecimal.ZERO
-            }
-        }
-        // 엔티티는 통째로 빼지 않는다. 주입 코드가 없는 LINE으로 손으로 쓴 코드를 검사한다.
-        rule {
-            element = "CLASS"
-            includes = listOf("*JpaEntity")
-            limit {
-                counter = "LINE"
                 value = "MISSEDCOUNT"
                 maximum = BigDecimal.ZERO
             }
