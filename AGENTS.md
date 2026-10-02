@@ -49,7 +49,7 @@ common/validation           Validation 헬퍼 (application 바깥)
 ./gradlew nativeTest                   # 네이티브 이미지에서 테스트 실행
 ```
 
-`check`(따라서 `build`)는 커버리지 검증(`jacocoTestCoverageVerification`)을 포함한다. 리포트는 `build/reports/jacoco/test/html/index.html`이다. `--tests`로 일부만 돌린 뒤 `check`하면 커버리지 검증이 실패하는 것이 정상이다. 아래 "커버리지" 참고.
+`check`(따라서 `build`)는 커버리지 검증(`jacocoTestCoverageVerification`)을 포함한다. 리포트는 `build/reports/jacoco/test/html/index.html`이고 **마지막 `test` 실행만 반영한다** — `--tests`로 일부만 돌렸다면 리포트도 그 일부의 커버리지다. `test --tests ...`와 `check`(또는 `build`)를 **한 번의 호출에서** 함께 실행하면 커버리지 검증이 실패하는 것이 정상이다. 따로 실행한 `check`는 필터가 바뀐 `test`를 전체로 다시 돌리므로 통과한다. 아래 "커버리지" 참고.
 
 JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정한다. Gradle toolchain은 Java 25를 요구한다.
 
@@ -74,7 +74,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 - Gradle 9.8.0 / Kotlin DSL, Hibernate ORM 플러그인(bytecode enhancement), GraalVM Native Build Tools.
 - **Gradle을 올릴 때 `distributionUrl`을 손으로 고치지 말 것** — `distributionSha256Sum` 불일치로 실패하고 래퍼 jar·스크립트도 갱신돼야 한다. `./gradlew wrapper --gradle-version <버전> --distribution-type bin --gradle-distribution-sha256-sum <services.gradle.org의 .sha256 값>`으로 바꾼다.
 - JUnit 5, AssertJ, Mockito(BDD 스타일).
-- **JaCoCo 버전은 고정하지 않는다** — Gradle 기본값에 맡긴다(라이브러리 버전을 BOM에 맡기는 것과 같다). Java를 올렸는데 JaCoCo가 그 클래스 파일 버전을 모르면 계측 단계에서 시끄럽게 실패한다.
+- **JaCoCo 버전은 고정하지 않는다** — Gradle 기본값에 맡긴다(라이브러리 버전을 BOM에 맡기는 것과 같다). Java를 올렸는데 JaCoCo가 그 클래스 파일 버전을 모르면 시끄럽게 실패한다. 다만 실패하는 곳은 계측이 아니라 분석이다 — JVM은 에이전트의 계측 예외를 무시해 클래스를 계측 없이 로드하므로 테스트는 오류 로그만 남기고 통과하고, 리포트·검증 태스크가 클래스를 분석하다(`Error while analyzing ...`) 실패한다.
 - **Lombok 생성 코드의 `@lombok.Generated`는 루트 `lombok.config`가 고정한다.** 1.18.46의 기본값과 같지만, 커버리지 제외가 이것에 기대므로 기본값에 맡기지 않는다. `config.stopBubbling = true`라 상위 디렉터리의 설정은 읽지 않는다. Gradle은 Lombok이 읽는 이 파일을 모르므로 `JavaCompile`의 입력으로 등록해 두었다 — 바꾸면 다시 컴파일된다.
 
 ## 코드 컨벤션
