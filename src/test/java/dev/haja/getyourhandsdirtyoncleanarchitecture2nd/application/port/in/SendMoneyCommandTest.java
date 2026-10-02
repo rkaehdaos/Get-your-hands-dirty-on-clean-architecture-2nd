@@ -59,7 +59,8 @@ class SendMoneyCommandTest {
     }
 
     // null 컴포넌트는 @NotNull만 위반으로 보고한다. 커스텀 검증기(@DistinctAccounts,
-    // @PositiveMoney)가 null을 유효로 보지 않으면 같은 컴포넌트의 위반이 두 번 나온다
+    // @PositiveMoney)가 null을 위반으로 보면 위반이 하나 더 붙고(@DistinctAccounts는 늘
+    // targetAccountId에 붙인다), null을 거르지 않으면 NPE가 ValidationException으로 올라온다
 
     @Test
     @DisplayName("출금 계좌가 null이면 sourceAccountId 위반 하나만 보고됨")
