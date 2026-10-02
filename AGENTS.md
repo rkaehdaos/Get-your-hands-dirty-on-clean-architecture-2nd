@@ -75,7 +75,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 - **Gradle을 올릴 때 `distributionUrl`을 손으로 고치지 말 것** — `distributionSha256Sum` 불일치로 실패하고 래퍼 jar·스크립트도 갱신돼야 한다. `./gradlew wrapper --gradle-version <버전> --distribution-type bin --gradle-distribution-sha256-sum <services.gradle.org의 .sha256 값>`으로 바꾼다.
 - JUnit 5, AssertJ, Mockito(BDD 스타일).
 - **JaCoCo 버전은 고정하지 않는다** — Gradle 기본값에 맡긴다(라이브러리 버전을 BOM에 맡기는 것과 같다). Java를 올렸는데 JaCoCo가 그 클래스 파일 버전을 모르면 계측 단계에서 시끄럽게 실패한다.
-- **Lombok 생성 코드의 `@lombok.Generated`는 루트 `lombok.config`가 고정한다.** 1.18.46의 기본값과 같지만, 커버리지 제외가 이것에 기대므로 기본값에 맡기지 않는다. `config.stopBubbling = true`라 상위 디렉터리의 설정은 읽지 않는다.
+- **Lombok 생성 코드의 `@lombok.Generated`는 루트 `lombok.config`가 고정한다.** 1.18.46의 기본값과 같지만, 커버리지 제외가 이것에 기대므로 기본값에 맡기지 않는다. `config.stopBubbling = true`라 상위 디렉터리의 설정은 읽지 않는다. Gradle은 Lombok이 읽는 이 파일을 모르므로 `JavaCompile`의 입력으로 등록해 두었다 — 바꾸면 다시 컴파일된다.
 
 ## 코드 컨벤션
 
@@ -274,14 +274,14 @@ response.expectStatus().isOk();
 
 reflectoring.io의 "100% Code Coverage*"가 말하는 **Cleaned Code Coverage 100%**를 `check`가 강제한다 — 테스트로 덮여야 하는 코드는 하나도 빠짐없이 실행돼야 한다. 제외는 의식적 결정으로만 하고, 100%를 빌드로 강제해 덮이지 않은 코드가 더 많은 미검증 코드를 부르지 않게 한다.
 
-- **카운터는 클래스마다 INSTRUCTION·BRANCH 누락 0이다(LINE이 아니다).** JaCoCo의 LINE은 부분 커버 라인을 커버로 센다 — 한 줄짜리 `orElseThrow(() -> ...)` 람다나 `a == null || b` 같은 분기 한쪽이 빠져도 LINE은 100%다. INSTRUCTION 누락 0이면 누락·부분 커버 라인이 모두 0이고, BRANCH 누락 0이 명령어는 다 실행됐지만 한 번도 선택되지 않은 분기까지 잡는다. `element = CLASS`라 실패 메시지에 클래스 이름이 찍힌다.
+- **카운터는 메서드마다 INSTRUCTION·BRANCH 누락 0이다(LINE이 아니다).** JaCoCo의 LINE은 부분 커버 라인을 커버로 센다 — 한 줄짜리 `orElseThrow(() -> ...)` 람다나 `a == null || b` 같은 분기 한쪽이 빠져도 LINE은 100%다. INSTRUCTION 누락 0이면 누락·부분 커버 라인이 모두 0이고, BRANCH 누락 0이 명령어는 다 실행됐지만 한 번도 선택되지 않은 분기까지 잡는다. `element = METHOD`라 실패 메시지에 클래스와 메서드 이름이 찍힌다. 클래스의 누락은 메서드 누락의 합이므로 메서드마다 0이면 클래스마다 0인 것과 같다.
 - **제외는 셋뿐이다.**
   1. Lombok 생성 코드(`@lombok.Generated` — `lombok.config`).
   2. JaCoCo 내장 필터: record의 `equals`/`hashCode`/`toString`, private 빈 생성자, enum 합성 메서드, finally·try-with-resources 중복 등. 설정할 것은 없다.
-  3. **`*JpaEntity`의 INSTRUCTION·BRANCH만.** Hibernate bytecode enhancement가 주입한 `$$_hibernate_*` 메서드는 라인 정보가 없어 이 두 카운터만 오염시킨다. 엔티티는 통째로 빠지지 않고 **LINE 누락 0 규칙을 따로 받는다** — 엔티티에 손으로 쓴 메서드가 생기면 줄 단위로는 걸린다. 이 규칙은 엔티티 클래스명이 `*JpaEntity`인 것에 기댄다. 엔티티를 추가할 때 이름을 지킬 것.
+  3. **Hibernate가 주입한 `$$_hibernate_*` 메서드.** bytecode enhancement가 엔티티에 넣은 코드라 손으로 쓴 코드가 아니다. 메서드 이름으로만 빼므로 엔티티의 나머지 메서드는 다른 클래스와 같은 규칙을 받는다(엔티티 클래스명과 무관하다). 패턴은 `*.??_hibernate_*`다 — `$`는 Ant 속성 확장이 먹어 `$$`가 `$`로 줄어 매칭되지 않는다.
 - **리포트는 actual 커버리지다.** 제외는 `jacocoTestCoverageVerification`의 규칙에만 두고 `jacocoTestReport`의 `classDirectories`에서는 아무것도 빼지 않는다. 그래서 리포트 합계가 100%가 아닌 것(엔티티의 Hibernate 코드)이 정상이고, 그 차이가 곧 제외된 양이다.
 - 검증 태스크는 `dependsOn(test)`이다. 없으면 실행 데이터가 없을 때 실패하지 않고 조용히 SKIP된다(`executionData(test)`는 `mustRunAfter`만 건다).
-- **공백을 만나면 이 순서다.** ① 테스트를 쓴다. ② 죽은 코드면 지우고, 테스트하기 어려우면 구조를 고친다. ③ 그래도 안 되면 `build.gradle.kts`의 규칙에 이유 주석과 함께 클래스 단위로 제외한다. 메서드 단위 제외가 필요하면 그 부분을 별도 클래스로 분리한다. 커스텀 제외 애노테이션은 만들지 않는다 — 지금 필요한 제외가 없다.
+- **공백을 만나면 이 순서다.** ① 테스트를 쓴다. ② 죽은 코드면 지우고, 테스트하기 어려우면 구조를 고친다. ③ 그래도 안 되면 `build.gradle.kts`의 규칙에 이유 주석과 함께 클래스 단위로 제외한다(`<클래스>.*`). 메서드 단위 제외가 필요하면 그 부분을 별도 클래스로 분리한다 — 예외는 옮길 수 없는 Hibernate 주입 메서드뿐이다. 커스텀 제외 애노테이션은 만들지 않는다 — 지금 필요한 제외가 없다.
 - **100%는 바닥이다.** 실행됐다는 것이지 단언됐다는 것이 아니다. 커버리지를 채우려고 단언 없는 테스트를 쓰지 말 것. 예: `Activity`의 null 계약은 다른 테스트가 실행해 커버리지는 100%지만 단언하는 테스트는 아직 없다.
 - `nativeTest`는 커버리지를 재지 않는다. JVM `test`만 잰다.
 
