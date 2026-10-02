@@ -8,7 +8,7 @@ import java.util.Set;
 
 import static jakarta.validation.Validation.buildDefaultValidatorFactory;
 
-public class Validation {
+public final class Validation {
 
     // Your IDE may complain that the ValidatorFactory needs to be closed,
     // but if we do that here,
