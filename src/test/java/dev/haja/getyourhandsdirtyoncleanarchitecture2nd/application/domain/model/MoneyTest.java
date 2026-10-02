@@ -11,6 +11,8 @@ class MoneyTest {
 
     @Test
     void isPositive() {
+
+        // when / then
         assertThat(NEGATIVE.isPositive()).isFalse();
         assertThat(Money.ZERO.isPositive()).isFalse();
         assertThat(POSITIVE.isPositive()).isTrue();
@@ -18,6 +20,8 @@ class MoneyTest {
 
     @Test
     void isPositiveOrZero() {
+
+        // when / then
         assertThat(NEGATIVE.isPositiveOrZero()).isFalse();
         assertThat(Money.ZERO.isPositiveOrZero()).isTrue();
         assertThat(POSITIVE.isPositiveOrZero()).isTrue();
@@ -25,6 +29,8 @@ class MoneyTest {
 
     @Test
     void isNegative() {
+
+        // when / then
         assertThat(NEGATIVE.isNegative()).isTrue();
         assertThat(Money.ZERO.isNegative()).isFalse();
         assertThat(POSITIVE.isNegative()).isFalse();
@@ -32,6 +38,8 @@ class MoneyTest {
 
     @Test
     void isNegativeOrZero() {
+
+        // when / then
         assertThat(NEGATIVE.isNegativeOrZero()).isTrue();
         assertThat(Money.ZERO.isNegativeOrZero()).isTrue();
         assertThat(POSITIVE.isNegativeOrZero()).isFalse();
@@ -39,6 +47,8 @@ class MoneyTest {
 
     @Test
     void isGreaterThan() {
+
+        // when / then
         assertThat(Money.ZERO.isGreaterThan(POSITIVE)).isFalse();
         assertThat(Money.ZERO.isGreaterThan(Money.ZERO)).isFalse();
         assertThat(Money.ZERO.isGreaterThan(NEGATIVE)).isTrue();
@@ -46,6 +56,8 @@ class MoneyTest {
 
     @Test
     void isGreaterThanOrEqualTo() {
+
+        // when / then
         assertThat(Money.ZERO.isGreaterThanOrEqualTo(POSITIVE)).isFalse();
         assertThat(Money.ZERO.isGreaterThanOrEqualTo(Money.ZERO)).isTrue();
         assertThat(Money.ZERO.isGreaterThanOrEqualTo(NEGATIVE)).isTrue();
