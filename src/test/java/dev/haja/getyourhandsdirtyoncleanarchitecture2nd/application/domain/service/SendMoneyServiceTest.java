@@ -142,7 +142,8 @@ class SendMoneyServiceTest {
         // 아웃바운드 포트의 예외가 아니라 유스케이스의 예외가 올라온다
         assertThatThrownBy(() -> service.sendMoney(command))
                 .isInstanceOf(NoSuchAccountException.class)
-                .hasMessageContaining("41");
+                .hasMessageContaining("41")
+                .hasCauseInstanceOf(AccountNotFoundException.class);
 
         // 조회가 잠금보다 먼저이므로 잠금도 저장도 일어나지 않는다
         then(accountLock).shouldHaveNoInteractions();

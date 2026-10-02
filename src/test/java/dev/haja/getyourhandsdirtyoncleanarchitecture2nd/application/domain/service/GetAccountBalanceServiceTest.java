@@ -76,6 +76,7 @@ class GetAccountBalanceServiceTest {
         // 아웃바운드 포트의 예외가 아니라 유스케이스의 예외가 올라온다
         assertThatThrownBy(() -> service.getAccountBalance(new GetAccountBalanceQuery(DEFAULT_ACCOUNT_ID)))
                 .isInstanceOf(NoSuchAccountException.class)
-                .hasMessageContaining("42");
+                .hasMessageContaining("42")
+                .hasCauseInstanceOf(AccountNotFoundException.class);
     }
 }
