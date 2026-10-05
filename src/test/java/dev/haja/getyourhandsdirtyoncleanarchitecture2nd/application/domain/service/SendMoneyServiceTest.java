@@ -142,7 +142,8 @@ class SendMoneyServiceTest {
         // 아웃바운드 포트의 예외가 아니라 유스케이스의 예외가 올라온다
         assertThatThrownBy(() -> service.sendMoney(command))
                 .isInstanceOf(NoSuchAccountException.class)
-                .hasMessageContaining("41");
+                .hasMessageContaining("41")
+                .hasCauseInstanceOf(AccountNotFoundException.class);
 
         // 조회가 잠금보다 먼저이므로 잠금도 저장도 일어나지 않는다
         then(accountLock).shouldHaveNoInteractions();
@@ -169,6 +170,32 @@ class SendMoneyServiceTest {
         assertThatThrownBy(() -> service.sendMoney(command))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("source account");
+
+        // ID를 얻지 못하면 잠금도 저장도 일어나지 않는다
+        then(accountLock).shouldHaveNoInteractions();
+        then(updateAccountStatePort).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("입금 계좌에 ID가 없으면 IllegalStateException이 발생함")
+    void givenTargetAccountHasNoId_thenThrowsIllegalStateException() {
+
+        // given
+        AccountId sourceAccountId = OTHER_ACCOUNT_ID;
+        AccountId targetAccountId = DEFAULT_ACCOUNT_ID;
+
+        givenAnAccountWithId(sourceAccountId);
+        givenAnAccountWithoutId(targetAccountId);
+
+        SendMoneyCommand command = new SendMoneyCommand(
+                sourceAccountId,
+                targetAccountId,
+                Money.of(500L));
+
+        // when / then
+        assertThatThrownBy(() -> service.sendMoney(command))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("target account");
 
         // ID를 얻지 못하면 잠금도 저장도 일어나지 않는다
         then(accountLock).shouldHaveNoInteractions();

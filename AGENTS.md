@@ -6,7 +6,7 @@
 
 『만들면서 배우는 클린 아키텍처(Get Your Hands Dirty on Clean Architecture)』 2판을 따라 육각형 아키텍처 예제(BuckPal)를 구현하는 학습용 저장소다. 책의 예제를 그대로 옮기지 않고 **최신 Java/Spring으로 다시 쓰는 것**이 핵심이다(아래 "도메인 모델 — 책과 다른 점").
 
-진행 상태: 도메인 모델 → 유스케이스 → 웹 어댑터 → 영속성 어댑터 구현은 끝났다. 테스트는 11장("아키텍처 요소 테스트")에 이르러 기존 테스트를 전부 지우고(`b23ce59`, #12) 책의 흐름대로 다시 쌓는 중이다. 아직 없는 테스트: `Money`·`Activity` 단위 테스트, `GetAccountBalanceService` 테스트.
+진행 상태: 도메인 모델 → 유스케이스 → 웹 어댑터 → 영속성 어댑터 구현은 끝났다. 테스트는 11장("아키텍처 요소 테스트")에 이르러 기존 테스트를 전부 지우고(`b23ce59`, #12) 책의 흐름대로 다시 쌓는 중이다. 아직 없는 테스트: `Activity` 단위 테스트.
 
 ### 구성 요소
 
@@ -41,13 +41,15 @@ common/validation           Validation 헬퍼 (application 바깥)
 ## 명령어
 
 ```bash
-./gradlew build                        # 컴파일 + 테스트 + 패키징
+./gradlew build                        # 컴파일 + 테스트 + 커버리지 검증 + 패키징
 ./gradlew test                         # 전체 테스트
 ./gradlew test --tests '*AccountTest*' # 단일 테스트 클래스
 ./gradlew bootRun                      # 애플리케이션 실행
 ./gradlew nativeCompile                # GraalVM 네이티브 이미지 빌드
 ./gradlew nativeTest                   # 네이티브 이미지에서 테스트 실행
 ```
+
+`check`(따라서 `build`)는 커버리지 검증(`jacocoTestCoverageVerification`)을 포함한다. 리포트는 `build/reports/jacoco/test/html/index.html`이고 **마지막 `test` 실행만 반영한다** — `--tests`로 일부만 돌렸다면 리포트도 그 일부의 커버리지다. `test --tests ...`와 `check`(또는 `build`)를 **한 번의 호출에서** 함께 실행하면 커버리지 검증이 실패하는 것이 정상이다. 따로 실행한 `check`는 필터가 바뀐 `test`를 전체로 다시 돌리므로 통과한다. 아래 "커버리지" 참고.
 
 JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정한다. Gradle toolchain은 Java 25를 요구한다.
 
@@ -72,6 +74,8 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 - Gradle 9.8.0 / Kotlin DSL, Hibernate ORM 플러그인(bytecode enhancement), GraalVM Native Build Tools.
 - **Gradle을 올릴 때 `distributionUrl`을 손으로 고치지 말 것** — `distributionSha256Sum` 불일치로 실패하고 래퍼 jar·스크립트도 갱신돼야 한다. `./gradlew wrapper --gradle-version <버전> --distribution-type bin --gradle-distribution-sha256-sum <services.gradle.org의 .sha256 값>`으로 바꾼다.
 - JUnit 5, AssertJ, Mockito(BDD 스타일).
+- **JaCoCo 버전은 고정하지 않는다** — Gradle 기본값에 맡긴다(라이브러리 버전을 BOM에 맡기는 것과 같다). Java를 올렸는데 JaCoCo가 그 클래스 파일 버전을 모르면 시끄럽게 실패한다. 다만 실패하는 곳은 계측이 아니라 분석이다 — JVM은 에이전트의 계측 예외를 무시해 클래스를 계측 없이 로드하므로 테스트는 오류 로그만 남기고 통과하고, 리포트·검증 태스크가 클래스를 분석하다(`Error while analyzing ...`) 실패한다.
+- **Lombok 생성 코드의 `@lombok.Generated`는 루트 `lombok.config`가 고정한다.** 1.18.46의 기본값과 같지만, 커버리지 제외가 이것에 기대므로 기본값에 맡기지 않는다. `config.stopBubbling = true`라 상위 디렉터리의 설정은 읽지 않는다. Gradle은 Lombok이 읽는 이 파일을 모르므로 `JavaCompile`의 입력으로 등록해 두었다 — 바꾸면 다시 컴파일된다.
 
 ## 코드 컨벤션
 
@@ -181,6 +185,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
   |---|---|
   | `SendMoneyServiceTest`, `SendMoneyControllerTest` | `SendMoneySystemTest`(송금 **성공** 경로만 — 서비스의 실패 분기와 실패 응답의 `ProblemDetail` 매핑은 네이티브에서 실행되지 않는다), `SendMoneyCommandTest`(`PositiveMoneyValidator`를 실행하고 `${validatedValue}` 보간 결과까지 단언하는 유일한 테스트) |
   | `BuckPalConfigurationPropertiesTest` | `BuckPalConfigurationPropertiesValidationTest`(컨텍스트의 `Validator`로 기동과 같은 바인딩 경로를 밟는다) |
+  | `GetAccountBalanceServiceTest` | 없음 — 이 유스케이스를 쓰는 인바운드 어댑터가 아직 없다. 어댑터가 생기면 시스템 테스트가 덮는다 |
   | `ValidationRuntimeHintsTest` | 없음 — 빌드 시점 코드다. 등록된 힌트는 `SendMoneyCommandTest`·`SendMoneySystemTest`가 커맨드를 만들며 쓴다 |
 
 - **스프링 컨텍스트를 띄우는 테스트라면 `@DisabledInAotMode`도 함께 붙인다.** `@DisabledInNativeImage`는 실행만 막고, 그 컨텍스트는 `processTestAot`에서 여전히 AOT 처리되어 이미지에 실린다. 같은 컨텍스트를 쓰는 다른 테스트가 있으면 그쪽에도 붙여야 한다(`@DisabledInAotMode` Javadoc).
@@ -262,7 +267,23 @@ response.expectStatus().isOk();
   - 스키마 검증은 엔티티를 우회한다 — `JdbcTemplate` 직접 insert로 `DataIntegrityViolationException`, 인덱스는 H2 `INFORMATION_SCHEMA.INDEX_COLUMNS` 조회.
   - 커밋 경계를 봐야 하는 테스트만 `@Transactional(propagation = NOT_SUPPORTED)`이고, **그 메서드에는 `@Sql`을 붙이지 않는다**(픽스처가 커밋되어 다른 테스트를 오염시킨다).
 - **웹**: `@WebMvcTest(controllers = SendMoneyController.class)` + `MockMvcTester` + `@MockitoBean`. 실패 경로의 HTTP 매핑은 여기서 고정한다.
-- **시스템**: `@SpringBootTest(RANDOM_PORT)` + `@AutoConfigureRestTestClient` + `RestTestClient`. 비싸므로 **주요 경로 하나만** 둔다.
+- **시스템**: `@SpringBootTest(RANDOM_PORT, useMainMethod = ALWAYS)` + `@AutoConfigureRestTestClient` + `RestTestClient`. 비싸므로 **주요 경로 하나만** 둔다.
+  - `useMainMethod = ALWAYS`로 배포와 같은 기동 경로(`main` → `SpringApplication.run`)를 밟고, `main`이 커버리지 제외 없이 실행된다. 이 컨텍스트는 시스템 테스트만 쓰므로 붙여도 컨텍스트가 늘지 않는다 — 다른 `@SpringBootTest`에 붙이면 공유하던 컨텍스트가 갈라진다.
+
+### 커버리지
+
+reflectoring.io의 "100% Code Coverage*"가 말하는 **Cleaned Code Coverage 100%**를 `check`가 강제한다 — 테스트로 덮여야 하는 코드는 하나도 빠짐없이 실행돼야 한다. 제외는 의식적 결정으로만 하고, 100%를 빌드로 강제해 덮이지 않은 코드가 더 많은 미검증 코드를 부르지 않게 한다.
+
+- **카운터는 메서드마다 INSTRUCTION·BRANCH 누락 0이다(LINE이 아니다).** JaCoCo의 LINE은 부분 커버 라인을 커버로 센다 — 한 줄짜리 `orElseThrow(() -> ...)` 람다나 `a == null || b` 같은 분기 한쪽이 빠져도 LINE은 100%다. INSTRUCTION 누락 0이면 누락·부분 커버 라인이 모두 0이고, BRANCH 누락 0이 명령어는 다 실행됐지만 한 번도 선택되지 않은 분기까지 잡는다. `element = METHOD`라 실패 메시지에 클래스와 메서드 이름이 찍힌다. 클래스의 누락은 메서드 누락의 합이므로 메서드마다 0이면 클래스마다 0인 것과 같다.
+- **제외는 셋뿐이다.**
+  1. Lombok 생성 코드(`@lombok.Generated` — `lombok.config`).
+  2. JaCoCo 내장 필터: record의 `equals`/`hashCode`/`toString`, private 빈 생성자, enum 합성 메서드, finally·try-with-resources 중복 등. 설정할 것은 없다.
+  3. **Hibernate가 주입한 `$$_hibernate_*` 메서드.** bytecode enhancement가 엔티티에 넣은 코드라 손으로 쓴 코드가 아니다. 메서드 이름으로만 빼므로 엔티티의 나머지 메서드는 다른 클래스와 같은 규칙을 받는다(엔티티 클래스명과 무관하다). 패턴은 `*.??_hibernate_*`다 — `$`는 Ant 속성 확장이 먹어 `$$`가 `$`로 줄어 매칭되지 않는다.
+- **리포트는 actual 커버리지다.** 제외는 `jacocoTestCoverageVerification`의 규칙에만 두고 `jacocoTestReport`의 `classDirectories`에서는 아무것도 빼지 않는다. 그래서 리포트 합계가 100%가 아닌 것(엔티티의 Hibernate 코드)이 정상이고, 그 차이가 곧 제외된 양이다.
+- 검증 태스크는 `dependsOn(test)`이다. 없으면 실행 데이터가 없을 때 실패하지 않고 조용히 SKIP된다(`executionData(test)`는 `mustRunAfter`만 건다).
+- **공백을 만나면 이 순서다.** ① 테스트를 쓴다. ② 죽은 코드면 지우고, 테스트하기 어려우면 구조를 고친다. ③ 그래도 안 되면 `build.gradle.kts`의 규칙에 이유 주석과 함께 클래스 단위로 제외한다(`<클래스>.*`). 메서드 단위 제외가 필요하면 그 부분을 별도 클래스로 분리한다 — 예외는 옮길 수 없는 Hibernate 주입 메서드뿐이다. 커스텀 제외 애노테이션은 만들지 않는다 — 지금 필요한 제외가 없다.
+- **100%는 바닥이다.** 실행됐다는 것이지 단언됐다는 것이 아니다. 커버리지를 채우려고 단언 없는 테스트를 쓰지 말 것. 예: `Activity`의 null 계약은 다른 테스트가 실행해 커버리지는 100%지만 단언하는 테스트는 아직 없다.
+- `nativeTest`는 커버리지를 재지 않는다. JVM `test`만 잰다.
 
 ### DB 픽스처 (`sql/accounts.sql`)
 
