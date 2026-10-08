@@ -138,7 +138,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 - **package-private** 클래스이고 포트 인터페이스로만 노출한다. 의존성은 `private final` + `@RequiredArgsConstructor`.
 - **현재 시각은 주입받은 `Clock`에서 얻는다. `LocalDateTime.now()`를 직접 부르지 말 것.** `SendMoneyService`는 시각을 **한 번만 읽어** baselineDate(`minusDays(10)`)와 출금·입금 활동에 함께 쓴다 — 한 이체의 두 면이라 같은 시각이어야 한다.
 - 입력 검증을 다시 하지 않는다(커맨드가 스스로 한다). 설정값과 비교해야 하는 정책(송금 한도)만 서비스가 검사해 `port/in` 예외를 던진다.
-- 포트의 예외는 감싸지 않고 전파한다. **예외는 `AccountNotFoundException` 하나** — `AccountLoader`가 `port/in`의 `NoSuchAccountException`으로 번역한다. "계좌 없음"은 유스케이스의 거부이고, 인바운드 어댑터가 `port/out`을 import하지 않게 하기 위해서다.
+- 포트의 예외는 감싸지 않고 전파한다. **예외는 `AccountNotFoundException` 하나** — `AccountLoader`가 `port/in`의 `NoSuchAccountException`으로 번역한다. "계좌 없음"은 유스케이스의 거부이고, 인바운드 어댑터가 `port/out`을 import하지 않게 하기 위해서다. 아키텍처 검사(`HexagonalArchitecture.check`)가 이 방향을 강제한다.
 - **유스케이스의 거부는 반환값이 아니라 `port/in` 예외다.** `sendMoney`는 `void`이고, 도메인의 `boolean`(`Account.withdraw`/`deposit`, 이 계약은 그대로다)이 실패를 알리면 서비스가 예외로 번역한다. HTTP로의 번역은 웹 어댑터의 몫이다.
 - 잠금은 `AccountLock`으로 하고 **`try`/`finally`로 해제를 보장**한다. 출금 → 입금 계좌 순으로 중첩해 잠그고, 잡지 못한 잠금은 풀지 않는다. 전역 획득 순서를 보장하지 않으므로 **교착 회피는 구현체 책임**이다(`AccountLock` Javadoc).
 
@@ -272,6 +272,7 @@ response.expectStatus().isOk();
 - **아키텍처**: 평평한 `@Test`에서 `ClassFileImporter`로 임포트하고, **`ImportOption.Predefined.DO_NOT_INCLUDE_TESTS`를 반드시 건다.** 테스트 클래스패스에는 같은 패키지의 테스트(`domain.model`의 `AccountTest` 등)도 있어, 빼지 않으면 그 테스트의 AssertJ·JUnit·빌더 의존이 위반으로 잡힌다. 허용 목록에 테스트 라이브러리를 더해 우회하지 말 것 — 프로덕션 코드가 그것에 의존해도 통과하게 된다.
   - 임포트는 `DependencyRuleTests.productionClasses()` 하나다. `HexagonalArchitecture.check(classes)`의 빈 패키지 검사도 넘겨받은 이 클래스로 하므로, 테스트 클래스만 있는 패키지는 비어 있는 것으로 실패한다.
   - **등록한 패키지(어댑터·포트·서비스·설정)가 비어 있으면 실패하고, `with...()` 등록을 빠뜨리면 `IllegalStateException`이다.** ArchUnit의 `failOnEmptyShould`는 `that()` 쪽 대상이 빈 경우만 잡고, `dependOnClassesThat()` 쪽(의존 대상)이 빈 경우는 잡지 못한다 — 의존 금지 규칙은 대상 패키지명이 틀려도 통과하므로 빈 패키지 검사가 그 몫을 한다. 패키지를 옮기거나 이름을 바꾸면 등록도 함께 고친다.
+  - **어댑터는 반대쪽 포트에 의존하지 않는다** — 인바운드 어댑터 → 아웃바운드 포트(유스케이스 우회), 아웃바운드 어댑터 → 인바운드 포트(예외 번역 계층 붕괴)를 금지한다. **책의 `check()`에는 없는 규칙이다.**
 - **시스템**: `@SpringBootTest(RANDOM_PORT, useMainMethod = ALWAYS)` + `@AutoConfigureRestTestClient` + `RestTestClient`. 비싸므로 **주요 경로 하나만** 둔다.
   - `useMainMethod = ALWAYS`로 배포와 같은 기동 경로(`main` → `SpringApplication.run`)를 밟고, `main`이 커버리지 제외 없이 실행된다. 이 컨텍스트는 시스템 테스트만 쓰므로 붙여도 컨텍스트가 늘지 않는다 — 다른 `@SpringBootTest`에 붙이면 공유하던 컨텍스트가 갈라진다.
 
