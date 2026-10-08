@@ -8,7 +8,7 @@ public class Adapters extends ArchitectureElement {
 
     private final HexagonalArchitecture parentContext;
     final List<String> incomingAdapterPackages = new ArrayList<>();
-    private List<String> outgoingAdapterPackages = new ArrayList<>();
+    final List<String> outgoingAdapterPackages = new ArrayList<>();
 
     Adapters(HexagonalArchitecture parentContext, String basePackage) {
         super(basePackage);
