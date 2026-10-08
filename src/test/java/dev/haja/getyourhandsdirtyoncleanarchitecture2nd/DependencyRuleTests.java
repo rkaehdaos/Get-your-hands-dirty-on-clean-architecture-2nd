@@ -2,6 +2,7 @@ package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
+import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.archunit.HexagonalArchitecture;
@@ -50,10 +51,14 @@ class DependencyRuleTests {
                 "lombok..",
                 "java.."
             )
-            // 테스트 클래스패스에는 같은 패키지의 테스트(AccountTest 등)도 있다. 이들은 AssertJ·JUnit과
-            // 테스트 데이터 빌더에 의존하므로, 빼지 않으면 프로덕션 코드가 아닌 테스트가 위반으로 잡힌다.
-            .check(new ClassFileImporter()
-                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                .importPackages(IMPORT_PACKAGE_NAME));
+            .check(productionClasses());
+    }
+
+    // 테스트 클래스패스에는 같은 패키지의 테스트(AccountTest 등)도 있다. 이들은 AssertJ·JUnit과
+    // 테스트 데이터 빌더에 의존하므로, 빼지 않으면 프로덕션 코드가 아닌 테스트가 위반으로 잡힌다.
+    private static JavaClasses productionClasses() {
+        return new ClassFileImporter()
+            .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+            .importPackages(IMPORT_PACKAGE_NAME);
     }
 }
