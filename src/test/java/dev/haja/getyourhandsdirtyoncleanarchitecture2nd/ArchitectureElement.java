@@ -5,6 +5,7 @@ import static lombok.AccessLevel.PROTECTED;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor(access = PROTECTED)
@@ -24,6 +25,15 @@ abstract class ArchitectureElement {
             .dependOnClassesThat()
             .resideInAnyPackage(matchAllClassesInPackage(toPackageName))
             .check(classes);
+    }
+
+    static void denyAnyDependency(
+        List<String> fromPackages, List<String> toPackages, JavaClasses classes) {
+        for (String fromPackage : fromPackages) {
+            for (String toPackage : toPackages) {
+                denyDependency(fromPackage, toPackage, classes);
+            }
+        }
     }
 
     private static String matchAllClassesInPackage(String packageName) {
