@@ -6,6 +6,7 @@ import java.util.List;
 public class ApplicationLayer extends ArchitectureElement {
 
     private List<String> incomingPortsPackages = new ArrayList<>();
+    private List<String> outgoingPortsPackages = new ArrayList<>();
 
     public ApplicationLayer(String basePackage) {
         super(basePackage);
@@ -13,6 +14,11 @@ public class ApplicationLayer extends ArchitectureElement {
 
     public ApplicationLayer incomingPorts(String packageName) {
         this.incomingPortsPackages.add(fullQualifiedPackage(packageName));
+        return this;
+    }
+
+    public ApplicationLayer outgoingPorts(String packageName) {
+        this.outgoingPortsPackages.add(fullQualifiedPackage(packageName));
         return this;
     }
 }
