@@ -46,7 +46,29 @@ public class HexagonalArchitecture extends ArchitectureElement {
             this.domainPackages, Collections.singletonList(adapters.basePackage), classes);
     }
 
+    // 등록하지 않은 계층이 있으면 그 계층의 규칙이 아무것도 검사하지 않고 통과하거나
+    // "null.." 패턴·NPE로 엉뚱하게 실패한다. 검사 전에 빠진 등록을 이름으로 알린다.
+    private void requireAllLayersRegistered() {
+        List<String> missing = new ArrayList<>();
+        if (this.domainPackages.isEmpty()) {
+            missing.add("withDomainLayer()");
+        }
+        if (this.adapters == null) {
+            missing.add("withAdaptersLayer()");
+        }
+        if (this.applicationLayer == null) {
+            missing.add("withApplicationLayer()");
+        }
+        if (this.configurationPackage == null) {
+            missing.add("withConfiguration()");
+        }
+        if (!missing.isEmpty()) {
+            throw new IllegalStateException("등록하지 않은 계층이 있다: " + missing);
+        }
+    }
+
     public void check(JavaClasses classes) {
+        requireAllLayersRegistered();
         denyEmptyPackage(this.configurationPackage, classes);
         this.adapters.doesNotContainEmptyPackages(classes);
         this.adapters.dontDependOnEachOther(classes);
