@@ -1,4 +1,4 @@
-package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
+package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.configuration;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.port.in.DistinctAccountsValidator;
@@ -98,7 +98,7 @@ class ValidationRuntimeHintsTest {
                 .hasMessageContaining("amounts");
     }
 
-    // 루트 패키지에 있어 레지스트라의 port.in 스캔에는 잡히지 않는다
+    // configuration 패키지에 있어 레지스트라의 port.in 스캔에는 잡히지 않는다
     record CascadingInput(@Valid Money money) {}
 
     record ContainerElementInput(List<@NotNull Money> amounts) {}

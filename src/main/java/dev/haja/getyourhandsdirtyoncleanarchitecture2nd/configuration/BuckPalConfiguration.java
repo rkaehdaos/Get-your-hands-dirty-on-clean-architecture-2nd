@@ -1,4 +1,4 @@
-package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
+package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.configuration;
 
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model.Money;
 import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.service.MoneyTransferProperties;
