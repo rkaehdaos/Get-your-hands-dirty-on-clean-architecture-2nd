@@ -6,13 +6,15 @@ import java.util.List;
 
 public class ApplicationLayer extends ArchitectureElement {
 
+    private final HexagonalArchitecture parentContext;
     private List<String> incomingPortsPackages = new ArrayList<>();
     private List<String> outgoingPortsPackages = new ArrayList<>();
     private List<String> servicePackages = new ArrayList<>();
 
 
-    public ApplicationLayer(String basePackage) {
+    ApplicationLayer(String basePackage, HexagonalArchitecture parentContext) {
         super(basePackage);
+        this.parentContext = parentContext;
     }
 
     public ApplicationLayer incomingPorts(String packageName) {
@@ -30,6 +32,8 @@ public class ApplicationLayer extends ArchitectureElement {
         return this;
     }
 
+    public HexagonalArchitecture and() { return parentContext; }
+
     public void doesNotDependOn(String packageName, JavaClasses classes) {
         denyDependency(this.basePackage, packageName, classes);
     }
@@ -39,9 +43,7 @@ public class ApplicationLayer extends ArchitectureElement {
         denyAnyDependency(this.outgoingPortsPackages, this.incomingPortsPackages, classes);
     }
 
-    void doesNotContainEmptyPackages() {
-        denyEmptyPackages(allPackages());
-    }
+    void doesNotContainEmptyPackages() { denyEmptyPackages(allPackages()); }
 
     private List<String> allPackages() {
         List<String> allPackages = new ArrayList<>();

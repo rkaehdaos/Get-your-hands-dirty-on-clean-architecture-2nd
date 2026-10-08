@@ -6,6 +6,7 @@ import java.util.List;
 public class HexagonalArchitecture extends ArchitectureElement {
 
     private Adapters adapters;
+    private ApplicationLayer applicationLayer;
     private String configurationPackage;
     private List<String> domainPackages = new ArrayList<>();
 
@@ -25,6 +26,12 @@ public class HexagonalArchitecture extends ArchitectureElement {
     public HexagonalArchitecture withDomainLayer(String domainPackage) {
         this.domainPackages.add(fullQualifiedPackage(domainPackage));
         return this;
+    }
+
+    public ApplicationLayer withApplicationLayer(String applicationPackage) {
+        this.applicationLayer = new ApplicationLayer(fullQualifiedPackage(applicationPackage),
+            this);
+        return this.applicationLayer;
     }
 
     public HexagonalArchitecture withConfiguration(String packageName) {
