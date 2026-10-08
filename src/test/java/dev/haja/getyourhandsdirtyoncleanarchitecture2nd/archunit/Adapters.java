@@ -7,7 +7,7 @@ import java.util.List;
 public class Adapters extends ArchitectureElement {
 
     private final HexagonalArchitecture parentContext;
-    private List<String> incomingAdapterPackages = new ArrayList<>();
+    final List<String> incomingAdapterPackages = new ArrayList<>();
     private List<String> outgoingAdapterPackages = new ArrayList<>();
 
     Adapters(HexagonalArchitecture parentContext, String basePackage) {

@@ -46,6 +46,11 @@ public class HexagonalArchitecture extends ArchitectureElement {
             this.domainPackages, Collections.singletonList(adapters.basePackage), classes);
     }
 
+    private void incomingAdaptersDoNotDependOnOutgoingPorts(JavaClasses classes) {
+        denyAnyDependency(
+            this.adapters.incomingAdapterPackages, this.applicationLayer.outgoingPortsPackages, classes);
+    }
+
     // 등록하지 않은 계층이 있으면 그 계층의 규칙이 아무것도 검사하지 않고 통과하거나
     // "null.." 패턴·NPE로 엉뚱하게 실패한다. 검사 전에 빠진 등록을 이름으로 알린다.
     private void requireAllLayersRegistered() {
@@ -77,6 +82,7 @@ public class HexagonalArchitecture extends ArchitectureElement {
         this.applicationLayer.doesNotDependOn(this.adapters.basePackage, classes);
         this.applicationLayer.doesNotDependOn(this.configurationPackage, classes);
         this.applicationLayer.incomingAndOutgoingPortsDoNotDependOnEachOther(classes);
+        this.incomingAdaptersDoNotDependOnOutgoingPorts(classes);
         this.domainDoesNotDependOnAdapters(classes);
     }
 

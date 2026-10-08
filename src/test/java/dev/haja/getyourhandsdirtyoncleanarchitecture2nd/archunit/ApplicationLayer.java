@@ -8,7 +8,7 @@ public class ApplicationLayer extends ArchitectureElement {
 
     private final HexagonalArchitecture parentContext;
     private List<String> incomingPortsPackages = new ArrayList<>();
-    private List<String> outgoingPortsPackages = new ArrayList<>();
+    final List<String> outgoingPortsPackages = new ArrayList<>();
     private List<String> servicePackages = new ArrayList<>();
 
 
