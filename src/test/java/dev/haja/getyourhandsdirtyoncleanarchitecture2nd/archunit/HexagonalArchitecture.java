@@ -85,6 +85,9 @@ public class HexagonalArchitecture extends ArchitectureElement {
 
     public void check(JavaClasses classes) {
         requireAllLayersRegistered();
+        // 도메인은 의존 규칙의 that() 쪽이라 failOnEmptyShould도 잡지만, 전역 설정에 기대지 않도록
+        // 다른 패키지처럼 명시적으로 검사한다.
+        denyEmptyPackages(this.domainPackages, classes);
         denyEmptyPackage(this.configurationPackage, classes);
         this.adapters.doesNotContainEmptyPackages(classes);
         this.adapters.dontDependOnEachOther(classes);
