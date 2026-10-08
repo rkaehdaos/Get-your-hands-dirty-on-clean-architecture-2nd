@@ -1,5 +1,8 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
 
+import static com.tngtech.archunit.base.DescribedPredicate.greaterThanOrEqualTo;
+import static com.tngtech.archunit.lang.conditions.ArchConditions.containNumberOfElements;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static lombok.AccessLevel.PROTECTED;
 
@@ -38,6 +41,14 @@ abstract class ArchitectureElement {
 
     private static String matchAllClassesInPackage(String packageName) {
         return packageName + "..";
+    }
+
+    void denyEmptyPackage(String packageName) {
+        classes()
+            .that()
+            .resideInAPackage(matchAllClassesInPackage(packageName))
+            .should(containNumberOfElements(greaterThanOrEqualTo(1)))
+            .check(classesInPackage(packageName));
     }
 
     private JavaClasses classesInPackage(String packageName) {
