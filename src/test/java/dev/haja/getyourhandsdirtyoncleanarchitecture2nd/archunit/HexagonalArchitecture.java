@@ -47,6 +47,7 @@ public class HexagonalArchitecture extends ArchitectureElement {
     }
 
     public void check(JavaClasses classes) {
+        denyEmptyPackage(this.configurationPackage, classes);
         this.adapters.doesNotContainEmptyPackages(classes);
         this.adapters.dontDependOnEachOther(classes);
         this.adapters.doesNotDependOn(this.configurationPackage, classes);
