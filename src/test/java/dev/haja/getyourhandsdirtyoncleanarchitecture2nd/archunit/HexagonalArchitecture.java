@@ -74,7 +74,7 @@ public class HexagonalArchitecture extends ArchitectureElement {
         this.adapters.dontDependOnEachOther(classes);
         this.adapters.doesNotDependOn(this.configurationPackage, classes);
         this.applicationLayer.doesNotContainEmptyPackages(classes);
-        this.applicationLayer.doesNotDependOn(this.adapters.getBasePackage(), classes);
+        this.applicationLayer.doesNotDependOn(this.adapters.basePackage, classes);
         this.applicationLayer.doesNotDependOn(this.configurationPackage, classes);
         this.applicationLayer.incomingAndOutgoingPortsDoNotDependOnEachOther(classes);
         this.domainDoesNotDependOnAdapters(classes);

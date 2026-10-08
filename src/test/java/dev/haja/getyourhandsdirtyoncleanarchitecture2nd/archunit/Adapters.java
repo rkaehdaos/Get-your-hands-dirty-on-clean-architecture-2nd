@@ -34,10 +34,6 @@ public class Adapters extends ArchitectureElement {
 
     public HexagonalArchitecture and() { return parentContext; }
 
-    String getBasePackage() {
-        return basePackage;
-    }
-
     void dontDependOnEachOther(JavaClasses classes) {
         List<String> allAdapters = allAdapterPackages();
         for (String adapter1 : allAdapters) {
