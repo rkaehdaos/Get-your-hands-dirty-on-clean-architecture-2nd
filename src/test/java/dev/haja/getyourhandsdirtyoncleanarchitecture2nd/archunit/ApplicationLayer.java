@@ -39,6 +39,10 @@ public class ApplicationLayer extends ArchitectureElement {
         denyAnyDependency(this.outgoingPortsPackages, this.incomingPortsPackages, classes);
     }
 
+    void doesNotContainEmptyPackages() {
+        denyEmptyPackages(allPackages());
+    }
+
     private List<String> allPackages() {
         List<String> allPackages = new ArrayList<>();
         allPackages.addAll(incomingPortsPackages);
