@@ -30,6 +30,7 @@ class DependencyRuleTests {
             .and()
 
             .withApplicationLayer("application")
+            .services("domain.service")
             .incomingPorts("port.in")
             .outgoingPorts("port.out")
             .and()
