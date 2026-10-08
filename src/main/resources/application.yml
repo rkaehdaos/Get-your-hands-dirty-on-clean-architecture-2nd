@@ -4,7 +4,7 @@ buckpal:
   # 책은 이 값을 BuckPalConfigurationProperties의 기본값으로 두지만,
   # 여기서는 코드에 기본값을 두지 않으므로 설정에 명시한다.
   # Ref:
-  # https://github.com/rkaehdaos/Get-your-hands-dirty-on-clean-architecture-2
+  # https://github.com/rkaehdaos/Get-your-hands-dirty-on-clean-architecture-2nd/issues/58#issue-5758582573
   transferThreshold: 9223372036854775807
 
 ## spring
