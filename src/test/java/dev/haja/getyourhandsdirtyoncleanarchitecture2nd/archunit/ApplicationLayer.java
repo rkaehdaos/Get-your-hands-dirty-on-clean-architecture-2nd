@@ -38,4 +38,12 @@ public class ApplicationLayer extends ArchitectureElement {
         denyAnyDependency(this.incomingPortsPackages, this.outgoingPortsPackages, classes);
         denyAnyDependency(this.outgoingPortsPackages, this.incomingPortsPackages, classes);
     }
+
+    private List<String> allPackages() {
+        List<String> allPackages = new ArrayList<>();
+        allPackages.addAll(incomingPortsPackages);
+        allPackages.addAll(outgoingPortsPackages);
+        allPackages.addAll(servicePackages);
+        return allPackages;
+    }
 }
