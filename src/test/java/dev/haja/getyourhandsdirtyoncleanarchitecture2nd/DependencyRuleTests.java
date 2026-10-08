@@ -13,16 +13,18 @@ import org.junit.jupiter.api.condition.DisabledInNativeImage;
 class DependencyRuleTests {
 
     public static final String ROOT_PACKAGE_NAME = "dev.haja.getyourhandsdirtyoncleanarchitecture2nd";
+    public static final String DOMAIN_PACKAGE_NAME = ROOT_PACKAGE_NAME + ".application.domain.model..";
+
 
     @Test
     void domainModelDoesNotDependOnOutside() {
         noClasses()
             .that()
-            .resideInAPackage(ROOT_PACKAGE_NAME + ".application.domain.model..")
+            .resideInAPackage(DOMAIN_PACKAGE_NAME)
             .should()
             .dependOnClassesThat()
             .resideOutsideOfPackages(
-                ROOT_PACKAGE_NAME + ".application.domain.model..",
+                DOMAIN_PACKAGE_NAME,
                 "lombok..",
                 "java.."
             )
