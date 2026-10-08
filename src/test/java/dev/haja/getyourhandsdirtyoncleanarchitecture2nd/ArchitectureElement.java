@@ -6,4 +6,7 @@ abstract class ArchitectureElement {
     public ArchitectureElement(String basePackage) {
         this.basePackage = basePackage;
     }
+    String fullQualifiedPackage(String relativePackage) {
+        return this.basePackage + "." + relativePackage;
+    }
 }
