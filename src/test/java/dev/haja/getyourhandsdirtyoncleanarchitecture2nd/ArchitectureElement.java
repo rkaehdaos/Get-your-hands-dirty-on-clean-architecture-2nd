@@ -55,4 +55,9 @@ abstract class ArchitectureElement {
         return new ClassFileImporter().importPackages(packageName);
     }
 
+    void denyEmptyPackages(List<String> packages) {
+        for (String packageName : packages) {
+            denyEmptyPackage(packageName);
+        }
+    }
 }
