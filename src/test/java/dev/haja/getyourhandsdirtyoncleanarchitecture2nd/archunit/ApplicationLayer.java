@@ -33,4 +33,9 @@ public class ApplicationLayer extends ArchitectureElement {
     public void doesNotDependOn(String packageName, JavaClasses classes) {
         denyDependency(this.basePackage, packageName, classes);
     }
+
+    public void incomingAndOutgoingPortsDoNotDependOnEachOther(JavaClasses classes) {
+        denyAnyDependency(this.incomingPortsPackages, this.outgoingPortsPackages, classes);
+        denyAnyDependency(this.outgoingPortsPackages, this.incomingPortsPackages, classes);
+    }
 }
