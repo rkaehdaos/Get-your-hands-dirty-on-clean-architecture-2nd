@@ -15,11 +15,11 @@
 - **서비스** `SendMoneyService`(`@UseCase` + `jakarta.transaction.Transactional`), `GetAccountBalanceService`. **`GetAccountBalanceService`는 빈이 아니다** — 이 유스케이스를 쓰는 인바운드 어댑터가 아직 없어서다(책 원본도 같다). `@UseCase`는 그 어댑터를 추가하는 `feat` 커밋에서 붙이고, 트랜잭션 경계도 그때 정한다. 그 전까지 쓰려면 `new`나 `@Import`로 조립한다. 둘이 공유하는 헬퍼 `AccountLoader`가 서비스 패키지에 있다.
 - **인바운드 어댑터** `SendMoneyController`, `SendMoneyExceptionHandler`(`@RestControllerAdvice`).
 - **아웃바운드 어댑터** `AccountPersistenceAdapter`(`LoadAccountPort`·`UpdateAccountStatePort`를 함께 구현), `NoOpAccountLock`(아무것도 잠그지 않는 자리표시자).
-- **설정**(루트 패키지) `BuckPalConfiguration` — `MoneyTransferProperties`·`Clock` 빈을 등록한다. 네이티브용 `ValidationRuntimeHints`가 중첩돼 있고, 등록은 `META-INF/spring/aot.factories`가 맡는다. `BuckPalConfigurationProperties` — `buckpal.*` 바인딩. 아래 "설정"·"네이티브 이미지" 참고.
+- **설정**(`configuration` 패키지) `BuckPalConfiguration` — `MoneyTransferProperties`·`Clock` 빈을 등록한다. 네이티브용 `ValidationRuntimeHints`가 중첩돼 있고, 등록은 `META-INF/spring/aot.factories`가 맡는다. `BuckPalConfigurationProperties` — `buckpal.*` 바인딩. 아래 "설정"·"네이티브 이미지" 참고.
 
 ### 패키지 구조
 
-책과 같다.
+설정 패키지만 책과 다르다(아래).
 
 ```
 adapter/in/web              인바운드 웹 어댑터
@@ -30,9 +30,10 @@ application/port/in         인바운드 포트 + 입력 모델(커맨드/쿼리
 application/port/out        아웃바운드 포트
 common                      계층 식별 스테레오타입(@WebAdapter · @UseCase · @PersistenceAdapter)
 common/validation           Validation 헬퍼 (application 바깥)
+configuration               설정(BuckPalConfiguration · BuckPalConfigurationProperties)
 ```
 
-- 루트 패키지에는 `BuckPalApplication`, `BuckPalConfiguration`, `BuckPalConfigurationProperties`만 둔다.
+- 루트 패키지에는 `BuckPalApplication`만 두고(컴포넌트 스캔 기준점), 설정은 `configuration` 패키지에 둔다. **책과 다른 점이다.** 책은 설정을 루트에 두면서 아키텍처 검사에 `withConfiguration("configuration")`을 등록해, "어댑터·애플리케이션은 설정에 의존하지 않는다" 규칙이 빈 패키지를 가리키고 아무것도 검사하지 않은 채 통과한다.
 - `common`의 스테레오타입은 표지가 아니라 **`@Component`를 메타 애노테이션으로 가진 빈 등록**이다. 빈이 아니던 클래스에 붙이면 동작 변경이다(`refactor`가 아니다). `@WebAdapter`는 `@RestController`(예외 핸들러는 `@RestControllerAdvice`)와 함께 붙인다(이유는 Javadoc).
 - `src/test`의 `common` 패키지(테스트 데이터 빌더·픽스처 상수)는 `src/main`의 `common`(스테레오타입)과 **같은 패키지를 소스셋만 나눠 쓴다.** 역할은 서로 무관하다.
 - `@Sql` 픽스처 스크립트는 패키지 구조를 따르지 않고 `src/test/resources/sql/`에 모은다(현재 `accounts.sql` 하나).
@@ -269,6 +270,8 @@ response.expectStatus().isOk();
   - 커밋 경계를 봐야 하는 테스트만 `@Transactional(propagation = NOT_SUPPORTED)`이고, **그 메서드에는 `@Sql`을 붙이지 않는다**(픽스처가 커밋되어 다른 테스트를 오염시킨다).
 - **웹**: `@WebMvcTest(controllers = SendMoneyController.class)` + `MockMvcTester` + `@MockitoBean`. 실패 경로의 HTTP 매핑은 여기서 고정한다.
 - **아키텍처**: 평평한 `@Test`에서 `ClassFileImporter`로 임포트하고, **`ImportOption.Predefined.DO_NOT_INCLUDE_TESTS`를 반드시 건다.** 테스트 클래스패스에는 같은 패키지의 테스트(`domain.model`의 `AccountTest` 등)도 있어, 빼지 않으면 그 테스트의 AssertJ·JUnit·빌더 의존이 위반으로 잡힌다. 허용 목록에 테스트 라이브러리를 더해 우회하지 말 것 — 프로덕션 코드가 그것에 의존해도 통과하게 된다.
+  - 임포트는 `DependencyRuleTests.productionClasses()` 하나다. `HexagonalArchitecture.check(classes)`의 빈 패키지 검사도 넘겨받은 이 클래스로 하므로, 테스트 클래스만 있는 패키지는 비어 있는 것으로 실패한다.
+  - **등록한 패키지(어댑터·포트·서비스·설정)가 비어 있으면 실패하고, `with...()` 등록을 빠뜨리면 `IllegalStateException`이다.** ArchUnit의 `failOnEmptyShould`는 `that()` 쪽 대상이 빈 경우만 잡고, `dependOnClassesThat()` 쪽(의존 대상)이 빈 경우는 잡지 못한다 — 의존 금지 규칙은 대상 패키지명이 틀려도 통과하므로 빈 패키지 검사가 그 몫을 한다. 패키지를 옮기거나 이름을 바꾸면 등록도 함께 고친다.
 - **시스템**: `@SpringBootTest(RANDOM_PORT, useMainMethod = ALWAYS)` + `@AutoConfigureRestTestClient` + `RestTestClient`. 비싸므로 **주요 경로 하나만** 둔다.
   - `useMainMethod = ALWAYS`로 배포와 같은 기동 경로(`main` → `SpringApplication.run`)를 밟고, `main`이 커버리지 제외 없이 실행된다. 이 컨텍스트는 시스템 테스트만 쓰므로 붙여도 컨텍스트가 늘지 않는다 — 다른 `@SpringBootTest`에 붙이면 공유하던 컨텍스트가 갈라진다.
 
@@ -300,7 +303,7 @@ reflectoring.io의 "100% Code Coverage*"가 말하는 **Cleaned Code Coverage 10
 
 `.gitmessage.txt`가 템플릿이다. 형식은 `<이모지> <type>(<scope>): <subject>`, **subject는 한글**이다(예: `✨ feat(core): ActivityWindow에 addActivity 메서드 추가`). type/scope/이모지는 템플릿에 있는 것만 쓴다.
 
-- scope: 도메인·애플리케이션 계층(포트·서비스·입력 모델) `core`, 웹 어댑터 `api`, 영속성 어댑터 `db`, 설정 `config` — 루트 패키지 설정(`BuckPalConfiguration*`, `application.yml`, `META-INF/spring/aot.factories`)과 저장소·에이전트 설정 파일(`AGENTS.md`, `.editorconfig`, `.githooks`, `.gitmessage.txt`). 문서 변경은 type `📝 docs`가 설정 변경 커밋과 구분한다. 의존성 `deps`(`🔨 build(deps)` / `📦 chore(deps)`).
+- scope: 도메인·애플리케이션 계층(포트·서비스·입력 모델) `core`, 웹 어댑터 `api`, 영속성 어댑터 `db`, 설정 `config` — `configuration` 패키지 설정(`BuckPalConfiguration*`, `application.yml`, `META-INF/spring/aot.factories`)과 저장소·에이전트 설정 파일(`AGENTS.md`, `.editorconfig`, `.githooks`, `.gitmessage.txt`). 문서 변경은 type `📝 docs`가 설정 변경 커밋과 구분한다. 의존성 `deps`(`🔨 build(deps)` / `📦 chore(deps)`).
 - **`common` 패키지에는 전용 scope가 없다**(템플릿에 없다). 쓰는 쪽을 따른다 — 스테레오타입은 식별하는 계층(`@UseCase` `core`, `@WebAdapter` `api`, `@PersistenceAdapter` `db`), `common.validation`은 입력 모델이 쓰므로 `core`. `src/test`의 `common`(테스트 데이터 빌더·픽스처)은 아래의 scope `test`다.
 - **테스트 커밋의 scope는 대상 코드를 따른다**(`✅ test(core)`, `✅ test(config)`). scope `test`는 테스트 코드 자체가 대상일 때다(`♻️ refactor(test): AccountBuilder를 AccountTestData로 이동`, `✅ test(test): 목 기반 테스트를 네이티브 이미지에서 제외`).
 - 커밋은 매우 잘게 — 메서드 하나, 검증 하나 수준. 기능과 테스트는 별도 커밋(`feat`/`fix` → `test`).
