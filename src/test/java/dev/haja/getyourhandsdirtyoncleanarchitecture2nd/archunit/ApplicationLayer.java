@@ -1,5 +1,6 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.archunit;
 
+import com.tngtech.archunit.core.domain.JavaClasses;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,5 +28,9 @@ public class ApplicationLayer extends ArchitectureElement {
     public ApplicationLayer services(String packageName) {
         this.servicePackages.add(fullQualifiedPackage(packageName));
         return this;
+    }
+
+    public void doesNotDependOn(String packageName, JavaClasses classes) {
+        denyDependency(this.basePackage, packageName, classes);
     }
 }
