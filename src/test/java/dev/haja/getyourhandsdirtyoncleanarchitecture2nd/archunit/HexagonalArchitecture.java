@@ -45,4 +45,16 @@ public class HexagonalArchitecture extends ArchitectureElement {
         denyAnyDependency(
             this.domainPackages, Collections.singletonList(adapters.basePackage), classes);
     }
+
+    public void check(JavaClasses classes) {
+        this.adapters.doesNotContainEmptyPackages();
+        this.adapters.dontDependOnEachOther(classes);
+        this.adapters.doesNotDependOn(this.configurationPackage, classes);
+        this.applicationLayer.doesNotContainEmptyPackages();
+        this.applicationLayer.doesNotDependOn(this.adapters.getBasePackage(), classes);
+        this.applicationLayer.doesNotDependOn(this.configurationPackage, classes);
+        this.applicationLayer.incomingAndOutgoingPortsDoNotDependOnEachOther(classes);
+        this.domainDoesNotDependOnAdapters(classes);
+    }
+
 }
