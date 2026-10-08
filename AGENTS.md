@@ -271,7 +271,7 @@ response.expectStatus().isOk();
 - **웹**: `@WebMvcTest(controllers = SendMoneyController.class)` + `MockMvcTester` + `@MockitoBean`. 실패 경로의 HTTP 매핑은 여기서 고정한다.
 - **아키텍처**: 평평한 `@Test`에서 `ClassFileImporter`로 임포트하고, **`ImportOption.Predefined.DO_NOT_INCLUDE_TESTS`를 반드시 건다.** 테스트 클래스패스에는 같은 패키지의 테스트(`domain.model`의 `AccountTest` 등)도 있어, 빼지 않으면 그 테스트의 AssertJ·JUnit·빌더 의존이 위반으로 잡힌다. 허용 목록에 테스트 라이브러리를 더해 우회하지 말 것 — 프로덕션 코드가 그것에 의존해도 통과하게 된다.
   - 임포트는 `DependencyRuleTests.productionClasses()` 하나다. `HexagonalArchitecture.check(classes)`의 빈 패키지 검사도 넘겨받은 이 클래스로 하므로, 테스트 클래스만 있는 패키지는 비어 있는 것으로 실패한다.
-  - **등록한 패키지(어댑터·포트·서비스·설정)가 비어 있으면 실패하고, `with...()` 등록을 빠뜨리면 `IllegalStateException`이다.** ArchUnit의 `failOnEmptyShould`는 `that()` 쪽 대상이 빈 경우만 잡고, `dependOnClassesThat()` 쪽(의존 대상)이 빈 경우는 잡지 못한다 — 의존 금지 규칙은 대상 패키지명이 틀려도 통과하므로 빈 패키지 검사가 그 몫을 한다. 패키지를 옮기거나 이름을 바꾸면 등록도 함께 고친다.
+  - **등록한 패키지(어댑터·포트·서비스·설정)가 비어 있으면 실패하고, `with...()` 등록이나 그 하위 등록(`incoming()`·`outgoing()`·`incomingPorts()`·`outgoingPorts()`·`services()`)을 빠뜨리면 `IllegalStateException`이다.** 하위 등록은 규칙이 순회하는 목록이라, 빠지면 빈 목록을 돌며 아무것도 검사하지 않고 통과한다. ArchUnit의 `failOnEmptyShould`는 `that()` 쪽 대상이 빈 경우만 잡고, `dependOnClassesThat()` 쪽(의존 대상)이 빈 경우는 잡지 못한다 — 의존 금지 규칙은 대상 패키지명이 틀려도 통과하므로 빈 패키지 검사가 그 몫을 한다. 패키지를 옮기거나 이름을 바꾸면 등록도 함께 고친다.
   - **어댑터는 반대쪽 포트에 의존하지 않는다** — 인바운드 어댑터 → 아웃바운드 포트(유스케이스 우회), 아웃바운드 어댑터 → 인바운드 포트(예외 번역 계층 붕괴)를 금지한다. **책의 `check()`에는 없는 규칙이다.**
 - **시스템**: `@SpringBootTest(RANDOM_PORT, useMainMethod = ALWAYS)` + `@AutoConfigureRestTestClient` + `RestTestClient`. 비싸므로 **주요 경로 하나만** 둔다.
   - `useMainMethod = ALWAYS`로 배포와 같은 기동 경로(`main` → `SpringApplication.run`)를 밟고, `main`이 커버리지 제외 없이 실행된다. 이 컨텍스트는 시스템 테스트만 쓰므로 붙여도 컨텍스트가 늘지 않는다 — 다른 `@SpringBootTest`에 붙이면 공유하던 컨텍스트가 갈라진다.
