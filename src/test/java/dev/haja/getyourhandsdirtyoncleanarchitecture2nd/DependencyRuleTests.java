@@ -4,6 +4,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import dev.haja.getyourhandsdirtyoncleanarchitecture2nd.archunit.HexagonalArchitecture;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
 
@@ -14,7 +15,28 @@ class DependencyRuleTests {
 
     public static final String ROOT_PACKAGE_NAME = "dev.haja.getyourhandsdirtyoncleanarchitecture2nd";
     public static final String DOMAIN_PACKAGE_NAME = ROOT_PACKAGE_NAME + ".application.domain.model..";
+    public static final String IMPORT_PACKAGE_NAME = ROOT_PACKAGE_NAME + "..";
 
+    @Test
+    void validateRegistrationContextArchitecture() {
+        HexagonalArchitecture.basePackage(ROOT_PACKAGE_NAME)
+
+            .withDomainLayer("application.domain")
+
+            .withAdaptersLayer("adapter")
+            .incoming("in.web")
+            .outgoing("out.persistence")
+            .and()
+
+            .withApplicationLayer("application")
+            .incomingPorts("port.in")
+            .outgoingPorts("port.out")
+            .and()
+
+            .withConfiguration("configuration")
+            .check(new ClassFileImporter()
+                .importPackages(IMPORT_PACKAGE_NAME));
+    }
 
     @Test
     void domainModelDoesNotDependOnOutside() {
@@ -32,6 +54,6 @@ class DependencyRuleTests {
             // 테스트 데이터 빌더에 의존하므로, 빼지 않으면 프로덕션 코드가 아닌 테스트가 위반으로 잡힌다.
             .check(new ClassFileImporter()
                 .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                .importPackages(ROOT_PACKAGE_NAME + ".."));
+                .importPackages(IMPORT_PACKAGE_NAME));
     }
 }
