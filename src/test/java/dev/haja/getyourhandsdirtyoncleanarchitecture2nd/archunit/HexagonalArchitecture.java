@@ -5,6 +5,7 @@ import java.util.List;
 
 public class HexagonalArchitecture extends ArchitectureElement {
 
+    private String configurationPackage;
     private List<String> domainPackages = new ArrayList<>();
 
     public static HexagonalArchitecture basePackage(String basePackage) {
@@ -19,4 +20,10 @@ public class HexagonalArchitecture extends ArchitectureElement {
         this.domainPackages.add(fullQualifiedPackage(domainPackage));
         return this;
     }
+
+    public HexagonalArchitecture withConfiguration(String packageName) {
+        this.configurationPackage = fullQualifiedPackage(packageName);
+        return this;
+    }
+
 }
