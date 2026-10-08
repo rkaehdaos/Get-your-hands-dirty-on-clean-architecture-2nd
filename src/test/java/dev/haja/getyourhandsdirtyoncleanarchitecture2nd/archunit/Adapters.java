@@ -44,4 +44,8 @@ public class Adapters extends ArchitectureElement {
             }
         }
     }
+
+    void doesNotDependOn(String packageName, JavaClasses classes) {
+        denyDependency(this.basePackage, packageName, classes);
+    }
 }
