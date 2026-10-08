@@ -15,7 +15,8 @@ class GetAccountBalanceService implements
     private final LoadAccountPort loadAccountPort;
 
     /**
-     * 현재 시각을 직접 가져오지 않고 Clock에게 물어본다. 시각이 주입 가능한 의존성이 되어
+     * 현재 시각을 직접 가져오지 않고 Clock에게 물어본다.
+     * 시각이 주입 가능한 의존성이 되어
      * 테스트가 baselineDate를 정확히 고정할 수 있다.
      */
     private final Clock clock;

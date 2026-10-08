@@ -24,7 +24,7 @@ class BuckPalConfigurationPropertiesTest {
     void bindsTransferThreshold() {
 
         // given
-        // application.yml의 10000과 다른 값을 쓴다. 같은 값이면 이 값이 무시되고 yml이
+        // application.yml의 값(Long.MAX_VALUE)과 다른 값을 쓴다. 같은 값이면 이 값이 무시되고 yml이
         // 읽히는 회귀가 생겨도 테스트가 그대로 통과한다
         ApplicationContextRunner runner = contextRunner
                 .withPropertyValues("buckpal.transferThreshold=12345");

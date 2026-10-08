@@ -1,8 +1,11 @@
 ##
 buckpal:
-  # 송금 한도. 책의 예제 값이다. 이 설정이 생기기 전에는 MoneyTransferProperties의
-  # 기본 생성자가 1,000,000을 썼으므로 한도가 100분의 1로 낮아졌다.
-  transferThreshold: 10000
+  # 송금 한도. 한도를 두지 않는다(Long.MAX_VALUE).
+  # 책은 이 값을 BuckPalConfigurationProperties의 기본값으로 두지만,
+  # 여기서는 코드에 기본값을 두지 않으므로 설정에 명시한다.
+  # Ref:
+  # https://github.com/rkaehdaos/Get-your-hands-dirty-on-clean-architecture-2
+  transferThreshold: 9223372036854775807
 
 ## spring
 spring:
