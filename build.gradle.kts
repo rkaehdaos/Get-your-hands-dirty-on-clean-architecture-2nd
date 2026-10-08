@@ -5,11 +5,20 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.hibernate.orm") version "7.4.5.Final"
     id("org.graalvm.buildtools.native") version "1.1.8"
+    id("org.sonarqube") version "7.5.0.8588"
+
 }
 
 group = "dev.haja"
 version = "0.0.1-SNAPSHOT"
 description = "Get-your-hands-dirty-on-clean-architecture-2nd"
+
+sonar {
+    properties {
+        property("sonar.projectKey", "rkaehdaos_Get-your-hands-dirty-on-clean-architecture-2nd2")
+        property("sonar.organization", "rkaehdaos")
+    }
+}
 
 java {
     toolchain {
