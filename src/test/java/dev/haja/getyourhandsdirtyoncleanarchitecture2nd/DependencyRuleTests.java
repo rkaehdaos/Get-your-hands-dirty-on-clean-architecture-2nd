@@ -35,8 +35,7 @@ class DependencyRuleTests {
             .and()
 
             .withConfiguration("configuration")
-            .check(new ClassFileImporter()
-                .importPackages(IMPORT_PACKAGE_NAME));
+            .check(productionClasses());
     }
 
     @Test
