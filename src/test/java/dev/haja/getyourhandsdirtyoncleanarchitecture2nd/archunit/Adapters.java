@@ -28,4 +28,8 @@ public class Adapters extends ArchitectureElement {
         allAdapters.addAll(outgoingAdapterPackages);
         return allAdapters;
     }
+
+    String getBasePackage() {
+        return basePackage;
+    }
 }
