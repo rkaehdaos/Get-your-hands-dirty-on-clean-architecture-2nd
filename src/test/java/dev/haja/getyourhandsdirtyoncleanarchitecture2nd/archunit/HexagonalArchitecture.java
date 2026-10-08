@@ -57,7 +57,9 @@ public class HexagonalArchitecture extends ArchitectureElement {
     }
 
     // 등록하지 않은 계층이 있으면 그 계층의 규칙이 아무것도 검사하지 않고 통과하거나
-    // "null.." 패턴·NPE로 엉뚱하게 실패한다. 검사 전에 빠진 등록을 이름으로 알린다.
+    // "null.." 패턴·NPE로 엉뚱하게 실패한다. 하위 계층(incoming()·incomingPorts() 등)도
+    // 마찬가지로, 빠지면 그 목록을 순회하는 규칙이 빈 목록을 돌며 조용히 통과한다.
+    // 검사 전에 빠진 등록을 이름으로 알린다.
     private void requireAllLayersRegistered() {
         List<String> missing = new ArrayList<>();
         if (this.domainPackages.isEmpty()) {
@@ -65,9 +67,13 @@ public class HexagonalArchitecture extends ArchitectureElement {
         }
         if (this.adapters == null) {
             missing.add("withAdaptersLayer()");
+        } else {
+            missing.addAll(this.adapters.missingRegistrations());
         }
         if (this.applicationLayer == null) {
             missing.add("withApplicationLayer()");
+        } else {
+            missing.addAll(this.applicationLayer.missingRegistrations());
         }
         if (this.configurationPackage == null) {
             missing.add("withConfiguration()");

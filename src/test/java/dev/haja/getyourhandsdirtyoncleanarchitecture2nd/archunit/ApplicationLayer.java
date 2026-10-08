@@ -54,4 +54,18 @@ public class ApplicationLayer extends ArchitectureElement {
         allPackages.addAll(servicePackages);
         return allPackages;
     }
+
+    List<String> missingRegistrations() {
+        List<String> missing = new ArrayList<>();
+        if (this.incomingPortsPackages.isEmpty()) {
+            missing.add("withApplicationLayer().incomingPorts()");
+        }
+        if (this.outgoingPortsPackages.isEmpty()) {
+            missing.add("withApplicationLayer().outgoingPorts()");
+        }
+        if (this.servicePackages.isEmpty()) {
+            missing.add("withApplicationLayer().services()");
+        }
+        return missing;
+    }
 }

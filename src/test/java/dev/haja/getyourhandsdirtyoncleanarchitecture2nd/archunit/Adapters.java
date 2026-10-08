@@ -52,4 +52,15 @@ public class Adapters extends ArchitectureElement {
     void doesNotContainEmptyPackages(JavaClasses classes) {
         denyEmptyPackages(allAdapterPackages(), classes);
     }
+
+    List<String> missingRegistrations() {
+        List<String> missing = new ArrayList<>();
+        if (this.incomingAdapterPackages.isEmpty()) {
+            missing.add("withAdaptersLayer().incoming()");
+        }
+        if (this.outgoingAdapterPackages.isEmpty()) {
+            missing.add("withAdaptersLayer().outgoing()");
+        }
+        return missing;
+    }
 }
