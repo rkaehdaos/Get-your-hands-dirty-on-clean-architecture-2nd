@@ -21,4 +21,11 @@ public class Adapters extends ArchitectureElement {
         this.incomingAdapterPackages.add(fullQualifiedPackage(packageName));
         return this;
     }
+
+    List<String> allAdapterPackages() {
+        List<String> allAdapters = new ArrayList<>();
+        allAdapters.addAll(incomingAdapterPackages);
+        allAdapters.addAll(outgoingAdapterPackages);
+        return allAdapters;
+    }
 }
