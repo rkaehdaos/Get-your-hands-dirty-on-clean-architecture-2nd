@@ -1,5 +1,6 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static lombok.AccessLevel.PROTECTED;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
@@ -13,6 +14,16 @@ abstract class ArchitectureElement {
 
     String fullQualifiedPackage(String relativePackage) {
         return this.basePackage + "." + relativePackage;
+    }
+
+    static void denyDependency(String fromPackageName, String toPackageName, JavaClasses classes) {
+        noClasses()
+            .that()
+            .resideInAPackage(matchAllClassesInPackage(fromPackageName))
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage(matchAllClassesInPackage(toPackageName))
+            .check(classes);
     }
 
     private static String matchAllClassesInPackage(String packageName) {
