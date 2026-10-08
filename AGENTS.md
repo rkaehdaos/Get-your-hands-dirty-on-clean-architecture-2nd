@@ -73,7 +73,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 - Bean Validation(`spring-boot-starter-validation`)은 컨텍스트 없이도 쓰므로 `implementation`이다.
 - Gradle 9.8.0 / Kotlin DSL, Hibernate ORM 플러그인(bytecode enhancement), GraalVM Native Build Tools.
 - **Gradle을 올릴 때 `distributionUrl`을 손으로 고치지 말 것** — `distributionSha256Sum` 불일치로 실패하고 래퍼 jar·스크립트도 갱신돼야 한다. `./gradlew wrapper --gradle-version <버전> --distribution-type bin --gradle-distribution-sha256-sum <services.gradle.org의 .sha256 값>`으로 바꾼다.
-- JUnit 5, AssertJ, Mockito(BDD 스타일).
+- JUnit 5, AssertJ, Mockito(BDD 스타일), ArchUnit(코어 `archunit`만 — `@ArchTest`를 쓰지 않으므로 JUnit 엔진은 두지 않는다).
 - **JaCoCo 버전은 고정하지 않는다** — Gradle 기본값에 맡긴다(라이브러리 버전을 BOM에 맡기는 것과 같다). Java를 올렸는데 JaCoCo가 그 클래스 파일 버전을 모르면 시끄럽게 실패한다. 다만 실패하는 곳은 계측이 아니라 분석이다 — JVM은 에이전트의 계측 예외를 무시해 클래스를 계측 없이 로드하므로 테스트는 오류 로그만 남기고 통과하고, 리포트·검증 태스크가 클래스를 분석하다(`Error while analyzing ...`) 실패한다.
 - **Lombok 생성 코드의 `@lombok.Generated`는 루트 `lombok.config`가 고정한다.** 1.18.46의 기본값과 같지만, 커버리지 제외가 이것에 기대므로 기본값에 맡기지 않는다. `config.stopBubbling = true`라 상위 디렉터리의 설정은 읽지 않는다. Gradle은 Lombok이 읽는 이 파일을 모르므로 `JavaCompile`의 입력으로 등록해 두었다 — 바꾸면 다시 컴파일된다.
 
@@ -179,7 +179,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
   - `ValidationRuntimeHints`가 AOT 처리 중에 `application.port.in`을 스캔해 **제약이 하나라도 붙은 record**를 입력 모델로 본다. 그 필드(`ACCESS_DECLARED_FIELDS`)와, 제약에서 뽑은 검증기의 생성자(`INVOKE_DECLARED_CONSTRUCTORS`)를 등록한다. 입력 모델도 검증기도 손으로 나열하지 않는다. **대신 입력 모델을 `port/in` 밖에 두면 힌트가 빠지고, JVM 테스트로는 드러나지 않는다.**
   - 등록은 `@ImportRuntimeHints`가 아니라 `META-INF/spring/aot.factories`다. 애노테이션이면 `BuckPalConfiguration`을 담은 컨텍스트가 AOT 처리될 때만 기여해, 컨텍스트 없이 도는 `SendMoneyCommandTest`의 네이티브 실행이 풀 컨텍스트 테스트의 부수효과에 기대게 된다.
   - `@Valid` 캐스케이드와 컨테이너 원소 제약은 따라가지 않고 `IllegalStateException`으로 거부한다. 조용히 힌트를 빠뜨리는 대신 JVM 테스트와 AOT 빌드에서 실패한다. 필요해지면 레지스트라를 Spring 처리기처럼 재귀로 확장한다.
-- **네이티브에서 돌 수 없는 테스트는 `@DisabledInNativeImage`를 붙이고, 그 빈자리를 누가 메우는지 주석으로 남긴다.** 해당하는 것: Mockito(`Mockito.mock`, `@MockitoBean` — 런타임 바이트코드 생성 불가), `ApplicationContextRunner`(런타임 설정 처리·JDK 프록시), AOT 빌드 시점 코드(`RuntimeHintsRegistrar` — 네이티브 안에서는 클래스패스를 스캔할 수 없다).
+- **네이티브에서 돌 수 없는 테스트는 `@DisabledInNativeImage`를 붙이고, 그 빈자리를 누가 메우는지 주석으로 남긴다.** 해당하는 것: Mockito(`Mockito.mock`, `@MockitoBean` — 런타임 바이트코드 생성 불가), `ApplicationContextRunner`(런타임 설정 처리·JDK 프록시), AOT 빌드 시점 코드(`RuntimeHintsRegistrar` — 네이티브 안에서는 클래스패스를 스캔할 수 없다), ArchUnit(같은 이유로 임포트할 클래스 파일이 없다).
 
   | 제외된 테스트 | 네이티브에서 대신 덮는 테스트 |
   |---|---|
@@ -187,6 +187,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
   | `BuckPalConfigurationPropertiesTest` | `BuckPalConfigurationPropertiesValidationTest`(컨텍스트의 `Validator`로 기동과 같은 바인딩 경로를 밟는다) |
   | `GetAccountBalanceServiceTest` | 없음 — 이 유스케이스를 쓰는 인바운드 어댑터가 아직 없다. 어댑터가 생기면 시스템 테스트가 덮는다 |
   | `ValidationRuntimeHintsTest` | 없음 — 빌드 시점 코드다. 등록된 힌트는 `SendMoneyCommandTest`·`SendMoneySystemTest`가 커맨드를 만들며 쓴다 |
+  | `DependencyRuleTests` | 없음 — 클래스 파일에 대한 정적 구조 검사라 JVM `test`로 충분하다 |
 
 - **스프링 컨텍스트를 띄우는 테스트라면 `@DisabledInAotMode`도 함께 붙인다.** `@DisabledInNativeImage`는 실행만 막고, 그 컨텍스트는 `processTestAot`에서 여전히 AOT 처리되어 이미지에 실린다. 같은 컨텍스트를 쓰는 다른 테스트가 있으면 그쪽에도 붙여야 한다(`@DisabledInAotMode` Javadoc).
 - 힌트 등록 자체는 `ValidationRuntimeHintsTest`가 JVM `test`에서 고정한다(스캔 결과, `aot.factories` 등록, 미지원 제약 거부) — `nativeTest`보다 먼저 드러난다.
@@ -267,6 +268,7 @@ response.expectStatus().isOk();
   - 스키마 검증은 엔티티를 우회한다 — `JdbcTemplate` 직접 insert로 `DataIntegrityViolationException`, 인덱스는 H2 `INFORMATION_SCHEMA.INDEX_COLUMNS` 조회.
   - 커밋 경계를 봐야 하는 테스트만 `@Transactional(propagation = NOT_SUPPORTED)`이고, **그 메서드에는 `@Sql`을 붙이지 않는다**(픽스처가 커밋되어 다른 테스트를 오염시킨다).
 - **웹**: `@WebMvcTest(controllers = SendMoneyController.class)` + `MockMvcTester` + `@MockitoBean`. 실패 경로의 HTTP 매핑은 여기서 고정한다.
+- **아키텍처**: 평평한 `@Test`에서 `ClassFileImporter`로 임포트하고, **`ImportOption.Predefined.DO_NOT_INCLUDE_TESTS`를 반드시 건다.** 테스트 클래스패스에는 같은 패키지의 테스트(`domain.model`의 `AccountTest` 등)도 있어, 빼지 않으면 그 테스트의 AssertJ·JUnit·빌더 의존이 위반으로 잡힌다. 허용 목록에 테스트 라이브러리를 더해 우회하지 말 것 — 프로덕션 코드가 그것에 의존해도 통과하게 된다.
 - **시스템**: `@SpringBootTest(RANDOM_PORT, useMainMethod = ALWAYS)` + `@AutoConfigureRestTestClient` + `RestTestClient`. 비싸므로 **주요 경로 하나만** 둔다.
   - `useMainMethod = ALWAYS`로 배포와 같은 기동 경로(`main` → `SpringApplication.run`)를 밟고, `main`이 커버리지 제외 없이 실행된다. 이 컨텍스트는 시스템 테스트만 쓰므로 붙여도 컨텍스트가 늘지 않는다 — 다른 `@SpringBootTest`에 붙이면 공유하던 컨텍스트가 갈라진다.
 
