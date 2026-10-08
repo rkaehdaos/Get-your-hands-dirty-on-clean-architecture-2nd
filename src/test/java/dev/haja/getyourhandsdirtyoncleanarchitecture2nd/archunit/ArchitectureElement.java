@@ -1,4 +1,4 @@
-package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
+package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.archunit;
 
 import static com.tngtech.archunit.base.DescribedPredicate.greaterThanOrEqualTo;
 import static com.tngtech.archunit.lang.conditions.ArchConditions.containNumberOfElements;
