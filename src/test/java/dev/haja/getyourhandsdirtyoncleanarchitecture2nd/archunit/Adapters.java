@@ -6,11 +6,13 @@ import java.util.List;
 
 public class Adapters extends ArchitectureElement {
 
+    private final HexagonalArchitecture parentContext;
     private List<String> incomingAdapterPackages = new ArrayList<>();
     private List<String> outgoingAdapterPackages = new ArrayList<>();
 
-    Adapters(String basePackage) {
+    Adapters(HexagonalArchitecture parentContext, String basePackage) {
         super(basePackage);
+        this.parentContext = parentContext;
     }
 
     public Adapters outgoing(String packageName) {
@@ -29,6 +31,8 @@ public class Adapters extends ArchitectureElement {
         allAdapters.addAll(outgoingAdapterPackages);
         return allAdapters;
     }
+
+    public HexagonalArchitecture and() { return parentContext; }
 
     String getBasePackage() {
         return basePackage;
