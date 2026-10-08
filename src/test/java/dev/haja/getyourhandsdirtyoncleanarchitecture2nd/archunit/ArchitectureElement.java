@@ -7,7 +7,6 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static lombok.AccessLevel.PROTECTED;
 
 import com.tngtech.archunit.core.domain.JavaClasses;
-import com.tngtech.archunit.core.importer.ClassFileImporter;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 
@@ -43,21 +42,17 @@ abstract class ArchitectureElement {
         return packageName + "..";
     }
 
-    void denyEmptyPackage(String packageName) {
+    void denyEmptyPackage(String packageName, JavaClasses classes) {
         classes()
             .that()
             .resideInAPackage(matchAllClassesInPackage(packageName))
             .should(containNumberOfElements(greaterThanOrEqualTo(1)))
-            .check(classesInPackage(packageName));
+            .check(classes);
     }
 
-    private JavaClasses classesInPackage(String packageName) {
-        return new ClassFileImporter().importPackages(packageName);
-    }
-
-    void denyEmptyPackages(List<String> packages) {
+    void denyEmptyPackages(List<String> packages, JavaClasses classes) {
         for (String packageName : packages) {
-            denyEmptyPackage(packageName);
+            denyEmptyPackage(packageName, classes);
         }
     }
 }

@@ -53,7 +53,7 @@ public class Adapters extends ArchitectureElement {
         denyDependency(this.basePackage, packageName, classes);
     }
 
-    void doesNotContainEmptyPackages() {
-        denyEmptyPackages(allAdapterPackages());
+    void doesNotContainEmptyPackages(JavaClasses classes) {
+        denyEmptyPackages(allAdapterPackages(), classes);
     }
 }
