@@ -170,7 +170,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 - **송금 한도 `buckpal.transferThreshold`는 `application.yml`이 유일한 출처다. 코드에 기본값을 되살리지 말 것** — relaxed binding은 모르는 키를 무시하므로, 기본값이 있으면 오타 하나로 코드의 값이 조용히 한도가 된다. 한도를 두지 않으려면 그 값을 yml에 명시한다.
 - `BuckPalConfigurationProperties`는 `@Validated` record(`@NotNull @Positive Long`)라 누락·0 이하에서 기동이 실패한다. `ignoreUnknownFields = false`라 **`buckpal.*` 아래 모르는 키도 기동을 막는다** — 기본 yml에 값이 늘 있으니, 이것이 없으면 프로파일 yml·환경변수 쪽 키 오타가 무시된다.
 - `buckpal` 아래에 키를 추가하려면 record에 컴포넌트부터 추가한다. 환경변수는 `BUCKPAL_TRANSFERTHRESHOLD`다(`BUCKPAL_TRANSFER_THRESHOLD`는 모르는 키).
-- `MoneyTransferProperties`는 null만 검증하고 기본값 생성자가 없다.
+- `MoneyTransferProperties`는 null만 검증한다. 책을 따라 기본값 생성자(`Money.of(1_000_000L)`)가 있지만 **빈은 이것을 쓰지 않는다** — `BuckPalConfiguration`이 늘 `buckpal.transferThreshold`로 만든다. 바인딩을 거치지 않으므로 위의 "코드 기본값" 금지(키 오타의 fail-open)와는 무관하다. 실행 중 한도를 바꾸려면 이 생성자가 아니라 yml을 고친다.
 - `Clock` 빈은 `Clock.tick(systemDefaultZone(), 1μs)`다. `ActivityJpaEntity.timestamp`의 `secondPrecision = 6`과 **함께 움직여야** 저장 후 다시 읽은 시각이 같다.
 
 ### 네이티브 이미지
