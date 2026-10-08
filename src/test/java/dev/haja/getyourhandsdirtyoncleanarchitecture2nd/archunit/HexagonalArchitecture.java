@@ -1,6 +1,8 @@
 package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.archunit;
 
+import com.tngtech.archunit.core.domain.JavaClasses;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class HexagonalArchitecture extends ArchitectureElement {
@@ -39,4 +41,8 @@ public class HexagonalArchitecture extends ArchitectureElement {
         return this;
     }
 
+    private void domainDoesNotDependOnAdapters(JavaClasses classes) {
+        denyAnyDependency(
+            this.domainPackages, Collections.singletonList(adapters.basePackage), classes);
+    }
 }
