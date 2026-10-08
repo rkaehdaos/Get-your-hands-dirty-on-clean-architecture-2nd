@@ -12,15 +12,17 @@ import org.junit.jupiter.api.condition.DisabledInNativeImage;
 @DisabledInNativeImage
 class DependencyRuleTests {
 
+    public static final String ROOT_PACKAGE_NAME = "dev.haja.getyourhandsdirtyoncleanarchitecture2nd";
+
     @Test
     void domainModelDoesNotDependOnOutside() {
         noClasses()
             .that()
-            .resideInAPackage("dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model..")
+            .resideInAPackage(ROOT_PACKAGE_NAME + ".application.domain.model..")
             .should()
             .dependOnClassesThat()
             .resideOutsideOfPackages(
-                "dev.haja.getyourhandsdirtyoncleanarchitecture2nd.application.domain.model..",
+                ROOT_PACKAGE_NAME + ".application.domain.model..",
                 "lombok..",
                 "java.."
             )
@@ -28,6 +30,6 @@ class DependencyRuleTests {
             // 테스트 데이터 빌더에 의존하므로, 빼지 않으면 프로덕션 코드가 아닌 테스트가 위반으로 잡힌다.
             .check(new ClassFileImporter()
                 .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
-                .importPackages("dev.haja.getyourhandsdirtyoncleanarchitecture2nd.."));
+                .importPackages(ROOT_PACKAGE_NAME + ".."));
     }
 }
