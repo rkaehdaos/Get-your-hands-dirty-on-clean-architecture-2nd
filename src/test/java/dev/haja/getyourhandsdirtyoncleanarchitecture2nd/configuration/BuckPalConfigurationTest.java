@@ -1,4 +1,4 @@
-package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
+package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.configuration;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

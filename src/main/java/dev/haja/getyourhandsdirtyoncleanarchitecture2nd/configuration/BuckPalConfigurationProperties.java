@@ -1,4 +1,4 @@
-package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
+package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.configuration;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

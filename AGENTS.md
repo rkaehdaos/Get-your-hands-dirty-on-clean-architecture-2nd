@@ -15,11 +15,11 @@
 - **서비스** `SendMoneyService`(`@UseCase` + `jakarta.transaction.Transactional`), `GetAccountBalanceService`. **`GetAccountBalanceService`는 빈이 아니다** — 이 유스케이스를 쓰는 인바운드 어댑터가 아직 없어서다(책 원본도 같다). `@UseCase`는 그 어댑터를 추가하는 `feat` 커밋에서 붙이고, 트랜잭션 경계도 그때 정한다. 그 전까지 쓰려면 `new`나 `@Import`로 조립한다. 둘이 공유하는 헬퍼 `AccountLoader`가 서비스 패키지에 있다.
 - **인바운드 어댑터** `SendMoneyController`, `SendMoneyExceptionHandler`(`@RestControllerAdvice`).
 - **아웃바운드 어댑터** `AccountPersistenceAdapter`(`LoadAccountPort`·`UpdateAccountStatePort`를 함께 구현), `NoOpAccountLock`(아무것도 잠그지 않는 자리표시자).
-- **설정**(루트 패키지) `BuckPalConfiguration` — `MoneyTransferProperties`·`Clock` 빈을 등록한다. 네이티브용 `ValidationRuntimeHints`가 중첩돼 있고, 등록은 `META-INF/spring/aot.factories`가 맡는다. `BuckPalConfigurationProperties` — `buckpal.*` 바인딩. 아래 "설정"·"네이티브 이미지" 참고.
+- **설정**(`configuration` 패키지) `BuckPalConfiguration` — `MoneyTransferProperties`·`Clock` 빈을 등록한다. 네이티브용 `ValidationRuntimeHints`가 중첩돼 있고, 등록은 `META-INF/spring/aot.factories`가 맡는다. `BuckPalConfigurationProperties` — `buckpal.*` 바인딩. 아래 "설정"·"네이티브 이미지" 참고.
 
 ### 패키지 구조
 
-책과 같다.
+설정 패키지만 책과 다르다(아래).
 
 ```
 adapter/in/web              인바운드 웹 어댑터
@@ -30,9 +30,10 @@ application/port/in         인바운드 포트 + 입력 모델(커맨드/쿼리
 application/port/out        아웃바운드 포트
 common                      계층 식별 스테레오타입(@WebAdapter · @UseCase · @PersistenceAdapter)
 common/validation           Validation 헬퍼 (application 바깥)
+configuration               설정(BuckPalConfiguration · BuckPalConfigurationProperties)
 ```
 
-- 루트 패키지에는 `BuckPalApplication`, `BuckPalConfiguration`, `BuckPalConfigurationProperties`만 둔다.
+- 루트 패키지에는 `BuckPalApplication`만 두고(컴포넌트 스캔 기준점), 설정은 `configuration` 패키지에 둔다. **책과 다른 점이다.** 책은 설정을 루트에 두면서 아키텍처 검사에 `withConfiguration("configuration")`을 등록해, "어댑터·애플리케이션은 설정에 의존하지 않는다" 규칙이 빈 패키지를 가리키고 아무것도 검사하지 않은 채 통과한다.
 - `common`의 스테레오타입은 표지가 아니라 **`@Component`를 메타 애노테이션으로 가진 빈 등록**이다. 빈이 아니던 클래스에 붙이면 동작 변경이다(`refactor`가 아니다). `@WebAdapter`는 `@RestController`(예외 핸들러는 `@RestControllerAdvice`)와 함께 붙인다(이유는 Javadoc).
 - `src/test`의 `common` 패키지(테스트 데이터 빌더·픽스처 상수)는 `src/main`의 `common`(스테레오타입)과 **같은 패키지를 소스셋만 나눠 쓴다.** 역할은 서로 무관하다.
 - `@Sql` 픽스처 스크립트는 패키지 구조를 따르지 않고 `src/test/resources/sql/`에 모은다(현재 `accounts.sql` 하나).
@@ -73,7 +74,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 - Bean Validation(`spring-boot-starter-validation`)은 컨텍스트 없이도 쓰므로 `implementation`이다.
 - Gradle 9.8.0 / Kotlin DSL, Hibernate ORM 플러그인(bytecode enhancement), GraalVM Native Build Tools.
 - **Gradle을 올릴 때 `distributionUrl`을 손으로 고치지 말 것** — `distributionSha256Sum` 불일치로 실패하고 래퍼 jar·스크립트도 갱신돼야 한다. `./gradlew wrapper --gradle-version <버전> --distribution-type bin --gradle-distribution-sha256-sum <services.gradle.org의 .sha256 값>`으로 바꾼다.
-- JUnit 5, AssertJ, Mockito(BDD 스타일).
+- JUnit 5, AssertJ, Mockito(BDD 스타일), ArchUnit(코어 `archunit`만 — `@ArchTest`를 쓰지 않으므로 JUnit 엔진은 두지 않는다).
 - **JaCoCo 버전은 고정하지 않는다** — Gradle 기본값에 맡긴다(라이브러리 버전을 BOM에 맡기는 것과 같다). Java를 올렸는데 JaCoCo가 그 클래스 파일 버전을 모르면 시끄럽게 실패한다. 다만 실패하는 곳은 계측이 아니라 분석이다 — JVM은 에이전트의 계측 예외를 무시해 클래스를 계측 없이 로드하므로 테스트는 오류 로그만 남기고 통과하고, 리포트·검증 태스크가 클래스를 분석하다(`Error while analyzing ...`) 실패한다.
 - **Lombok 생성 코드의 `@lombok.Generated`는 루트 `lombok.config`가 고정한다.** 1.18.46의 기본값과 같지만, 커버리지 제외가 이것에 기대므로 기본값에 맡기지 않는다. `config.stopBubbling = true`라 상위 디렉터리의 설정은 읽지 않는다. Gradle은 Lombok이 읽는 이 파일을 모르므로 `JavaCompile`의 입력으로 등록해 두었다 — 바꾸면 다시 컴파일된다.
 
@@ -137,7 +138,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 - **package-private** 클래스이고 포트 인터페이스로만 노출한다. 의존성은 `private final` + `@RequiredArgsConstructor`.
 - **현재 시각은 주입받은 `Clock`에서 얻는다. `LocalDateTime.now()`를 직접 부르지 말 것.** `SendMoneyService`는 시각을 **한 번만 읽어** baselineDate(`minusDays(10)`)와 출금·입금 활동에 함께 쓴다 — 한 이체의 두 면이라 같은 시각이어야 한다.
 - 입력 검증을 다시 하지 않는다(커맨드가 스스로 한다). 설정값과 비교해야 하는 정책(송금 한도)만 서비스가 검사해 `port/in` 예외를 던진다.
-- 포트의 예외는 감싸지 않고 전파한다. **예외는 `AccountNotFoundException` 하나** — `AccountLoader`가 `port/in`의 `NoSuchAccountException`으로 번역한다. "계좌 없음"은 유스케이스의 거부이고, 인바운드 어댑터가 `port/out`을 import하지 않게 하기 위해서다.
+- 포트의 예외는 감싸지 않고 전파한다. **예외는 `AccountNotFoundException` 하나** — `AccountLoader`가 `port/in`의 `NoSuchAccountException`으로 번역한다. "계좌 없음"은 유스케이스의 거부이고, 인바운드 어댑터가 `port/out`을 import하지 않게 하기 위해서다. 아키텍처 검사(`HexagonalArchitecture.check`)가 이 방향을 강제한다.
 - **유스케이스의 거부는 반환값이 아니라 `port/in` 예외다.** `sendMoney`는 `void`이고, 도메인의 `boolean`(`Account.withdraw`/`deposit`, 이 계약은 그대로다)이 실패를 알리면 서비스가 예외로 번역한다. HTTP로의 번역은 웹 어댑터의 몫이다.
 - 잠금은 `AccountLock`으로 하고 **`try`/`finally`로 해제를 보장**한다. 출금 → 입금 계좌 순으로 중첩해 잠그고, 잡지 못한 잠금은 풀지 않는다. 전역 획득 순서를 보장하지 않으므로 **교착 회피는 구현체 책임**이다(`AccountLock` Javadoc).
 
@@ -170,7 +171,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
 - **송금 한도 `buckpal.transferThreshold`는 `application.yml`이 유일한 출처다. 코드에 기본값을 되살리지 말 것** — relaxed binding은 모르는 키를 무시하므로, 기본값이 있으면 오타 하나로 코드의 값이 조용히 한도가 된다. 한도를 두지 않으려면 그 값을 yml에 명시한다.
 - `BuckPalConfigurationProperties`는 `@Validated` record(`@NotNull @Positive Long`)라 누락·0 이하에서 기동이 실패한다. `ignoreUnknownFields = false`라 **`buckpal.*` 아래 모르는 키도 기동을 막는다** — 기본 yml에 값이 늘 있으니, 이것이 없으면 프로파일 yml·환경변수 쪽 키 오타가 무시된다.
 - `buckpal` 아래에 키를 추가하려면 record에 컴포넌트부터 추가한다. 환경변수는 `BUCKPAL_TRANSFERTHRESHOLD`다(`BUCKPAL_TRANSFER_THRESHOLD`는 모르는 키).
-- `MoneyTransferProperties`는 null만 검증하고 기본값 생성자가 없다.
+- `MoneyTransferProperties`는 null만 검증한다. 책을 따라 기본값 생성자(`Money.of(1_000_000L)`)가 있지만 **빈은 이것을 쓰지 않는다** — `BuckPalConfiguration`이 늘 `buckpal.transferThreshold`로 만든다. 바인딩을 거치지 않으므로 위의 "코드 기본값" 금지(키 오타의 fail-open)와는 무관하다. 실행 중 한도를 바꾸려면 이 생성자가 아니라 yml을 고친다.
 - `Clock` 빈은 `Clock.tick(systemDefaultZone(), 1μs)`다. `ActivityJpaEntity.timestamp`의 `secondPrecision = 6`과 **함께 움직여야** 저장 후 다시 읽은 시각이 같다.
 
 ### 네이티브 이미지
@@ -179,7 +180,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
   - `ValidationRuntimeHints`가 AOT 처리 중에 `application.port.in`을 스캔해 **제약이 하나라도 붙은 record**를 입력 모델로 본다. 그 필드(`ACCESS_DECLARED_FIELDS`)와, 제약에서 뽑은 검증기의 생성자(`INVOKE_DECLARED_CONSTRUCTORS`)를 등록한다. 입력 모델도 검증기도 손으로 나열하지 않는다. **대신 입력 모델을 `port/in` 밖에 두면 힌트가 빠지고, JVM 테스트로는 드러나지 않는다.**
   - 등록은 `@ImportRuntimeHints`가 아니라 `META-INF/spring/aot.factories`다. 애노테이션이면 `BuckPalConfiguration`을 담은 컨텍스트가 AOT 처리될 때만 기여해, 컨텍스트 없이 도는 `SendMoneyCommandTest`의 네이티브 실행이 풀 컨텍스트 테스트의 부수효과에 기대게 된다.
   - `@Valid` 캐스케이드와 컨테이너 원소 제약은 따라가지 않고 `IllegalStateException`으로 거부한다. 조용히 힌트를 빠뜨리는 대신 JVM 테스트와 AOT 빌드에서 실패한다. 필요해지면 레지스트라를 Spring 처리기처럼 재귀로 확장한다.
-- **네이티브에서 돌 수 없는 테스트는 `@DisabledInNativeImage`를 붙이고, 그 빈자리를 누가 메우는지 주석으로 남긴다.** 해당하는 것: Mockito(`Mockito.mock`, `@MockitoBean` — 런타임 바이트코드 생성 불가), `ApplicationContextRunner`(런타임 설정 처리·JDK 프록시), AOT 빌드 시점 코드(`RuntimeHintsRegistrar` — 네이티브 안에서는 클래스패스를 스캔할 수 없다).
+- **네이티브에서 돌 수 없는 테스트는 `@DisabledInNativeImage`를 붙이고, 그 빈자리를 누가 메우는지 주석으로 남긴다.** 해당하는 것: Mockito(`Mockito.mock`, `@MockitoBean` — 런타임 바이트코드 생성 불가), `ApplicationContextRunner`(런타임 설정 처리·JDK 프록시), AOT 빌드 시점 코드(`RuntimeHintsRegistrar` — 네이티브 안에서는 클래스패스를 스캔할 수 없다), ArchUnit(같은 이유로 임포트할 클래스 파일이 없다).
 
   | 제외된 테스트 | 네이티브에서 대신 덮는 테스트 |
   |---|---|
@@ -187,6 +188,7 @@ JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정
   | `BuckPalConfigurationPropertiesTest` | `BuckPalConfigurationPropertiesValidationTest`(컨텍스트의 `Validator`로 기동과 같은 바인딩 경로를 밟는다) |
   | `GetAccountBalanceServiceTest` | 없음 — 이 유스케이스를 쓰는 인바운드 어댑터가 아직 없다. 어댑터가 생기면 시스템 테스트가 덮는다 |
   | `ValidationRuntimeHintsTest` | 없음 — 빌드 시점 코드다. 등록된 힌트는 `SendMoneyCommandTest`·`SendMoneySystemTest`가 커맨드를 만들며 쓴다 |
+  | `DependencyRuleTests` | 없음 — 클래스 파일에 대한 정적 구조 검사라 JVM `test`로 충분하다 |
 
 - **스프링 컨텍스트를 띄우는 테스트라면 `@DisabledInAotMode`도 함께 붙인다.** `@DisabledInNativeImage`는 실행만 막고, 그 컨텍스트는 `processTestAot`에서 여전히 AOT 처리되어 이미지에 실린다. 같은 컨텍스트를 쓰는 다른 테스트가 있으면 그쪽에도 붙여야 한다(`@DisabledInAotMode` Javadoc).
 - 힌트 등록 자체는 `ValidationRuntimeHintsTest`가 JVM `test`에서 고정한다(스캔 결과, `aot.factories` 등록, 미지원 제약 거부) — `nativeTest`보다 먼저 드러난다.
@@ -267,6 +269,10 @@ response.expectStatus().isOk();
   - 스키마 검증은 엔티티를 우회한다 — `JdbcTemplate` 직접 insert로 `DataIntegrityViolationException`, 인덱스는 H2 `INFORMATION_SCHEMA.INDEX_COLUMNS` 조회.
   - 커밋 경계를 봐야 하는 테스트만 `@Transactional(propagation = NOT_SUPPORTED)`이고, **그 메서드에는 `@Sql`을 붙이지 않는다**(픽스처가 커밋되어 다른 테스트를 오염시킨다).
 - **웹**: `@WebMvcTest(controllers = SendMoneyController.class)` + `MockMvcTester` + `@MockitoBean`. 실패 경로의 HTTP 매핑은 여기서 고정한다.
+- **아키텍처**: 평평한 `@Test`에서 `ClassFileImporter`로 임포트하고, **`ImportOption.Predefined.DO_NOT_INCLUDE_TESTS`를 반드시 건다.** 테스트 클래스패스에는 같은 패키지의 테스트(`domain.model`의 `AccountTest` 등)도 있어, 빼지 않으면 그 테스트의 AssertJ·JUnit·빌더 의존이 위반으로 잡힌다. 허용 목록에 테스트 라이브러리를 더해 우회하지 말 것 — 프로덕션 코드가 그것에 의존해도 통과하게 된다.
+  - 임포트는 `DependencyRuleTests.productionClasses()` 하나다. `HexagonalArchitecture.check(classes)`의 빈 패키지 검사도 넘겨받은 이 클래스로 하므로, 테스트 클래스만 있는 패키지는 비어 있는 것으로 실패한다.
+  - **등록한 패키지(도메인·어댑터·포트·서비스·설정)가 비어 있으면 실패하고, `with...()` 등록이나 그 하위 등록(`incoming()`·`outgoing()`·`incomingPorts()`·`outgoingPorts()`·`services()`)을 빠뜨리면 `IllegalStateException`이다.** 하위 등록은 규칙이 순회하는 목록이라, 빠지면 빈 목록을 돌며 아무것도 검사하지 않고 통과한다. ArchUnit의 `failOnEmptyShould`는 `that()` 쪽 대상이 빈 경우만 잡고, `dependOnClassesThat()` 쪽(의존 대상)이 빈 경우는 잡지 못한다 — 의존 금지 규칙은 대상 패키지명이 틀려도 통과하므로 빈 패키지 검사가 그 몫을 한다. 패키지를 옮기거나 이름을 바꾸면 등록도 함께 고친다.
+  - **어댑터는 반대쪽 포트에 의존하지 않는다** — 인바운드 어댑터 → 아웃바운드 포트(유스케이스 우회), 아웃바운드 어댑터 → 인바운드 포트(예외 번역 계층 붕괴)를 금지한다. **책의 `check()`에는 없는 규칙이다.**
 - **시스템**: `@SpringBootTest(RANDOM_PORT, useMainMethod = ALWAYS)` + `@AutoConfigureRestTestClient` + `RestTestClient`. 비싸므로 **주요 경로 하나만** 둔다.
   - `useMainMethod = ALWAYS`로 배포와 같은 기동 경로(`main` → `SpringApplication.run`)를 밟고, `main`이 커버리지 제외 없이 실행된다. 이 컨텍스트는 시스템 테스트만 쓰므로 붙여도 컨텍스트가 늘지 않는다 — 다른 `@SpringBootTest`에 붙이면 공유하던 컨텍스트가 갈라진다.
 
@@ -298,7 +304,7 @@ reflectoring.io의 "100% Code Coverage*"가 말하는 **Cleaned Code Coverage 10
 
 `.gitmessage.txt`가 템플릿이다. 형식은 `<이모지> <type>(<scope>): <subject>`, **subject는 한글**이다(예: `✨ feat(core): ActivityWindow에 addActivity 메서드 추가`). type/scope/이모지는 템플릿에 있는 것만 쓴다.
 
-- scope: 도메인·애플리케이션 계층(포트·서비스·입력 모델) `core`, 웹 어댑터 `api`, 영속성 어댑터 `db`, 설정 `config` — 루트 패키지 설정(`BuckPalConfiguration*`, `application.yml`, `META-INF/spring/aot.factories`)과 저장소·에이전트 설정 파일(`AGENTS.md`, `.editorconfig`, `.githooks`, `.gitmessage.txt`). 문서 변경은 type `📝 docs`가 설정 변경 커밋과 구분한다. 의존성 `deps`(`🔨 build(deps)` / `📦 chore(deps)`).
+- scope: 도메인·애플리케이션 계층(포트·서비스·입력 모델) `core`, 웹 어댑터 `api`, 영속성 어댑터 `db`, 설정 `config` — `configuration` 패키지 설정(`BuckPalConfiguration*`, `application.yml`, `META-INF/spring/aot.factories`)과 저장소·에이전트 설정 파일(`AGENTS.md`, `.editorconfig`, `.githooks`, `.gitmessage.txt`). 문서 변경은 type `📝 docs`가 설정 변경 커밋과 구분한다. 의존성 `deps`(`🔨 build(deps)` / `📦 chore(deps)`).
 - **`common` 패키지에는 전용 scope가 없다**(템플릿에 없다). 쓰는 쪽을 따른다 — 스테레오타입은 식별하는 계층(`@UseCase` `core`, `@WebAdapter` `api`, `@PersistenceAdapter` `db`), `common.validation`은 입력 모델이 쓰므로 `core`. `src/test`의 `common`(테스트 데이터 빌더·픽스처)은 아래의 scope `test`다.
 - **테스트 커밋의 scope는 대상 코드를 따른다**(`✅ test(core)`, `✅ test(config)`). scope `test`는 테스트 코드 자체가 대상일 때다(`♻️ refactor(test): AccountBuilder를 AccountTestData로 이동`, `✅ test(test): 목 기반 테스트를 네이티브 이미지에서 제외`).
 - 커밋은 매우 잘게 — 메서드 하나, 검증 하나 수준. 기능과 테스트는 별도 커밋(`feat`/`fix` → `test`).

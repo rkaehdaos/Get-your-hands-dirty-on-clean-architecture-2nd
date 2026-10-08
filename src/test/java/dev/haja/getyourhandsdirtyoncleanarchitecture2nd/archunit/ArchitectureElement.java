@@ -1,0 +1,58 @@
+package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.archunit;
+
+import static com.tngtech.archunit.base.DescribedPredicate.greaterThanOrEqualTo;
+import static com.tngtech.archunit.lang.conditions.ArchConditions.containNumberOfElements;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static lombok.AccessLevel.PROTECTED;
+
+import com.tngtech.archunit.core.domain.JavaClasses;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor(access = PROTECTED)
+abstract class ArchitectureElement {
+
+    final String basePackage;
+
+    String fullQualifiedPackage(String relativePackage) {
+        return this.basePackage + "." + relativePackage;
+    }
+
+    static void denyDependency(String fromPackageName, String toPackageName, JavaClasses classes) {
+        noClasses()
+            .that()
+            .resideInAPackage(matchAllClassesInPackage(fromPackageName))
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage(matchAllClassesInPackage(toPackageName))
+            .check(classes);
+    }
+
+    static void denyAnyDependency(
+        List<String> fromPackages, List<String> toPackages, JavaClasses classes) {
+        for (String fromPackage : fromPackages) {
+            for (String toPackage : toPackages) {
+                denyDependency(fromPackage, toPackage, classes);
+            }
+        }
+    }
+
+    private static String matchAllClassesInPackage(String packageName) {
+        return packageName + "..";
+    }
+
+    void denyEmptyPackage(String packageName, JavaClasses classes) {
+        classes()
+            .that()
+            .resideInAPackage(matchAllClassesInPackage(packageName))
+            .should(containNumberOfElements(greaterThanOrEqualTo(1)))
+            .check(classes);
+    }
+
+    void denyEmptyPackages(List<String> packages, JavaClasses classes) {
+        for (String packageName : packages) {
+            denyEmptyPackage(packageName, classes);
+        }
+    }
+}

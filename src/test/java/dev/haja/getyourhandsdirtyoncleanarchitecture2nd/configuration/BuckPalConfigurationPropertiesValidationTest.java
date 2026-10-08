@@ -1,4 +1,4 @@
-package dev.haja.getyourhandsdirtyoncleanarchitecture2nd;
+package dev.haja.getyourhandsdirtyoncleanarchitecture2nd.configuration;
 
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.DisplayName;
