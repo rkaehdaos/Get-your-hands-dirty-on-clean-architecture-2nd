@@ -46,3 +46,8 @@ mise.toml
 plans/
 CLAUDE.md
 .claude/
+.mcp.json
+.agentsroom/handoff-transcript-*.txt
+.agentsroom/handoff-summary-*.md
+.agentsroom/fork-context-*.txt
+.agents/mcp_config.json

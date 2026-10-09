@@ -52,6 +52,15 @@ configuration               설정(BuckPalConfiguration · BuckPalConfigurationP
 
 `check`(따라서 `build`)는 커버리지 검증(`jacocoTestCoverageVerification`)을 포함한다. 리포트는 `build/reports/jacoco/test/html/index.html`이고 **마지막 `test` 실행만 반영한다** — `--tests`로 일부만 돌렸다면 리포트도 그 일부의 커버리지다. `test --tests ...`와 `check`(또는 `build`)를 **한 번의 호출에서** 함께 실행하면 커버리지 검증이 실패하는 것이 정상이다. 따로 실행한 `check`는 필터가 바뀐 `test`를 전체로 다시 돌리므로 통과한다. 아래 "커버리지" 참고.
 
+### CI (`.github/workflows/build.yml`)
+
+`build`를 돌린 뒤 SonarCloud로 분석한다.
+
+- **`SONAR_TOKEN`은 `Analyze` 단계에만 둔다.** 빌드와 분석을 나눈 이유는 테스트 코드와 테스트 의존성이 토큰 없이 돌게 하기 위해서다. 그래서 `sonar` 태스크에 `test`/`jacocoTestReport` 의존을 걸지 않는다. 걸면 분석 단계에서 테스트가 다시 돌 수 있다. 실행 순서는 워크플로가 보장한다.
+- 토큰이 없으면(포크·Dependabot PR, secret 미등록) 분석만 건너뛰고 빌드 체크는 그대로 돈다.
+- `jacocoTestReport`의 XML은 Sonar용이다. 끄면 Sonar의 커버리지가 실패 없이 0이 된다.
+- 같은 PR의 이전 실행은 취소하고, main 실행은 취소 없이 줄 세운다. 늦게 끝난 이전 리비전의 분석이 최신 결과를 덮어쓰지 않게 하려는 것이다.
+
 JDK는 `mise.toml`(`.gitignore` 대상)이 `oracle-graalvm-25.0.4.1.1`을 지정한다. Gradle toolchain은 Java 25를 요구한다.
 
 ## 스택 주의점

@@ -1,0 +1,55 @@
+name: SonarQube
+on:
+  push:
+    branches:
+      - main
+    tags-ignore: [ 'beta*' ]
+    paths-ignore: [ '.github/**' ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: read
+# 늦게 끝난 이전 리비전의 분석이 최신 결과를 덮어쓰지 않게 한다.
+# PR은 이전 실행을 취소하고, main은 커밋마다 분석이 남도록 취소 없이 줄 세운다.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  build:
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    env:
+      # 포크·Dependabot PR에는 secret이 전달되지 않는다. secrets는 if:에서 직접
+      # 참조할 수 없으므로 값이 아니라 존재 여부만 노출해 분석을 건너뛴다.
+      HAS_SONAR_TOKEN: ${{ secrets.SONAR_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25.0.4'
+          distribution: 'graalvm' # See 'Supported distributions' for available options
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cache SonarQube packages
+        if: env.HAS_SONAR_TOKEN == 'true'
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      # 캐시 키 계산(빌드 스크립트·wrapper 포함), 기본 브랜치만 쓰고 PR은 읽기만 하는 정책,
+      # wrapper jar 검증을 맡긴다. 기본값 'enhanced'는 상용 컴포넌트라 오픈소스 'basic'을 쓴다.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+      # 테스트 코드와 그 의존성이 토큰 없이 돌도록 빌드와 분석을 나눈다.
+      # sonar는 build가 만든 JaCoCo XML을 읽는다.
+      - name: Build
+        run: ./gradlew build
+      - name: Analyze
+        if: env.HAS_SONAR_TOKEN == 'true'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew sonar --info

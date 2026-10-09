@@ -5,11 +5,20 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.hibernate.orm") version "7.4.5.Final"
     id("org.graalvm.buildtools.native") version "1.1.8"
+    id("org.sonarqube") version "7.5.0.8588"
+
 }
 
 group = "dev.haja"
 version = "0.0.1-SNAPSHOT"
 description = "Get-your-hands-dirty-on-clean-architecture-2nd"
+
+sonar {
+    properties {
+        property("sonar.projectKey", "rkaehdaos_Get-your-hands-dirty-on-clean-architecture-2nd2")
+        property("sonar.organization", "rkaehdaos")
+    }
+}
 
 java {
     toolchain {
@@ -66,6 +75,9 @@ tasks.test {
 // 리포트는 actual 커버리지다 — classDirectories에서 아무것도 빼지 않는다.
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
+    // Sonar Gradle 플러그인이 이 XML 경로를 sonar.coverage.jacoco.xmlReportPaths로 넘긴다.
+    // 끄면 Sonar에 올라가는 커버리지가 실패 없이 0이 된다.
+    reports { xml.required = true }
 }
 
 // Cleaned Code Coverage 100%: 테스트로 덮여야 하는 코드는 하나도 빠짐없이 실행돼야 한다.
