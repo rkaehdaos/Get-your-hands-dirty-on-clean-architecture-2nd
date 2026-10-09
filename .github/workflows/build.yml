@@ -7,6 +7,11 @@ on:
     paths-ignore: [ '.github/**' ]
   pull_request:
     types: [opened, synchronize, reopened]
+# 늦게 끝난 이전 리비전의 분석이 최신 결과를 덮어쓰지 않게 한다.
+# PR은 이전 실행을 취소하고, main은 커밋마다 분석이 남도록 취소 없이 줄 세운다.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   build:
     name: Build and analyze
