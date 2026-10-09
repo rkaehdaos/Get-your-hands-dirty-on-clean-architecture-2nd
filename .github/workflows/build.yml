@@ -11,6 +11,10 @@ jobs:
   build:
     name: Build and analyze
     runs-on: ubuntu-latest
+    env:
+      # 포크·Dependabot PR에는 secret이 전달되지 않는다. secrets는 if:에서 직접
+      # 참조할 수 없으므로 값이 아니라 존재 여부만 노출해 분석을 건너뛴다.
+      HAS_SONAR_TOKEN: ${{ secrets.SONAR_TOKEN != '' }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
@@ -21,6 +25,7 @@ jobs:
           distribution: 'graalvm' # See 'Supported distributions' for available options
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Cache SonarQube packages
+        if: env.HAS_SONAR_TOKEN == 'true'
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.sonar/cache
@@ -37,6 +42,7 @@ jobs:
       - name: Build
         run: ./gradlew build
       - name: Analyze
+        if: env.HAS_SONAR_TOKEN == 'true'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew sonar --info
